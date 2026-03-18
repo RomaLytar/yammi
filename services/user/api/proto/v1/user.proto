@@ -1,0 +1,39 @@
+syntax = "proto3";
+package user.v1;
+option go_package = "github.com/romanlovesweed/yammi/services/user/api/proto/v1;userpb";
+
+service UserService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+}
+
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message GetProfileResponse {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string avatar_url = 4;
+  string bio = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+
+message UpdateProfileRequest {
+  string user_id = 1;
+  string name = 2;
+  string avatar_url = 3;
+  string bio = 4;
+}
+
+message UpdateProfileResponse {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string avatar_url = 4;
+  string bio = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}

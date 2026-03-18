@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/romanlovesweed/yammi/services/auth/internal/domain"
@@ -11,6 +12,8 @@ type AuthUseCase struct {
 	userRepo         UserRepository
 	refreshTokenRepo RefreshTokenRepository
 	tokenGenerator   TokenGenerator
+	eventPublisher   EventPublisher
+	hasher           PasswordHasher
 	refreshTokenTTL  time.Duration
 }
 
@@ -18,21 +21,31 @@ func NewAuthUseCase(
 	userRepo UserRepository,
 	refreshTokenRepo RefreshTokenRepository,
 	tokenGenerator TokenGenerator,
+	eventPublisher EventPublisher,
+	hasher PasswordHasher,
 	refreshTokenTTL time.Duration,
 ) *AuthUseCase {
 	return &AuthUseCase{
 		userRepo:         userRepo,
 		refreshTokenRepo: refreshTokenRepo,
 		tokenGenerator:   tokenGenerator,
+		eventPublisher:   eventPublisher,
+		hasher:           hasher,
 		refreshTokenTTL:  refreshTokenTTL,
 	}
 }
 
 func (uc *AuthUseCase) Register(ctx context.Context, email, password, name string) (userID, accessToken, refreshToken string, err error) {
-	user, err := domain.NewUser(email, password, name)
+	if err := domain.ValidateRegistration(email, password, name); err != nil {
+		return "", "", "", err
+	}
+
+	hash, err := uc.hasher.Hash(password)
 	if err != nil {
 		return "", "", "", err
 	}
+
+	user := domain.NewUserWithHash(email, hash, name)
 
 	if err := uc.userRepo.Create(ctx, user); err != nil {
 		return "", "", "", err
@@ -48,6 +61,10 @@ func (uc *AuthUseCase) Register(ctx context.Context, email, password, name strin
 		return "", "", "", err
 	}
 
+	if err := uc.eventPublisher.PublishUserCreated(ctx, user.ID, user.Email, user.Name); err != nil {
+		log.Printf("WARNING: failed to publish UserCreated event for user %s: %v", user.ID, err)
+	}
+
 	return user.ID, accessToken, rt.Token, nil
 }
 
@@ -57,7 +74,7 @@ func (uc *AuthUseCase) Login(ctx context.Context, email, password string) (userI
 		return "", "", "", err
 	}
 
-	if err := user.CheckPassword(password); err != nil {
+	if err := uc.hasher.Verify(password, user.PasswordHash); err != nil {
 		return "", "", "", err
 	}
 

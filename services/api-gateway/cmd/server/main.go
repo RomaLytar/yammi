@@ -1,12 +1,14 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	delivery "github.com/romanlovesweed/yammi/services/api-gateway/internal/delivery/http"
+	"github.com/romanlovesweed/yammi/services/api-gateway/internal/infrastructure"
 )
 
 func main() {
@@ -15,19 +17,29 @@ func main() {
 		port = "8080"
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-	})
+	authAddr := os.Getenv("AUTH_GRPC_ADDR")
+	if authAddr == "" {
+		authAddr = "localhost:50051"
+	}
+
+	userAddr := os.Getenv("USER_GRPC_ADDR")
+	if userAddr == "" {
+		userAddr = "localhost:50052"
+	}
+
+	// gRPC clients
+	clients, err := infrastructure.NewGRPCClients(authAddr, userAddr)
+	if err != nil {
+		log.Fatalf("failed to create grpc clients: %v", err)
+	}
+	defer clients.Close()
+
+	// HTTP router
+	router := delivery.NewRouter(clients)
 
 	server := &http.Server{
 		Addr:    ":" + port,
-		Handler: mux,
+		Handler: router,
 	}
 
 	go func() {
@@ -42,5 +54,6 @@ func main() {
 	<-quit
 
 	log.Println("api-gateway shutting down")
+	clients.Close()
 	server.Close()
 }

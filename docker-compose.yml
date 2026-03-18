@@ -39,32 +39,72 @@ services:
       timeout: 3s
       retries: 5
 
+  # --- Monitoring ---
+
+  nats-exporter:
+    image: natsio/prometheus-nats-exporter:latest
+    command: ["-varz", "-connz", "-jsz=all", "-subz", "http://nats:8222"]
+    depends_on:
+      nats:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./deployments/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - nats-exporter
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./deployments/monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./deployments/monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3033:3000"
+    depends_on:
+      - prometheus
+
   # --- Services ---
 
   auth:
     build:
-      context: ./services/auth
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/auth/Dockerfile
     environment:
       AUTH_GRPC_PORT: "50051"
       DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_auth?sslmode=disable"
-    ports:
-      - "50051:50051"
+      NATS_URL: "nats://nats:4222"
+      BCRYPT_COST: "8"
+    deploy:
+      replicas: 5
     depends_on:
       postgres:
+        condition: service_healthy
+      nats:
         condition: service_healthy
 
   user:
     build:
-      context: ./services/user
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/user/Dockerfile
     environment:
       USER_GRPC_PORT: "50052"
       DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_user?sslmode=disable"
+      NATS_URL: "nats://nats:4222"
     ports:
       - "50052:50052"
     depends_on:
       postgres:
+        condition: service_healthy
+      nats:
         condition: service_healthy
 
   board:
@@ -145,6 +185,19 @@ services:
       NATS_URL: "nats://nats:4222"
     ports:
       - "8081:8081"
+    depends_on:
+      nats:
+        condition: service_healthy
+
+  # --- Tools ---
+
+  dlq:
+    build:
+      context: ./tools/dlq
+      dockerfile: Dockerfile
+    environment:
+      NATS_URL: "nats://nats:4222"
+    profiles: ["tools"]
     depends_on:
       nats:
         condition: service_healthy

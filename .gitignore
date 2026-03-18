@@ -1,0 +1,9 @@
+# Ignore all README.md except the root one
+**/README.md
+!/README.md
+
+# IDE
+.idea/
+
+# Claude Code
+.claude/

@@ -1,0 +1,153 @@
+services:
+  # --- Infrastructure ---
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: yammi
+      POSTGRES_PASSWORD: yammi
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yammi"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  nats:
+    image: nats:2-alpine
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: ["--jetstream", "-m", "8222"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # --- Services ---
+
+  auth:
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile
+    environment:
+      AUTH_GRPC_PORT: "50051"
+      DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_auth?sslmode=disable"
+    ports:
+      - "50051:50051"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  user:
+    build:
+      context: ./services/user
+      dockerfile: Dockerfile
+    environment:
+      USER_GRPC_PORT: "50052"
+      DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_user?sslmode=disable"
+    ports:
+      - "50052:50052"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  board:
+    build:
+      context: ./services/board
+      dockerfile: Dockerfile
+    environment:
+      BOARD_GRPC_PORT: "50053"
+      DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_board?sslmode=disable"
+      REDIS_URL: "redis://redis:6379/0"
+      NATS_URL: "nats://nats:4222"
+    ports:
+      - "50053:50053"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+
+  comment:
+    build:
+      context: ./services/comment
+      dockerfile: Dockerfile
+    environment:
+      COMMENT_GRPC_PORT: "50054"
+      DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_comment?sslmode=disable"
+      NATS_URL: "nats://nats:4222"
+    ports:
+      - "50054:50054"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+
+  notification:
+    build:
+      context: ./services/notification
+      dockerfile: Dockerfile
+    environment:
+      NOTIFICATION_GRPC_PORT: "50055"
+      DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_notification?sslmode=disable"
+      NATS_URL: "nats://nats:4222"
+    ports:
+      - "50055:50055"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    environment:
+      GATEWAY_HTTP_PORT: "8080"
+      AUTH_GRPC_ADDR: "auth:50051"
+      USER_GRPC_ADDR: "user:50052"
+      BOARD_GRPC_ADDR: "board:50053"
+      COMMENT_GRPC_ADDR: "comment:50054"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth
+      - user
+      - board
+      - comment
+
+  gateway:
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    environment:
+      WS_GATEWAY_PORT: "8081"
+      NATS_URL: "nats://nats:4222"
+    ports:
+      - "8081:8081"
+    depends_on:
+      nats:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

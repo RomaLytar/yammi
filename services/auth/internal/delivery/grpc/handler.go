@@ -91,6 +91,18 @@ func (h *AuthHandler) GetPublicKey(ctx context.Context, req *authpb.GetPublicKey
 	}, nil
 }
 
+func (h *AuthHandler) DeleteUser(ctx context.Context, req *authpb.DeleteUserRequest) (*authpb.DeleteUserResponse, error) {
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	if err := h.uc.DeleteUser(ctx, req.GetUserId()); err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	return &authpb.DeleteUserResponse{}, nil
+}
+
 func mapDomainError(err error) error {
 	switch {
 	case errors.Is(err, domain.ErrEmailExists):

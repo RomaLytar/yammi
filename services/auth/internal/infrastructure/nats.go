@@ -67,6 +67,27 @@ func (p *NATSPublisher) PublishUserCreated(ctx context.Context, userID, email, n
 	return nil
 }
 
+func (p *NATSPublisher) PublishUserDeleted(ctx context.Context, userID string) error {
+	event := events.UserDeleted{
+		EventID:      uuid.New().String(),
+		EventVersion: 1,
+		OccurredAt:   time.Now(),
+		UserID:       userID,
+	}
+
+	data, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("marshal event: %w", err)
+	}
+
+	_, err = p.js.Publish(events.SubjectUserDeleted, data)
+	if err != nil {
+		return fmt.Errorf("publish event: %w", err)
+	}
+
+	return nil
+}
+
 func (p *NATSPublisher) Close() {
 	p.nc.Close()
 }

@@ -8,6 +8,7 @@ service AuthService {
   rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
   rpc RevokeToken(RevokeTokenRequest) returns (RevokeTokenResponse);
   rpc GetPublicKey(GetPublicKeyRequest) returns (GetPublicKeyResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
 }
 
 message RegisterRequest {
@@ -54,3 +55,9 @@ message GetPublicKeyResponse {
   string public_key_pem = 1;
   string algorithm = 2;
 }
+
+message DeleteUserRequest {
+  string user_id = 1;
+}
+
+message DeleteUserResponse {}

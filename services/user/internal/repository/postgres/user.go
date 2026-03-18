@@ -64,3 +64,18 @@ func (r *UserRepo) Update(ctx context.Context, user *domain.User) error {
 	}
 	return nil
 }
+
+func (r *UserRepo) Delete(ctx context.Context, id string) error {
+	result, err := r.db.ExecContext(ctx, `DELETE FROM profiles WHERE id = $1`, id)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return domain.ErrUserNotFound
+	}
+	return nil
+}

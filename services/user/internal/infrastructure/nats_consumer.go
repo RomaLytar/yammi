@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math/rand"
 	"time"
 
 	"github.com/nats-io/nats.go"
@@ -17,12 +16,11 @@ import (
 )
 
 const (
-	consumerName  = "user-service-user-created-v4"
-	maxDeliveries = 7
-	maxAckPending = 500
-	ackWait       = 30 * time.Second
-	maxBackoff    = 30 * time.Second
-	jitterFactor  = 0.2 // ±20%
+	consumerCreated = "user-service-user-created-v4"
+	consumerDeleted = "user-service-user-deleted-v1"
+	maxDeliveries   = 7
+	maxAckPending   = 500
+	ackWait         = 30 * time.Second
 )
 
 type NATSConsumer struct {
@@ -74,10 +72,23 @@ func (c *NATSConsumer) JetStream() nats.JetStreamContext {
 }
 
 func (c *NATSConsumer) Start() error {
+	if err := c.subscribeUserCreated(); err != nil {
+		return err
+	}
+	if err := c.subscribeUserDeleted(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *NATSConsumer) Close() {
+	c.nc.Close()
+}
+
+func (c *NATSConsumer) subscribeUserCreated() error {
 	_, err := c.js.Subscribe(events.SubjectUserCreated, func(msg *nats.Msg) {
 		meta, metaErr := msg.Metadata()
 
-		// Poison message: can't unmarshal — send to DLQ immediately
 		var event events.UserCreated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message, sending to DLQ: %v", err)
@@ -85,21 +96,17 @@ func (c *NATSConsumer) Start() error {
 			return
 		}
 
-		// Process
 		if err := c.uc.CreateProfile(context.Background(), event.UserID, event.Email, event.Name); err != nil {
-			// Permanent: idempotency — already exists
 			if errors.Is(err, domain.ErrEmailExists) {
 				msg.Ack()
 				return
 			}
 
-			// Check delivery count
 			numDelivered := uint64(1)
 			if metaErr == nil {
 				numDelivered = meta.NumDelivered
 			}
 
-			// Max retries exhausted — send to DLQ
 			if numDelivered >= maxDeliveries {
 				log.Printf("max retries (%d) exhausted for user %s, sending to DLQ: %v",
 					maxDeliveries, event.UserID, err)
@@ -107,7 +114,6 @@ func (c *NATSConsumer) Start() error {
 				return
 			}
 
-			// Retry with exponential backoff
 			delay := backoffDelay(numDelivered)
 			log.Printf("retry %d/%d for user %s in %s: %v",
 				numDelivered, maxDeliveries, event.UserID, delay, err)
@@ -118,7 +124,7 @@ func (c *NATSConsumer) Start() error {
 		log.Printf("created profile for user %s (%s)", event.UserID, event.Email)
 		msg.Ack()
 	},
-		nats.Durable(consumerName),
+		nats.Durable(consumerCreated),
 		nats.ManualAck(),
 		nats.DeliverAll(),
 		nats.MaxDeliver(maxDeliveries),
@@ -131,57 +137,43 @@ func (c *NATSConsumer) Start() error {
 	}
 
 	log.Printf("consumer started: %s (maxDeliver=%d, maxAckPending=%d, ackWait=%s)",
-		consumerName, maxDeliveries, maxAckPending, ackWait)
+		consumerCreated, maxDeliveries, maxAckPending, ackWait)
 	return nil
 }
 
-func (c *NATSConsumer) sendToDLQ(msg *nats.Msg, originalSubject, errMsg string) {
-	numDelivered := uint64(0)
-	if meta, err := msg.Metadata(); err == nil {
-		numDelivered = meta.NumDelivered
-	}
+func (c *NATSConsumer) subscribeUserDeleted() error {
+	_, err := c.js.Subscribe(events.SubjectUserDeleted, func(msg *nats.Msg) {
+		var event events.UserDeleted
+		if err := json.Unmarshal(msg.Data, &event); err != nil {
+			log.Printf("poison message on user.deleted, sending to DLQ: %v", err)
+			c.sendToDLQ(msg, events.SubjectUserDeleted, err.Error())
+			return
+		}
 
-	envelope := events.DLQEnvelope{
-		OriginalSubject: originalSubject,
-		ConsumerName:    consumerName,
-		Error:           errMsg,
-		NumDelivered:    numDelivered,
-		Payload:         string(msg.Data),
-		FailedAt:        time.Now(),
-	}
+		if err := c.uc.DeleteProfile(context.Background(), event.UserID); err != nil {
+			if errors.Is(err, domain.ErrUserNotFound) {
+				msg.Ack()
+				return
+			}
+			log.Printf("failed to delete profile for user %s: %v", event.UserID, err)
+			msg.Nak()
+			return
+		}
 
-	data, err := json.Marshal(envelope)
+		log.Printf("deleted profile for user %s", event.UserID)
+		msg.Ack()
+	},
+		nats.Durable(consumerDeleted),
+		nats.ManualAck(),
+		nats.DeliverAll(),
+		nats.MaxDeliver(maxDeliveries),
+		nats.AckWait(ackWait),
+	)
+
 	if err != nil {
-		log.Printf("ERROR: failed to marshal DLQ envelope: %v", err)
-		// Don't ack — let NATS redeliver
-		msg.Nak()
-		return
+		return fmt.Errorf("subscribe to %s: %w", events.SubjectUserDeleted, err)
 	}
 
-	_, err = c.js.Publish(events.DLQSubject(originalSubject), data)
-	if err != nil {
-		log.Printf("ERROR: failed to publish to DLQ: %v", err)
-		// Don't ack — let NATS redeliver
-		msg.Nak()
-		return
-	}
-
-	log.Printf("sent to DLQ: subject=%s error=%s deliveries=%d",
-		events.DLQSubject(originalSubject), errMsg, numDelivered)
-	msg.Ack()
-}
-
-func (c *NATSConsumer) Close() {
-	c.nc.Close()
-}
-
-func backoffDelay(attempt uint64) time.Duration {
-	// base=2s, exponential: 2s, 4s, 8s, 16s, 30s, 30s
-	delay := time.Duration(1<<attempt) * time.Second
-	if delay > maxBackoff {
-		delay = maxBackoff
-	}
-	// jitter ±20% to avoid thundering herd
-	jitter := time.Duration(float64(delay) * jitterFactor * (2*rand.Float64() - 1))
-	return delay + jitter
+	log.Printf("consumer started: %s", consumerDeleted)
+	return nil
 }

@@ -23,9 +23,10 @@ func NewRouter(clients *infrastructure.GRPCClients) http.Handler {
 	mux.HandleFunc("GET /api/v1/auth/public-key", auth.GetPublicKey)
 
 	// User routes
-	user := NewUserHandler(clients.UserClient)
+	user := NewUserHandler(clients.UserClient, clients.AuthClient)
 	mux.HandleFunc("GET /api/v1/users/{id}", user.GetProfile)
 	mux.HandleFunc("PUT /api/v1/users/{id}", user.UpdateProfile)
+	mux.HandleFunc("DELETE /api/v1/users/{id}", user.DeleteUser)
 
 	return mux
 }

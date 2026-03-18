@@ -39,3 +39,7 @@ func (uc *UserUseCase) UpdateProfile(ctx context.Context, userID, name, avatarUR
 
 	return user, nil
 }
+
+func (uc *UserUseCase) DeleteProfile(ctx context.Context, userID string) error {
+	return uc.userRepo.Delete(ctx, userID)
+}

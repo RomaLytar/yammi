@@ -41,8 +41,8 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.HandleFunc("POST /api/v1/auth/login", RateLimitHandlerFunc(loginLimiter, auth.Login))
 	mux.HandleFunc("GET /api/v1/auth/public-key", auth.GetPublicKey)
 
-	// Auth routes — требуют авторизацию
-	mux.Handle("POST /api/v1/auth/refresh", RateLimitMiddleware(refreshLimiter)(requireAuth(http.HandlerFunc(auth.RefreshToken))))
+	// Auth routes — refresh публичный (токен проверяется в Auth Service), revoke требует авторизацию
+	mux.HandleFunc("POST /api/v1/auth/refresh", RateLimitHandlerFunc(refreshLimiter, auth.RefreshToken))
 	mux.Handle("POST /api/v1/auth/revoke", rateLimit(requireAuth(http.HandlerFunc(auth.RevokeToken))))
 
 	// User routes

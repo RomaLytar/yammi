@@ -7,3 +7,6 @@
 
 # Claude Code
 .claude/
+
+# Internal guide (not for public repo)
+GUIDE.md

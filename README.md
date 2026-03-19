@@ -441,18 +441,87 @@ Stack: Prometheus + Grafana
 | CI           | GitHub Actions   |
 | Load testing | k6               |
 
+## Локальная инфраструктура
+
+После запуска `docker compose up --build` доступны:
+
+### Приложение
+
+| Компонент          | URL                                      | Описание                          |
+|--------------------|------------------------------------------|-----------------------------------|
+| API Gateway        | http://localhost:8080                     | Основная точка входа (REST API)   |
+| API Health Check   | http://localhost:8080/health              | Проверка статуса API Gateway      |
+| WebSocket Gateway  | ws://localhost:8081/ws                    | Real-time обновления (WIP)        |
+| WS Health Check    | http://localhost:8081/health              | Проверка статуса WS Gateway       |
+
+### Мониторинг
+
+| Компонент   | URL                          | Логин / Пароль    | Описание                              |
+|-------------|------------------------------|-------------------|---------------------------------------|
+| Grafana     | http://localhost:3033        | `admin` / `admin` | Дашборды: NATS JetStream, User Events |
+| Prometheus  | http://localhost:9090        | —                 | Метрики, запросы PromQL               |
+| NATS Monitor| http://localhost:8222        | —                 | Встроенный мониторинг NATS            |
+
+### Базы данных и инфраструктура
+
+| Компонент   | Адрес                        | Креды                | Описание                     |
+|-------------|------------------------------|----------------------|------------------------------|
+| PostgreSQL  | `localhost:5432`             | `yammi` / `yammi`    | 5 БД: yammi_auth, yammi_user, yammi_board, yammi_comment, yammi_notification |
+| Redis       | `localhost:6380`             | —                    | Кеш (Board Service)          |
+| NATS        | `localhost:4222`             | —                    | Event Bus (JetStream)        |
+
+### Grafana дашборды
+
+После первого запуска дашборды подгружаются автоматически через provisioning:
+
+- **NATS JetStream** — состояние стримов, consumer lag, сообщения в секунду
+- **NATS User Deleted** — мониторинг обработки событий UserDeleted
+
+### Полезные ссылки Prometheus
+
+- Все метрики: http://localhost:9090/targets
+- NATS метрики: http://localhost:9090/graph?g0.expr=nats_varz_connections
+
+### DLQ (Dead-Letter Queue) утилита
+
+```bash
+# Просмотр сообщений в DLQ
+docker compose run --rm dlq list
+
+# Переотправка событий из DLQ
+docker compose run --rm dlq replay
+
+# Очистка DLQ
+docker compose run --rm dlq purge
+```
+
+### Postman
+
+Коллекция API Gateway находится в `postman/Yammi_API_Gateway.postman_collection.json`. Импортируйте в Postman для тестирования всех эндпоинтов.
+
+## Статус реализации
+
+| Сервис              | Статус          | Описание                                           |
+|---------------------|-----------------|-----------------------------------------------------|
+| Auth Service        | ✅ Реализован    | JWT (EdDSA), регистрация, логин, refresh/revoke      |
+| User Service        | ✅ Реализован    | Профили, NATS consumer, DLQ monitor                  |
+| API Gateway         | ✅ Реализован    | REST API, JWT verify, rate limiting                  |
+| Board Service       | ⬜ Заглушка      | Только main.go, нет бизнес-логики                    |
+| Comment Service     | ⬜ Заглушка      | Только main.go, нет бизнес-логики                    |
+| Notification Service| ⬜ Заглушка      | Только main.go, нет бизнес-логики                    |
+| WebSocket Gateway   | ⬜ Заглушка      | /health работает, /ws возвращает 501                 |
+
 ## План разработки
 
-1. **Domain + Usecase** — Board aggregate, инварианты, бизнес-логика
-2. **Clean Architecture** — DI, слои, repository interfaces
-3. **gRPC** — proto/v1 файлы, handlers, базовые методы
-4. **Auth Service** — регистрация, логин, JWT (asymmetric keys)
-5. **API Gateway** — routing, JWT verify, rate limiting
-6. **PostgreSQL** — миграции, repository реализация
+1. ~~**Domain + Usecase** — Board aggregate, инварианты, бизнес-логика~~
+2. ~~**Clean Architecture** — DI, слои, repository interfaces~~
+3. ~~**gRPC** — proto/v1 файлы, handlers, базовые методы~~
+4. ~~**Auth Service** — регистрация, логин, JWT (asymmetric keys)~~
+5. ~~**API Gateway** — routing, JWT verify, rate limiting~~
+6. ~~**PostgreSQL** — миграции, repository реализация~~
 7. **Authorization** — roles (owner/member), проверка в usecase
-8. **Event Bus** — NATS/Kafka, формализованные события
+8. ~~**Event Bus** — NATS, формализованные события~~
 9. **Realtime Gateway** — WebSocket, consumer событий
 10. **Redis** — read-through cache для досок
-11. **Тесты** — unit, integration (testcontainers), contract
-12. **Docker + CI** — docker-compose, GitHub Actions, k6
-# yammi
+11. ~~**Тесты** — unit, integration, load (k6)~~
+12. ~~**Docker + CI** — docker-compose, GitHub Actions, k6~~

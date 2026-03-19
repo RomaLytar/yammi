@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,6 +19,9 @@ type User struct {
 func ValidateRegistration(email, password, name string) error {
 	if email == "" {
 		return ErrEmptyEmail
+	}
+	if !strings.Contains(email, "@") {
+		return ErrInvalidEmail
 	}
 	if password == "" {
 		return ErrEmptyPassword

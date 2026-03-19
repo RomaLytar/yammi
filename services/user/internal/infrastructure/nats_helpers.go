@@ -16,7 +16,7 @@ const (
 	jitterFactor = 0.2 // ±20%
 )
 
-func (c *NATSConsumer) sendToDLQ(msg *nats.Msg, originalSubject, errMsg string) {
+func (c *NATSConsumer) sendToDLQ(msg *nats.Msg, originalSubject, consumerName, errMsg string) {
 	numDelivered := uint64(0)
 	if meta, err := msg.Metadata(); err == nil {
 		numDelivered = meta.NumDelivered
@@ -24,7 +24,7 @@ func (c *NATSConsumer) sendToDLQ(msg *nats.Msg, originalSubject, errMsg string) 
 
 	envelope := events.DLQEnvelope{
 		OriginalSubject: originalSubject,
-		ConsumerName:    consumerCreated,
+		ConsumerName:    consumerName,
 		Error:           errMsg,
 		NumDelivered:    numDelivered,
 		Payload:         string(msg.Data),
@@ -51,8 +51,12 @@ func (c *NATSConsumer) sendToDLQ(msg *nats.Msg, originalSubject, errMsg string) 
 }
 
 func backoffDelay(attempt uint64) time.Duration {
+	// Защита от overflow: 1<<63 и больше переполняет int64
+	if attempt > 30 {
+		return maxBackoff + time.Duration(float64(maxBackoff)*jitterFactor*(2*rand.Float64()-1))
+	}
 	delay := time.Duration(1<<attempt) * time.Second
-	if delay > maxBackoff {
+	if delay > maxBackoff || delay <= 0 {
 		delay = maxBackoff
 	}
 	jitter := time.Duration(float64(delay) * jitterFactor * (2*rand.Float64() - 1))

@@ -20,6 +20,7 @@ func testLogin(t *testing.T) {
 
 	state.accessToken = resp.AccessToken
 	state.refreshToken = resp.RefreshToken
+	state.api.SetToken(state.accessToken)
 
 	t.Log("Login successful, new tokens issued")
 }
@@ -38,6 +39,7 @@ func testLoginAfterRevoke(t *testing.T) {
 
 	state.accessToken = resp.AccessToken
 	state.refreshToken = resp.RefreshToken
+	state.api.SetToken(state.accessToken)
 
 	t.Log("Login after revoke successful — account intact")
 }

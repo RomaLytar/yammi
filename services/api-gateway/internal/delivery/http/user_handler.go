@@ -32,14 +32,14 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{
-		"id":         resp.Id,
-		"email":      resp.Email,
-		"name":       resp.Name,
-		"avatar_url": resp.AvatarUrl,
-		"bio":        resp.Bio,
-		"created_at": resp.CreatedAt,
-		"updated_at": resp.UpdatedAt,
+	writeJSON(w, http.StatusOK, profileResponse{
+		ID:        resp.Id,
+		Email:     resp.Email,
+		Name:      resp.Name,
+		AvatarURL: resp.AvatarUrl,
+		Bio:       resp.Bio,
+		CreatedAt: resp.CreatedAt,
+		UpdatedAt: resp.UpdatedAt,
 	})
 }
 
@@ -58,7 +58,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+	writeJSON(w, http.StatusOK, statusResponse{Status: "deleted"})
 }
 
 func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
@@ -89,13 +89,13 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{
-		"id":         resp.Id,
-		"email":      resp.Email,
-		"name":       resp.Name,
-		"avatar_url": resp.AvatarUrl,
-		"bio":        resp.Bio,
-		"created_at": resp.CreatedAt,
-		"updated_at": resp.UpdatedAt,
+	writeJSON(w, http.StatusOK, profileResponse{
+		ID:        resp.Id,
+		Email:     resp.Email,
+		Name:      resp.Name,
+		AvatarURL: resp.AvatarUrl,
+		Bio:       resp.Bio,
+		CreatedAt: resp.CreatedAt,
+		UpdatedAt: resp.UpdatedAt,
 	})
 }

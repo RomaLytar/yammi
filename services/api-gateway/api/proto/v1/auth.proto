@@ -1,3 +1,5 @@
+// Source of truth: services/auth/api/proto/v1/auth.proto
+// Копия для генерации Go-клиента в api-gateway (отдельный Go module).
 syntax = "proto3";
 package auth.v1;
 option go_package = "github.com/romanlovesweed/yammi/services/api-gateway/api/proto/v1;authpb";

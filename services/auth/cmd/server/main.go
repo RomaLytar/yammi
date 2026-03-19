@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/ed25519"
 	"log"
 	"net"
 	"os"
@@ -50,10 +51,23 @@ func main() {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
 
-	// JWT keys
-	privateKey, publicKey, err := infrastructure.GenerateKeyPair()
-	if err != nil {
-		log.Fatalf("failed to generate key pair: %v", err)
+	// JWT keys — если задан JWT_SEED, все реплики получат одинаковую пару ключей
+	var privateKey ed25519.PrivateKey
+	var publicKey ed25519.PublicKey
+	if seed := os.Getenv("JWT_SEED"); seed != "" {
+		priv, pub, err := infrastructure.KeyPairFromSeed(seed)
+		if err != nil {
+			log.Fatalf("failed to load key from JWT_SEED: %v", err)
+		}
+		privateKey, publicKey = priv, pub
+		log.Println("jwt: using shared key from JWT_SEED")
+	} else {
+		priv, pub, err := infrastructure.GenerateKeyPair()
+		if err != nil {
+			log.Fatalf("failed to generate key pair: %v", err)
+		}
+		privateKey, publicKey = priv, pub
+		log.Println("jwt: WARNING — generated ephemeral key pair (not suitable for multiple replicas)")
 	}
 
 	tokenGenerator := infrastructure.NewJWTGenerator(privateKey, publicKey, "yammi-auth", 15*time.Minute)

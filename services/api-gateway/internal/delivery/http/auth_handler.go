@@ -36,10 +36,10 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, map[string]string{
-		"user_id":       resp.UserId,
-		"access_token":  resp.AccessToken,
-		"refresh_token": resp.RefreshToken,
+	writeJSON(w, http.StatusCreated, authResponse{
+		UserID:       resp.UserId,
+		AccessToken:  resp.AccessToken,
+		RefreshToken: resp.RefreshToken,
 	})
 }
 
@@ -62,10 +62,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{
-		"user_id":       resp.UserId,
-		"access_token":  resp.AccessToken,
-		"refresh_token": resp.RefreshToken,
+	writeJSON(w, http.StatusOK, authResponse{
+		UserID:       resp.UserId,
+		AccessToken:  resp.AccessToken,
+		RefreshToken: resp.RefreshToken,
 	})
 }
 
@@ -86,9 +86,9 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{
-		"access_token":  resp.AccessToken,
-		"refresh_token": resp.RefreshToken,
+	writeJSON(w, http.StatusOK, tokenResponse{
+		AccessToken:  resp.AccessToken,
+		RefreshToken: resp.RefreshToken,
 	})
 }
 
@@ -109,7 +109,7 @@ func (h *AuthHandler) RevokeToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{"status": "revoked"})
+	writeJSON(w, http.StatusOK, statusResponse{Status: "revoked"})
 }
 
 func (h *AuthHandler) GetPublicKey(w http.ResponseWriter, r *http.Request) {
@@ -119,9 +119,9 @@ func (h *AuthHandler) GetPublicKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{
-		"public_key_pem": resp.PublicKeyPem,
-		"algorithm":      resp.Algorithm,
+	writeJSON(w, http.StatusOK, publicKeyResponse{
+		PublicKeyPEM: resp.PublicKeyPem,
+		Algorithm:    resp.Algorithm,
 	})
 }
 

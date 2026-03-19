@@ -34,8 +34,11 @@ func main() {
 	}
 	defer clients.Close()
 
+	// JWT verifier (загружает публичный ключ из Auth Service)
+	verifier := infrastructure.NewJWTVerifier(clients.AuthClient)
+
 	// HTTP router
-	router := delivery.NewRouter(clients)
+	router, shutdownLimiters := delivery.NewRouter(clients, verifier)
 
 	server := &http.Server{
 		Addr:    ":" + port,
@@ -54,6 +57,7 @@ func main() {
 	<-quit
 
 	log.Println("api-gateway shutting down")
+	shutdownLimiters()
 	clients.Close()
 	server.Close()
 }

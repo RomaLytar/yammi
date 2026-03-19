@@ -113,8 +113,9 @@ func mapDomainError(err error) error {
 		return status.Error(codes.Unauthenticated, err.Error())
 	case errors.Is(err, domain.ErrTokenRevoked), errors.Is(err, domain.ErrTokenExpired):
 		return status.Error(codes.Unauthenticated, err.Error())
-	case errors.Is(err, domain.ErrEmptyEmail), errors.Is(err, domain.ErrEmptyPassword),
-		errors.Is(err, domain.ErrEmptyName), errors.Is(err, domain.ErrWeakPassword):
+	case errors.Is(err, domain.ErrEmptyEmail), errors.Is(err, domain.ErrInvalidEmail),
+		errors.Is(err, domain.ErrEmptyPassword), errors.Is(err, domain.ErrEmptyName),
+		errors.Is(err, domain.ErrWeakPassword):
 		return status.Error(codes.InvalidArgument, err.Error())
 	default:
 		return status.Error(codes.Internal, "internal error")

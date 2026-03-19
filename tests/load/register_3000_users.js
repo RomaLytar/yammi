@@ -8,14 +8,22 @@ const profileCreated = new Counter('profile_created');
 const profileNotReady = new Counter('profile_not_ready_yet');
 const profileLatency = new Trend('profile_creation_latency_ms');
 
-// 3000 юзеров регистрируются одновременно
+// 3000 юзеров с плавным разгоном (ramping-arrival-rate)
+// ~175 + ~825 + ~1400 + ~375 ≈ 2800–3200 регистраций за 1 минуту
 export const options = {
   scenarios: {
     mass_registration: {
-      executor: 'shared-iterations',
-      vus: 200,           // 100 параллельных VU
-      iterations: 3000,   // всего 3000 регистраций
-      maxDuration: '1m',
+      executor: 'ramping-arrival-rate',
+      startRate: 5,
+      timeUnit: '1s',
+      preAllocatedVUs: 200,
+      maxVUs: 300,
+      stages: [
+        { duration: '10s', target: 35 },   // мягкий разгон
+        { duration: '15s', target: 75 },   // наращиваем темп
+        { duration: '25s', target: 75 },   // держим пиковую нагрузку
+        { duration: '10s', target: 5 },    // плавное снижение
+      ],
     },
   },
   thresholds: {
@@ -56,7 +64,10 @@ export default function () {
     return;
   }
 
-  const userId = JSON.parse(registerRes.body).user_id;
+  const regBody = JSON.parse(registerRes.body);
+  const userId = regBody.user_id;
+  const accessToken = regBody.access_token;
+  const authHeaders = { headers: { 'Authorization': `Bearer ${accessToken}` } };
 
   // 2. Ждём пока NATS доставит событие и User Service создаст профиль
   //    Пробуем несколько раз с небольшой задержкой
@@ -66,7 +77,7 @@ export default function () {
   for (let attempt = 0; attempt < 10; attempt++) {
     sleep(0.3); // 300ms между попытками
 
-    const profileRes = http.get(`${BASE_URL}/api/v1/users/${userId}`);
+    const profileRes = http.get(`${BASE_URL}/api/v1/users/${userId}`, authHeaders);
 
     if (profileRes.status === 200) {
       const profile = JSON.parse(profileRes.body);
@@ -90,10 +101,10 @@ export default function () {
 }
 
 export function handleSummary(data) {
-  const total = 3000;
   const created = data.metrics.profile_created ? data.metrics.profile_created.values.count : 0;
   const notReady = data.metrics.profile_not_ready_yet ? data.metrics.profile_not_ready_yet.values.count : 0;
   const errors = data.metrics.registration_errors ? data.metrics.registration_errors.values.count : 0;
+  const total = created + notReady + errors;
   const p95 = data.metrics.profile_creation_latency_ms
     ? data.metrics.profile_creation_latency_ms.values['p(95)'].toFixed(0)
     : 'N/A';

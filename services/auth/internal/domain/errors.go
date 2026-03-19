@@ -4,6 +4,7 @@ import "errors"
 
 var (
 	ErrEmptyEmail      = errors.New("email is required")
+	ErrInvalidEmail    = errors.New("invalid email format")
 	ErrEmptyPassword   = errors.New("password is required")
 	ErrWeakPassword    = errors.New("password must be at least 8 characters")
 	ErrEmptyName       = errors.New("name is required")

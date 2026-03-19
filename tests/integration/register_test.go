@@ -17,6 +17,7 @@ func testRegister(t *testing.T) {
 	state.userID = resp.UserID
 	state.accessToken = resp.AccessToken
 	state.refreshToken = resp.RefreshToken
+	state.api.SetToken(state.accessToken)
 
 	t.Logf("Registered user %s (%s)", state.userID, state.email)
 }

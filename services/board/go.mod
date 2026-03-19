@@ -1,3 +1,3 @@
 module github.com/romanlovesweed/yammi/services/board
 
-go 1.23
+go 1.24

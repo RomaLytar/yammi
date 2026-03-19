@@ -40,11 +40,14 @@ func testRefreshTokenRotation(t *testing.T) {
 	requireNotEmpty(t, "new access_token", resp.AccessToken)
 	requireNotEmpty(t, "new refresh_token", resp.RefreshToken)
 
-	requireNotEqual(t, "access_token rotated", resp.AccessToken, oldAccess)
+	// refresh_token всегда UUID — гарантированно новый
 	requireNotEqual(t, "refresh_token rotated", resp.RefreshToken, oldRefresh)
+	// access_token может совпасть если выдан в ту же секунду (детерминированный EdDSA)
+	_ = oldAccess
 
 	state.accessToken = resp.AccessToken
 	state.refreshToken = resp.RefreshToken
+	state.api.SetToken(state.accessToken)
 
 	// Old refresh token must be invalid
 	_, code, _ = state.api.RefreshToken(oldRefresh)
@@ -98,6 +101,7 @@ func testDoubleRefreshReplay(t *testing.T) {
 	// Fresh login to get a clean token
 	resp, code, _ := state.api.Login(state.email, state.password)
 	requireStatus(t, "Login for double refresh", code, 200)
+	state.api.SetToken(resp.AccessToken)
 
 	// First refresh — should succeed
 	newResp, code, _ := state.api.RefreshToken(resp.RefreshToken)
@@ -111,6 +115,7 @@ func testDoubleRefreshReplay(t *testing.T) {
 
 	state.accessToken = newResp.AccessToken
 	state.refreshToken = newResp.RefreshToken
+	state.api.SetToken(state.accessToken)
 
 	t.Logf("Double refresh replay rejected (HTTP %d)", code)
 }

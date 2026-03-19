@@ -82,7 +82,9 @@ export default function () {
   regSuccess.add(1);
   errorRate.add(0);
 
-  const userId = JSON.parse(res.body).user_id;
+  const resBody = JSON.parse(res.body);
+  const userId = resBody.user_id;
+  const accessToken = resBody.access_token;
 
   // === ПРОВЕРКА ПРОФИЛЯ ===
   // Одна попытка после паузы (не DDoS-polling)
@@ -90,6 +92,7 @@ export default function () {
   sleep(3);
 
   const profileRes = http.get(`${BASE_URL}/api/v1/users/${userId}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
     tags: { type: 'get_profile' },
   });
 
@@ -100,6 +103,7 @@ export default function () {
     // Вторая попытка через 5 секунд
     sleep(5);
     const retry = http.get(`${BASE_URL}/api/v1/users/${userId}`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
       tags: { type: 'get_profile' },
     });
     if (retry.status === 200) {
@@ -121,15 +125,20 @@ export function handleSummary(data) {
   const profiles = data.metrics.profile_created ? data.metrics.profile_created.values.count : 0;
   const notReady = data.metrics.profile_not_ready ? data.metrics.profile_not_ready.values.count : 0;
 
-  const regP50 = data.metrics.reg_latency_ms ? data.metrics.reg_latency_ms.values['p(50)'].toFixed(0) : '-';
-  const regP95 = data.metrics.reg_latency_ms ? data.metrics.reg_latency_ms.values['p(95)'].toFixed(0) : '-';
-  const regP99 = data.metrics.reg_latency_ms ? data.metrics.reg_latency_ms.values['p(99)'].toFixed(0) : '-';
-  const regMax = data.metrics.reg_latency_ms ? data.metrics.reg_latency_ms.values['max'].toFixed(0) : '-';
+  const safe = (metric, key) => {
+    if (!metric || !metric.values) return '-';
+    const val = metric.values[key];
+    if (val == null) return '-';
+    return val.toFixed(0);
+  };
 
-  const profP50 = data.metrics.profile_latency_ms && data.metrics.profile_latency_ms.values['p(50)'] != null
-    ? data.metrics.profile_latency_ms.values['p(50)'].toFixed(0) : '-';
-  const profP95 = data.metrics.profile_latency_ms && data.metrics.profile_latency_ms.values['p(95)'] != null
-    ? data.metrics.profile_latency_ms.values['p(95)'].toFixed(0) : '-';
+  const regMed = safe(data.metrics.reg_latency_ms, 'med');
+  const regP90 = safe(data.metrics.reg_latency_ms, 'p(90)');
+  const regP95 = safe(data.metrics.reg_latency_ms, 'p(95)');
+  const regMax = safe(data.metrics.reg_latency_ms, 'max');
+
+  const profMed = safe(data.metrics.profile_latency_ms, 'med');
+  const profP95 = safe(data.metrics.profile_latency_ms, 'p(95)');
 
   const httpReqs = data.metrics.http_reqs ? data.metrics.http_reqs.values.count : 0;
   const httpFailed = data.metrics.http_req_failed ? (data.metrics.http_req_failed.values.rate * 100).toFixed(2) : '0';
@@ -144,16 +153,16 @@ export function handleSummary(data) {
 ║  Попыток:              ${String(total).padStart(7)}                           ║
 ║  Успешных (201):       ${String(success).padStart(7)}                           ║
 ║  Ошибок:               ${String(errors).padStart(7)}  (${(errors/Math.max(total,1)*100).toFixed(1)}%)                  ║
-║  Latency p50:        ${regP50.padStart(7)} ms                          ║
+║  Latency med:        ${regMed.padStart(7)} ms                          ║
+║  Latency p90:        ${regP90.padStart(7)} ms                          ║
 ║  Latency p95:        ${regP95.padStart(7)} ms                          ║
-║  Latency p99:        ${regP99.padStart(7)} ms                          ║
 ║  Latency max:        ${regMax.padStart(7)} ms                          ║
 ║                                                            ║
 ║  NATS EVENT → PROFILE                                      ║
 ║  ──────────────────────────────────────────────            ║
 ║  Профилей создано:     ${String(profiles).padStart(7)}  / ${success}                    ║
 ║  Не дождались:         ${String(notReady).padStart(7)}                           ║
-║  Profile latency p50:${profP50.padStart(7)} ms                          ║
+║  Profile latency med:${profMed.padStart(7)} ms                          ║
 ║  Profile latency p95:${profP95.padStart(7)} ms                          ║
 ║                                                            ║
 ║  HTTP OVERVIEW                                             ║

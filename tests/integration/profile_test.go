@@ -70,15 +70,17 @@ func testUpdateProfileEmptyName(t *testing.T) {
 }
 
 func testUpdateProfileNonExistent(t *testing.T) {
+	// OwnerOnly middleware отклонит — чужой ID ≠ token.user_id → 403
 	_, code, _ := state.api.UpdateProfile("00000000-0000-0000-0000-000000000000", "Ghost", "", "")
-	requireStatus(t, "UpdateProfile non-existent", code, 404)
+	requireStatus(t, "UpdateProfile non-existent (forbidden)", code, 403)
 
-	t.Log("Update non-existent profile returns HTTP 404")
+	t.Log("Update non-existent profile returns HTTP 403 (owner check first)")
 }
 
 func testDeleteNonExistentUser(t *testing.T) {
+	// OwnerOnly middleware отклонит — чужой ID ≠ token.user_id → 403
 	code, _ := state.api.DeleteUser("00000000-0000-0000-0000-000000000000")
-	requireStatus(t, "Delete non-existent user", code, 404)
+	requireStatus(t, "Delete non-existent user (forbidden)", code, 403)
 
-	t.Log("Delete non-existent user returns HTTP 404")
+	t.Log("Delete non-existent user returns HTTP 403 (owner check first)")
 }

@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"crypto/ed25519"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"time"
@@ -63,5 +64,20 @@ func GenerateKeyPair() (ed25519.PrivateKey, ed25519.PublicKey, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("generate ed25519 key pair: %w", err)
 	}
+	return priv, pub, nil
+}
+
+// KeyPairFromSeed восстанавливает детерминированную пару ключей из base64-encoded seed (32 bytes).
+// Все реплики с одинаковым seed получат одинаковые ключи.
+func KeyPairFromSeed(seedB64 string) (ed25519.PrivateKey, ed25519.PublicKey, error) {
+	seed, err := base64.StdEncoding.DecodeString(seedB64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("decode JWT_SEED: %w", err)
+	}
+	if len(seed) != ed25519.SeedSize {
+		return nil, nil, fmt.Errorf("JWT_SEED must be %d bytes, got %d", ed25519.SeedSize, len(seed))
+	}
+	priv := ed25519.NewKeyFromSeed(seed)
+	pub := priv.Public().(ed25519.PublicKey)
 	return priv, pub, nil
 }

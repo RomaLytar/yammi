@@ -67,18 +67,29 @@ func TestUserLifecycle(t *testing.T) {
 	t.Run("15_Profile_UpdateNonExistent", testUpdateProfileNonExistent)
 	t.Run("16_Profile_DeleteNonExistent", testDeleteNonExistentUser)
 
+	// --- Auth middleware (401 / 403) ---
+	t.Run("17_Auth_GetProfileNoToken", testGetProfileNoToken)
+	t.Run("18_Auth_UpdateProfileNoToken", testUpdateProfileNoToken)
+	t.Run("19_Auth_DeleteUserNoToken", testDeleteUserNoToken)
+	t.Run("20_Auth_RefreshNoToken", testRefreshNoToken)
+	t.Run("21_Auth_RevokeNoToken", testRevokeNoToken)
+	t.Run("22_Auth_UpdateProfileForbidden", testUpdateProfileForbidden)
+	t.Run("23_Auth_DeleteUserForbidden", testDeleteUserForbidden)
+	t.Run("24_Auth_ViewOtherProfileAllowed", testViewOtherProfileAllowed)
+	t.Run("25_Auth_InvalidToken", testGetProfileInvalidToken)
+
 	// --- Tokens ---
-	t.Run("17_Token_Revoke_RefreshFails", testRevokeToken)
-	t.Run("18_Token_LoginAfterRevoke", testLoginAfterRevoke)
-	t.Run("19_Token_Rotation", testRefreshTokenRotation)
-	t.Run("20_Token_RefreshInvalid", testRefreshWithInvalidToken)
-	t.Run("21_Token_RefreshEmpty", testRefreshWithEmptyToken)
-	t.Run("22_Token_RevokeAlreadyRevoked", testRevokeAlreadyRevoked)
-	t.Run("23_Token_DoubleRefreshReplay", testDoubleRefreshReplay)
+	t.Run("26_Token_Revoke_RefreshFails", testRevokeToken)
+	t.Run("27_Token_LoginAfterRevoke", testLoginAfterRevoke)
+	t.Run("28_Token_Rotation", testRefreshTokenRotation)
+	t.Run("29_Token_RefreshInvalid", testRefreshWithInvalidToken)
+	t.Run("30_Token_RefreshEmpty", testRefreshWithEmptyToken)
+	t.Run("31_Token_RevokeAlreadyRevoked", testRevokeAlreadyRevoked)
+	t.Run("32_Token_DoubleRefreshReplay", testDoubleRefreshReplay)
 
 	// --- Deletion & cleanup ---
-	t.Run("24_Delete_User", testDeleteUser)
-	t.Run("25_Delete_LoginFails", testLoginAfterDelete)
-	t.Run("26_Delete_ProfileGoneViaNATS", testProfileGoneAfterDelete)
-	t.Run("27_Delete_ReRegisterSameEmail", testReRegisterSameEmail)
+	t.Run("33_Delete_User", testDeleteUser)
+	t.Run("34_Delete_LoginFails", testLoginAfterDelete)
+	t.Run("35_Delete_ProfileGoneViaNATS", testProfileGoneAfterDelete)
+	t.Run("36_Delete_ReRegisterSameEmail", testReRegisterSameEmail)
 }

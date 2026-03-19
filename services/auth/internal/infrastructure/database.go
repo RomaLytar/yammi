@@ -17,8 +17,8 @@ func NewPostgresDB(databaseURL string) (*sql.DB, error) {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
 
-	db.SetMaxOpenConns(100)
-	db.SetMaxIdleConns(20)
+	db.SetMaxOpenConns(20)
+	db.SetMaxIdleConns(10)
 
 	return db, nil
 }

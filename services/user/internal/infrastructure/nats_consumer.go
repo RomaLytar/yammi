@@ -15,6 +15,11 @@ import (
 	"github.com/romanlovesweed/yammi/services/user/internal/usecase"
 )
 
+// Consumer versioning: инкремент версии при изменении логики обработки событий.
+// v4 — текущая стабильная версия (создание профиля с idempotency + DLQ).
+// v1 — первая версия (удаление профиля).
+// NATS создаёт отдельный durable consumer для каждой версии,
+// старые consumers остаются в JetStream до ручной очистки.
 const (
 	consumerCreated = "user-service-user-created-v4"
 	consumerDeleted = "user-service-user-deleted-v1"
@@ -41,13 +46,13 @@ func NewNATSConsumer(natsURL string, uc *usecase.UserUseCase) (*NATSConsumer, er
 		return nil, fmt.Errorf("get jetstream context: %w", err)
 	}
 
-	// Ensure USERS stream
+	// Ensure USERS stream (может уже существовать — другая реплика создала)
 	_, err = js.AddStream(&nats.StreamConfig{
 		Name:     events.StreamUsers,
 		Subjects: []string{"user.>"},
 		MaxAge:   7 * 24 * time.Hour,
 	})
-	if err != nil {
+	if err != nil && !isStreamAlreadyExists(err) {
 		nc.Close()
 		return nil, fmt.Errorf("ensure users stream: %w", err)
 	}
@@ -58,7 +63,7 @@ func NewNATSConsumer(natsURL string, uc *usecase.UserUseCase) (*NATSConsumer, er
 		Subjects: []string{"dlq.>"},
 		MaxAge:   30 * 24 * time.Hour,
 	})
-	if err != nil {
+	if err != nil && !isStreamAlreadyExists(err) {
 		nc.Close()
 		return nil, fmt.Errorf("ensure dlq stream: %w", err)
 	}
@@ -92,7 +97,7 @@ func (c *NATSConsumer) subscribeUserCreated() error {
 		var event events.UserCreated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message, sending to DLQ: %v", err)
-			c.sendToDLQ(msg, events.SubjectUserCreated, err.Error())
+			c.sendToDLQ(msg, events.SubjectUserCreated, consumerCreated, err.Error())
 			return
 		}
 
@@ -110,7 +115,7 @@ func (c *NATSConsumer) subscribeUserCreated() error {
 			if numDelivered >= maxDeliveries {
 				log.Printf("max retries (%d) exhausted for user %s, sending to DLQ: %v",
 					maxDeliveries, event.UserID, err)
-				c.sendToDLQ(msg, events.SubjectUserCreated, err.Error())
+				c.sendToDLQ(msg, events.SubjectUserCreated, consumerCreated, err.Error())
 				return
 			}
 
@@ -146,7 +151,7 @@ func (c *NATSConsumer) subscribeUserDeleted() error {
 		var event events.UserDeleted
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on user.deleted, sending to DLQ: %v", err)
-			c.sendToDLQ(msg, events.SubjectUserDeleted, err.Error())
+			c.sendToDLQ(msg, events.SubjectUserDeleted, consumerDeleted, err.Error())
 			return
 		}
 
@@ -176,4 +181,8 @@ func (c *NATSConsumer) subscribeUserDeleted() error {
 
 	log.Printf("consumer started: %s", consumerDeleted)
 	return nil
+}
+
+func isStreamAlreadyExists(err error) bool {
+	return err != nil && err.Error() == "stream name already in use"
 }

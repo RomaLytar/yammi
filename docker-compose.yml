@@ -83,6 +83,7 @@ services:
       DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_auth?sslmode=disable"
       NATS_URL: "nats://nats:4222"
       BCRYPT_COST: "8"
+      JWT_SEED: "QLVciZ5Cbj3PYXfT2U5Y7DTx+30XaoNBcW4zR4i5y/w="
     deploy:
       replicas: 5
     depends_on:
@@ -168,6 +169,10 @@ services:
       USER_GRPC_ADDR: "user:50052"
       BOARD_GRPC_ADDR: "board:50053"
       COMMENT_GRPC_ADDR: "comment:50054"
+      RATE_LIMIT_REGISTER: "${RATE_LIMIT_REGISTER:-50}"
+      RATE_LIMIT_LOGIN: "${RATE_LIMIT_LOGIN:-50}"
+      RATE_LIMIT_REFRESH: "${RATE_LIMIT_REFRESH:-50}"
+      RATE_LIMIT_DEFAULT: "${RATE_LIMIT_DEFAULT:-50}"
     ports:
       - "8080:8080"
     depends_on:

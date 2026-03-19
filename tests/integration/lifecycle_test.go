@@ -61,7 +61,8 @@ func testReRegisterSameEmail(t *testing.T) {
 	requireNotEmpty(t, "new user_id", resp.UserID)
 	requireNotEqual(t, "user_id differs from original", resp.UserID, state.userID)
 
-	// Cleanup: delete the re-registered user
+	// Cleanup: delete the re-registered user (нужен его собственный токен)
+	state.api.SetToken(resp.AccessToken)
 	state.api.DeleteUser(resp.UserID)
 
 	t.Logf("Same email re-registered (new user_id=%s) — full cleanup confirmed", resp.UserID)

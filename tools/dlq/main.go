@@ -20,13 +20,14 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
+// DLQEnvelope — копия pkg/events.DLQEnvelope (tools/dlq — отдельный Go module).
 type DLQEnvelope struct {
-	OriginalSubject string          `json:"original_subject"`
-	ConsumerName    string          `json:"consumer_name"`
-	Error           string          `json:"error"`
-	NumDelivered    uint64          `json:"num_delivered"`
-	Payload         string          `json:"payload"`
-	FailedAt        time.Time       `json:"failed_at"`
+	OriginalSubject string    `json:"original_subject"`
+	ConsumerName    string    `json:"consumer_name"`
+	Error           string    `json:"error"`
+	NumDelivered    uint64    `json:"num_delivered"`
+	Payload         string    `json:"payload"`
+	FailedAt        time.Time `json:"failed_at"`
 }
 
 func main() {

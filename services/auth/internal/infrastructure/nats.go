@@ -35,7 +35,8 @@ func NewNATSPublisher(natsURL string) (*NATSPublisher, error) {
 		Subjects: []string{"user.>"},
 		MaxAge:   7 * 24 * time.Hour,
 	})
-	if err != nil {
+	// Стрим может уже существовать (другая реплика создала) — это нормально
+	if err != nil && !isStreamAlreadyExists(err) {
 		nc.Close()
 		return nil, fmt.Errorf("ensure stream: %w", err)
 	}
@@ -90,4 +91,8 @@ func (p *NATSPublisher) PublishUserDeleted(ctx context.Context, userID string) e
 
 func (p *NATSPublisher) Close() {
 	p.nc.Close()
+}
+
+func isStreamAlreadyExists(err error) bool {
+	return err != nil && err.Error() == "stream name already in use"
 }

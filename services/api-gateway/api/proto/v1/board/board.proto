@@ -1,0 +1,296 @@
+// Source of truth: services/board/api/proto/v1/board.proto
+// Копия для генерации Go-клиента в api-gateway (отдельный Go module).
+syntax = "proto3";
+
+package board.v1;
+option go_package = "github.com/romanlovesweed/yammi/services/api-gateway/api/proto/v1/board;boardpb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service BoardService {
+  // Board operations
+  rpc CreateBoard(CreateBoardRequest) returns (CreateBoardResponse);
+  rpc GetBoard(GetBoardRequest) returns (GetBoardResponse);
+  rpc ListBoards(ListBoardsRequest) returns (ListBoardsResponse);
+  rpc UpdateBoard(UpdateBoardRequest) returns (UpdateBoardResponse);
+  rpc DeleteBoard(DeleteBoardRequest) returns (google.protobuf.Empty);
+
+  // Column operations
+  rpc AddColumn(AddColumnRequest) returns (AddColumnResponse);
+  rpc GetColumns(GetColumnsRequest) returns (GetColumnsResponse);
+  rpc UpdateColumn(UpdateColumnRequest) returns (UpdateColumnResponse);
+  rpc DeleteColumn(DeleteColumnRequest) returns (google.protobuf.Empty);
+  rpc ReorderColumns(ReorderColumnsRequest) returns (ReorderColumnsResponse);
+
+  // Card operations
+  rpc CreateCard(CreateCardRequest) returns (CreateCardResponse);
+  rpc GetCard(GetCardRequest) returns (GetCardResponse);
+  rpc GetCards(GetCardsRequest) returns (GetCardsResponse);
+  rpc UpdateCard(UpdateCardRequest) returns (UpdateCardResponse);
+  rpc MoveCard(MoveCardRequest) returns (MoveCardResponse);
+  rpc DeleteCard(DeleteCardRequest) returns (google.protobuf.Empty);
+
+  // Member operations
+  rpc AddMember(AddMemberRequest) returns (AddMemberResponse);
+  rpc RemoveMember(RemoveMemberRequest) returns (google.protobuf.Empty);
+  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
+}
+
+// ============================================================================
+// Board Messages
+// ============================================================================
+
+message CreateBoardRequest {
+  string title = 1;
+  string description = 2;
+  string owner_id = 3;
+}
+
+message CreateBoardResponse {
+  Board board = 1;
+}
+
+message GetBoardRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message GetBoardResponse {
+  Board board = 1;
+  repeated Column columns = 2;
+  repeated BoardMember members = 3;
+}
+
+message ListBoardsRequest {
+  string user_id = 1;
+  int32 limit = 2;
+  string cursor = 3;  // cursor-based pagination (created_at_id)
+}
+
+message ListBoardsResponse {
+  repeated Board boards = 1;
+  string next_cursor = 2;  // cursor для следующей страницы
+}
+
+message UpdateBoardRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string title = 3;
+  string description = 4;
+  int32 version = 5;
+}
+
+message UpdateBoardResponse {
+  Board board = 1;
+}
+
+message DeleteBoardRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+// ============================================================================
+// Column Messages
+// ============================================================================
+
+message AddColumnRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string title = 3;
+  int32 position = 4;
+}
+
+message AddColumnResponse {
+  Column column = 1;
+}
+
+message GetColumnsRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message GetColumnsResponse {
+  repeated Column columns = 1;
+}
+
+message UpdateColumnRequest {
+  string column_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string title = 4;
+  int32 version = 5;
+}
+
+message UpdateColumnResponse {
+  Column column = 1;
+}
+
+message DeleteColumnRequest {
+  string column_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message ReorderColumnsRequest {
+  string board_id = 1;
+  string user_id = 2;
+  repeated ColumnPosition positions = 3;
+  int32 version = 4;
+}
+
+message ColumnPosition {
+  string column_id = 1;
+  int32 position = 2;
+}
+
+message ReorderColumnsResponse {
+  repeated Column columns = 1;
+}
+
+// ============================================================================
+// Card Messages
+// ============================================================================
+
+message CreateCardRequest {
+  string column_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string title = 4;
+  string description = 5;
+  string position = 6;  // lexorank position (string, не int!)
+}
+
+message CreateCardResponse {
+  Card card = 1;
+}
+
+message GetCardRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetCardResponse {
+  Card card = 1;
+}
+
+message GetCardsRequest {
+  string column_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetCardsResponse {
+  repeated Card cards = 1;
+}
+
+message UpdateCardRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string title = 4;
+  string description = 5;
+  string assignee_id = 6;
+  int32 version = 7;
+}
+
+message UpdateCardResponse {
+  Card card = 1;
+}
+
+message MoveCardRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string from_column_id = 3;
+  string to_column_id = 4;
+  string position = 5;  // lexorank position (string, не int!)
+  string user_id = 6;
+  int32 version = 7;
+}
+
+message MoveCardResponse {
+  Card card = 1;
+  repeated Card cards_in_column = 2;
+}
+
+message DeleteCardRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string column_id = 3;
+  string user_id = 4;
+}
+
+// ============================================================================
+// Member Messages
+// ============================================================================
+
+message AddMemberRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string member_user_id = 3;
+  string role = 4;
+}
+
+message AddMemberResponse {
+  BoardMember member = 1;
+}
+
+message RemoveMemberRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string member_user_id = 3;
+}
+
+message ListMembersRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message ListMembersResponse {
+  repeated BoardMember members = 1;
+}
+
+// ============================================================================
+// Domain Models
+// ============================================================================
+
+message Board {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string owner_id = 4;
+  int32 version = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message Column {
+  string id = 1;
+  string board_id = 2;
+  string title = 3;
+  int32 position = 4;
+  int32 version = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message Card {
+  string id = 1;
+  string column_id = 2;
+  string board_id = 3;
+  string title = 4;
+  string description = 5;
+  string position = 6;  // lexorank position (string: "a", "am", "b", ...)
+  string assignee_id = 7;
+  int32 version = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message BoardMember {
+  string user_id = 1;
+  string role = 2;
+  int32 version = 3;
+  google.protobuf.Timestamp joined_at = 4;
+}

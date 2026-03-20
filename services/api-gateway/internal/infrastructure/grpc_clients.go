@@ -10,15 +10,18 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 
-	authpb "github.com/romanlovesweed/yammi/services/api-gateway/api/proto/v1"
-	userpb "github.com/romanlovesweed/yammi/services/api-gateway/api/proto/v1/user"
+	authpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1"
+	boardpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board"
+	userpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/user"
 )
 
 type GRPCClients struct {
-	authConn   *grpc.ClientConn
-	AuthClient authpb.AuthServiceClient
-	userConn   *grpc.ClientConn
-	UserClient userpb.UserServiceClient
+	authConn    *grpc.ClientConn
+	AuthClient  authpb.AuthServiceClient
+	userConn    *grpc.ClientConn
+	UserClient  userpb.UserServiceClient
+	boardConn   *grpc.ClientConn
+	BoardClient boardpb.BoardServiceClient
 }
 
 var defaultDialOpts = []grpc.DialOption{
@@ -35,7 +38,7 @@ var defaultDialOpts = []grpc.DialOption{
 	}),
 }
 
-func NewGRPCClients(authAddr, userAddr string) (*GRPCClients, error) {
+func NewGRPCClients(authAddr, userAddr, boardAddr string) (*GRPCClients, error) {
 	authConn, err := grpc.NewClient("dns:///"+authAddr, defaultDialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to auth service: %w", err)
@@ -49,11 +52,21 @@ func NewGRPCClients(authAddr, userAddr string) (*GRPCClients, error) {
 	}
 	log.Printf("connected to user service at %s", userAddr)
 
+	boardConn, err := grpc.NewClient("dns:///"+boardAddr, defaultDialOpts...)
+	if err != nil {
+		authConn.Close()
+		userConn.Close()
+		return nil, fmt.Errorf("failed to connect to board service: %w", err)
+	}
+	log.Printf("connected to board service at %s", boardAddr)
+
 	return &GRPCClients{
-		authConn:   authConn,
-		AuthClient: authpb.NewAuthServiceClient(authConn),
-		userConn:   userConn,
-		UserClient: userpb.NewUserServiceClient(userConn),
+		authConn:    authConn,
+		AuthClient:  authpb.NewAuthServiceClient(authConn),
+		userConn:    userConn,
+		UserClient:  userpb.NewUserServiceClient(userConn),
+		boardConn:   boardConn,
+		BoardClient: boardpb.NewBoardServiceClient(boardConn),
 	}, nil
 }
 
@@ -63,5 +76,8 @@ func (c *GRPCClients) Close() {
 	}
 	if c.userConn != nil {
 		c.userConn.Close()
+	}
+	if c.boardConn != nil {
+		c.boardConn.Close()
 	}
 }

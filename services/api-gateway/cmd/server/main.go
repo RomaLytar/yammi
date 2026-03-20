@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	delivery "github.com/romanlovesweed/yammi/services/api-gateway/internal/delivery/http"
-	"github.com/romanlovesweed/yammi/services/api-gateway/internal/infrastructure"
+	delivery "github.com/RomaLytar/yammi/services/api-gateway/internal/delivery/http"
+	"github.com/RomaLytar/yammi/services/api-gateway/internal/infrastructure"
 )
 
 func main() {
@@ -27,8 +27,13 @@ func main() {
 		userAddr = "localhost:50052"
 	}
 
+	boardAddr := os.Getenv("BOARD_GRPC_ADDR")
+	if boardAddr == "" {
+		boardAddr = "localhost:50053"
+	}
+
 	// gRPC clients
-	clients, err := infrastructure.NewGRPCClients(authAddr, userAddr)
+	clients, err := infrastructure.NewGRPCClients(authAddr, userAddr, boardAddr)
 	if err != nil {
 		log.Fatalf("failed to create grpc clients: %v", err)
 	}

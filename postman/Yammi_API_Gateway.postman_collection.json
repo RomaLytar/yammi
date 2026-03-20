@@ -25,6 +25,31 @@
 			"key": "user_id",
 			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "board_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "column_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "column_id_2",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "card_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "other_user_id",
+			"value": "",
+			"type": "string"
 		}
 	],
 	"item": [
@@ -243,6 +268,1082 @@
 				}
 			],
 			"description": "Эндпоинты управления профилем пользователя."
+		},
+		{
+			"name": "Board Service",
+			"item": [
+				{
+					"name": "Board Operations",
+					"item": [
+						{
+							"name": "Create Board",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var json = pm.response.json();",
+											"    pm.collectionVariables.set('board_id', json.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"My First Board\",\n  \"description\": \"Task management\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "boards"]
+								},
+								"description": "Создать новую доску.\n\nboard_id автоматически сохраняется в переменные коллекции."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"title\": \"My First Board\",\n  \"description\": \"Task management\"\n}"
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/boards",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "boards"]
+										}
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"id\": \"01234567-89ab-cdef-0123-456789abcdef\",\n  \"title\": \"My First Board\",\n  \"description\": \"Task management\",\n  \"owner_id\": \"user-uuid\",\n  \"version\": 1,\n  \"created_at\": \"2026-03-20T10:00:00Z\",\n  \"updated_at\": \"2026-03-20T10:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Board",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "boards", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Получить доску по ID.\n\nВозвращает доску с колонками и участниками."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/boards/:id",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "boards", ":id"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{board_id}}"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"id\": \"01234567-89ab-cdef-0123-456789abcdef\",\n  \"title\": \"My First Board\",\n  \"description\": \"Task management\",\n  \"owner_id\": \"user-uuid\",\n  \"version\": 1,\n  \"columns\": [\n    {\n      \"id\": \"column-uuid-1\",\n      \"title\": \"To Do\",\n      \"position\": 0\n    }\n  ],\n  \"members\": [\n    {\n      \"user_id\": \"user-uuid\",\n      \"role\": \"owner\"\n    }\n  ],\n  \"created_at\": \"2026-03-20T10:00:00Z\",\n  \"updated_at\": \"2026-03-20T10:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "List Boards",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards?limit=20&cursor=",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "boards"],
+									"query": [
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "cursor",
+											"value": ""
+										}
+									]
+								},
+								"description": "Получить список досок текущего пользователя.\n\nПоддерживает пагинацию через cursor."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/boards?limit=20&cursor=",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "boards"],
+											"query": [
+												{
+													"key": "limit",
+													"value": "20"
+												},
+												{
+													"key": "cursor",
+													"value": ""
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"boards\": [\n    {\n      \"id\": \"board-uuid-1\",\n      \"title\": \"My First Board\",\n      \"description\": \"Task management\",\n      \"owner_id\": \"user-uuid\",\n      \"version\": 1,\n      \"created_at\": \"2026-03-20T10:00:00Z\",\n      \"updated_at\": \"2026-03-20T10:00:00Z\"\n    }\n  ],\n  \"next_cursor\": \"\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Board",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Updated Title\",\n  \"description\": \"New description\",\n  \"version\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "boards", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Обновить доску (title, description).\n\nТребуется version для optimistic locking."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"title\": \"Updated Title\",\n  \"description\": \"New description\",\n  \"version\": 1\n}"
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/boards/:id",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "boards", ":id"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{board_id}}"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"id\": \"01234567-89ab-cdef-0123-456789abcdef\",\n  \"title\": \"Updated Title\",\n  \"description\": \"New description\",\n  \"owner_id\": \"user-uuid\",\n  \"version\": 2,\n  \"created_at\": \"2026-03-20T10:00:00Z\",\n  \"updated_at\": \"2026-03-20T10:05:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Delete Board",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "boards", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Удалить доску.\n\nТолько владелец может удалить доску."
+							},
+							"response": []
+						}
+					],
+					"description": "Управление досками."
+				},
+				{
+					"name": "Column Operations",
+					"item": [
+						{
+							"name": "Add Column",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var json = pm.response.json();",
+											"    pm.collectionVariables.set('column_id', json.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"To Do\",\n  \"position\": 0\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id/columns",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "boards", ":id", "columns"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Добавить колонку в доску.\n\ncolumn_id автоматически сохраняется в переменные коллекции."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"title\": \"To Do\",\n  \"position\": 0\n}"
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/boards/:id/columns",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "boards", ":id", "columns"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{board_id}}"
+												}
+											]
+										}
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"id\": \"column-uuid-1\",\n  \"board_id\": \"board-uuid\",\n  \"title\": \"To Do\",\n  \"position\": 0,\n  \"created_at\": \"2026-03-20T10:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Columns",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id/columns",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "boards", ":id", "columns"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Получить список колонок доски."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/boards/:id/columns",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "boards", ":id", "columns"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{board_id}}"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"columns\": [\n    {\n      \"id\": \"column-uuid-1\",\n      \"board_id\": \"board-uuid\",\n      \"title\": \"To Do\",\n      \"position\": 0,\n      \"created_at\": \"2026-03-20T10:00:00Z\"\n    },\n    {\n      \"id\": \"column-uuid-2\",\n      \"board_id\": \"board-uuid\",\n      \"title\": \"In Progress\",\n      \"position\": 1,\n      \"created_at\": \"2026-03-20T10:01:00Z\"\n    }\n  ]\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Column",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"In Progress\",\n  \"version\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/columns/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "columns", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{column_id}}"
+										}
+									]
+								},
+								"description": "Обновить название колонки.\n\nТребуется version для optimistic locking."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"title\": \"In Progress\",\n  \"version\": 1\n}"
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/columns/:id",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "columns", ":id"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{column_id}}"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"id\": \"column-uuid-1\",\n  \"board_id\": \"board-uuid\",\n  \"title\": \"In Progress\",\n  \"position\": 0,\n  \"created_at\": \"2026-03-20T10:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Delete Column",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/columns/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "columns", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{column_id}}"
+										}
+									]
+								},
+								"description": "Удалить колонку.\n\nКолонка должна быть пустой (без карточек)."
+							},
+							"response": []
+						}
+					],
+					"description": "Управление колонками."
+				},
+				{
+					"name": "Card Operations",
+					"item": [
+						{
+							"name": "Create Card",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var json = pm.response.json();",
+											"    pm.collectionVariables.set('card_id', json.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Implement feature X\",\n  \"description\": \"Details here\",\n  \"position\": \"n\",\n  \"assignee_id\": null\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/columns/:id/cards",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "columns", ":id", "cards"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{column_id}}"
+										}
+									]
+								},
+								"description": "Создать карточку в колонке.\n\ncard_id автоматически сохраняется в переменные коллекции.\n\nposition: 'n' (новая позиция с шагом), или LexoRank строка."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Implement feature X\",\n  \"description\": \"Details here\",\n  \"position\": \"n\",\n  \"assignee_id\": null\n}"
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/columns/:id/cards",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "columns", ":id", "cards"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{column_id}}"
+												}
+											]
+										}
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"id\": \"card-uuid-1\",\n  \"board_id\": \"board-uuid\",\n  \"column_id\": \"column-uuid\",\n  \"title\": \"Implement feature X\",\n  \"description\": \"Details here\",\n  \"position\": \"0|hzzzzz:\",\n  \"assignee_id\": null,\n  \"created_at\": \"2026-03-20T10:00:00Z\",\n  \"updated_at\": \"2026-03-20T10:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Card",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "cards", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Получить карточку по ID."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/cards/:id",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "cards", ":id"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{card_id}}"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"id\": \"card-uuid-1\",\n  \"board_id\": \"board-uuid\",\n  \"column_id\": \"column-uuid\",\n  \"title\": \"Implement feature X\",\n  \"description\": \"Details here\",\n  \"position\": \"0|hzzzzz:\",\n  \"assignee_id\": null,\n  \"created_at\": \"2026-03-20T10:00:00Z\",\n  \"updated_at\": \"2026-03-20T10:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Cards",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/columns/:id/cards",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "columns", ":id", "cards"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{column_id}}"
+										}
+									]
+								},
+								"description": "Получить список карточек в колонке."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/columns/:id/cards",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "columns", ":id", "cards"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{column_id}}"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"cards\": [\n    {\n      \"id\": \"card-uuid-1\",\n      \"board_id\": \"board-uuid\",\n      \"column_id\": \"column-uuid\",\n      \"title\": \"Implement feature X\",\n      \"description\": \"Details here\",\n      \"position\": \"0|hzzzzz:\",\n      \"assignee_id\": null,\n      \"created_at\": \"2026-03-20T10:00:00Z\",\n      \"updated_at\": \"2026-03-20T10:00:00Z\"\n    }\n  ]\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Card",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Updated title\",\n  \"description\": \"Updated description\",\n  \"assignee_id\": \"{{user_id}}\",\n  \"version\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "cards", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Обновить карточку (title, description, assignee).\n\nТребуется version для optimistic locking."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Updated title\",\n  \"description\": \"Updated description\",\n  \"assignee_id\": \"{{user_id}}\",\n  \"version\": 1\n}"
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/cards/:id",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "cards", ":id"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{card_id}}"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"id\": \"card-uuid-1\",\n  \"board_id\": \"board-uuid\",\n  \"column_id\": \"column-uuid\",\n  \"title\": \"Updated title\",\n  \"description\": \"Updated description\",\n  \"position\": \"0|hzzzzz:\",\n  \"assignee_id\": \"user-uuid\",\n  \"created_at\": \"2026-03-20T10:00:00Z\",\n  \"updated_at\": \"2026-03-20T10:05:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Move Card",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"from_column_id\": \"{{column_id}}\",\n  \"to_column_id\": \"{{column_id_2}}\",\n  \"position\": \"am\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:id/move",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "cards", ":id", "move"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Переместить карточку в другую колонку или изменить позицию.\n\nposition: 'am' (average between two cards), 'n' (new at end), или LexoRank строка.\n\nВозвращает card + cards_in_column."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"from_column_id\": \"{{column_id}}\",\n  \"to_column_id\": \"{{column_id_2}}\",\n  \"position\": \"am\"\n}"
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/cards/:id/move",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "cards", ":id", "move"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{card_id}}"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"card\": {\n    \"id\": \"card-uuid-1\",\n    \"board_id\": \"board-uuid\",\n    \"column_id\": \"column-uuid-2\",\n    \"title\": \"Implement feature X\",\n    \"description\": \"Details here\",\n    \"position\": \"0|i00000:\",\n    \"assignee_id\": null,\n    \"created_at\": \"2026-03-20T10:00:00Z\",\n    \"updated_at\": \"2026-03-20T10:05:00Z\"\n  },\n  \"cards_in_column\": [\n    {\n      \"id\": \"card-uuid-1\",\n      \"position\": \"0|i00000:\"\n    },\n    {\n      \"id\": \"card-uuid-2\",\n      \"position\": \"0|j00000:\"\n    }\n  ]\n}"
+								}
+							]
+						},
+						{
+							"name": "Delete Card",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "cards", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Удалить карточку."
+							},
+							"response": []
+						}
+					],
+					"description": "Управление карточками."
+				},
+				{
+					"name": "Member Operations",
+					"item": [
+						{
+							"name": "Add Member",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"user_id\": \"{{other_user_id}}\",\n  \"role\": \"member\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id/members",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "boards", ":id", "members"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Добавить участника в доску.\n\nТолько владелец может добавлять участников.\n\nRole: 'owner' или 'member'."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"user_id\": \"{{other_user_id}}\",\n  \"role\": \"member\"\n}"
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/boards/:id/members",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "boards", ":id", "members"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{board_id}}"
+												}
+											]
+										}
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"user_id\": \"other-user-uuid\",\n  \"board_id\": \"board-uuid\",\n  \"role\": \"member\",\n  \"added_at\": \"2026-03-20T10:00:00Z\"\n}"
+								}
+							]
+						},
+						{
+							"name": "List Members",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id/members",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "boards", ":id", "members"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Получить список участников доски."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/boards/:id/members",
+											"host": ["{{base_url}}"],
+											"path": ["api", "v1", "boards", ":id", "members"],
+											"variable": [
+												{
+													"key": "id",
+													"value": "{{board_id}}"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [],
+									"cookie": [],
+									"body": "{\n  \"members\": [\n    {\n      \"user_id\": \"user-uuid\",\n      \"board_id\": \"board-uuid\",\n      \"role\": \"owner\",\n      \"added_at\": \"2026-03-20T10:00:00Z\"\n    },\n    {\n      \"user_id\": \"other-user-uuid\",\n      \"board_id\": \"board-uuid\",\n      \"role\": \"member\",\n      \"added_at\": \"2026-03-20T10:05:00Z\"\n    }\n  ]\n}"
+								}
+							]
+						},
+						{
+							"name": "Remove Member",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/members/:userId",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "boards", ":boardId", "members", ":userId"],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "userId",
+											"value": "{{other_user_id}}"
+										}
+									]
+								},
+								"description": "Удалить участника из доски.\n\nТолько владелец может удалять участников."
+							},
+							"response": []
+						}
+					],
+					"description": "Управление участниками доски."
+				}
+			],
+			"description": "Эндпоинты Board Service для управления досками, колонками, карточками и участниками.",
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{access_token}}",
+						"type": "string"
+					}
+				]
+			}
 		},
 		{
 			"name": "Health",

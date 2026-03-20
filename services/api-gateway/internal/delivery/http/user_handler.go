@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	authpb "github.com/romanlovesweed/yammi/services/api-gateway/api/proto/v1"
-	userpb "github.com/romanlovesweed/yammi/services/api-gateway/api/proto/v1/user"
+	authpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1"
+	userpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/user"
 )
 
 type UserHandler struct {

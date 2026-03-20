@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/romanlovesweed/yammi/services/api-gateway/internal/infrastructure"
+	"github.com/RomaLytar/yammi/services/api-gateway/internal/infrastructure"
 )
 
 type contextKey string

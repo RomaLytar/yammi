@@ -12,6 +12,7 @@ export const useAuthStore = defineStore('auth', () => {
   const userId = ref<string | null>(null)
   const accessToken = ref<string | null>(null)
   const refreshToken = ref<string | null>(null)
+  const isHydrating = ref(true) // ВАЖНО: true по умолчанию, чтобы блокировать router guard
 
   const isAuthenticated = computed(() => !!accessToken.value)
 
@@ -40,6 +41,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Восстанавливаем сессию из localStorage (вызывается в main.ts до mount)
   async function hydrate(): Promise<void> {
+    isHydrating.value = true
+
     // Регистрируем callback для auto-refresh из interceptor
     registerAuthCallbacks(
       (access, refresh) => {
@@ -54,16 +57,29 @@ export const useAuthStore = defineStore('auth', () => {
     const savedRefresh = localStorage.getItem(STORAGE_KEY_REFRESH)
     const savedUserId = localStorage.getItem(STORAGE_KEY_USER_ID)
 
-    if (!savedRefresh || !savedUserId) return
+    console.log('[AUTH] Hydrate: savedRefresh =', savedRefresh ? 'EXISTS' : 'NONE')
+    console.log('[AUTH] Hydrate: savedUserId =', savedUserId)
+
+    if (!savedRefresh || !savedUserId) {
+      console.log('[AUTH] Hydrate: no saved tokens, skipping')
+      isHydrating.value = false
+      return
+    }
 
     // Проактивно обновляем access token вместо ожидания 401
     try {
+      console.log('[AUTH] Hydrate: calling refreshTokens...')
       const result = await authApi.refreshTokens(savedRefresh)
+      console.log('[AUTH] Hydrate: refreshTokens SUCCESS')
       setAuth(savedUserId, result.accessToken, result.refreshToken)
-    } catch {
+    } catch (error) {
       // Refresh token невалиден — очищаем сессию
+      console.error('[AUTH] Hydrate: refreshTokens FAILED', error)
       localStorage.removeItem(STORAGE_KEY_REFRESH)
       localStorage.removeItem(STORAGE_KEY_USER_ID)
+    } finally {
+      isHydrating.value = false
+      console.log('[AUTH] Hydrate: DONE, isHydrating = false')
     }
   }
 
@@ -95,6 +111,7 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken,
     refreshToken,
     isAuthenticated,
+    isHydrating,
     hydrate,
     register,
     login,

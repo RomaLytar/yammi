@@ -44,11 +44,21 @@ export const router = createRouter({
 router.beforeEach((to) => {
   const auth = useAuthStore()
 
+  console.log('[ROUTER] beforeEach:', to.path, 'isAuthenticated =', auth.isAuthenticated, 'isHydrating =', auth.isHydrating)
+
+  // ВАЖНО: Не делаем редирект пока идет восстановление сессии
+  if (auth.isHydrating) {
+    console.log('[ROUTER] isHydrating = true, allowing navigation')
+    return // пропускаем, дадим hydrate() завершиться
+  }
+
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    console.log('[ROUTER] requiresAuth but not authenticated, redirect to login')
     return { path: '/login', query: { redirect: to.fullPath } }
   }
 
   if (to.meta.guest && auth.isAuthenticated) {
+    console.log('[ROUTER] guest route but authenticated, redirect to boards')
     return '/boards'
   }
 })

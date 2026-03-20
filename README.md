@@ -506,7 +506,7 @@ docker compose run --rm dlq purge
 | Auth Service        | ✅ Реализован    | JWT (EdDSA), регистрация, логин, refresh/revoke      |
 | User Service        | ✅ Реализован    | Профили, NATS consumer, DLQ monitor                  |
 | API Gateway         | ✅ Реализован    | REST API, JWT verify, rate limiting                  |
-| Board Service       | ⬜ Заглушка      | Только main.go, нет бизнес-логики                    |
+| Board Service       | ✅ Реализован    | Domain, Repository, Use Cases, gRPC, API Gateway, 55 тестов, Grafana dashboard |
 | Comment Service     | ⬜ Заглушка      | Только main.go, нет бизнес-логики                    |
 | Notification Service| ⬜ Заглушка      | Только main.go, нет бизнес-логики                    |
 | WebSocket Gateway   | ⬜ Заглушка      | /health работает, /ws возвращает 501                 |

@@ -31,7 +31,7 @@ export interface Card {
   id: string
   title: string
   description: string
-  position: number
+  position: string // lexorank позиция (строка типа "a", "am", "b")
   columnId: string
   assigneeId?: string
   createdAt: string

@@ -13,7 +13,16 @@ const model = defineModel<string>({ required: true })
 <template>
   <div class="base-input" :class="{ 'base-input--error': error }">
     <label v-if="label" class="base-input__label">{{ label }}</label>
+    <textarea
+      v-if="type === 'textarea'"
+      v-model="model"
+      class="base-input__field base-input__textarea"
+      :placeholder="placeholder"
+      :disabled="disabled"
+      rows="4"
+    />
     <input
+      v-else
       v-model="model"
       class="base-input__field"
       :type="type || 'text'"
@@ -62,5 +71,12 @@ const model = defineModel<string>({ required: true })
 .base-input__error {
   font-size: var(--font-size-xs);
   color: var(--color-danger);
+}
+
+.base-input__textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  line-height: 1.5;
 }
 </style>

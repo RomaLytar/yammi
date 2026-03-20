@@ -1,12 +1,20 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"google.golang.org/grpc"
+
+	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
+	delivery "github.com/RomaLytar/yammi/services/board/internal/delivery/grpc"
+	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/database"
+	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/nats"
+	"github.com/RomaLytar/yammi/services/board/internal/repository/postgres"
+	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
 
 func main() {
@@ -15,18 +23,114 @@ func main() {
 		port = "50053"
 	}
 
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		log.Fatal("DATABASE_URL is required")
+	}
+
+	natsURL := os.Getenv("NATS_URL")
+	if natsURL == "" {
+		log.Fatal("NATS_URL is required")
+	}
+
+	// Database
+	db, err := database.NewPostgresDB(databaseURL)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	// Migrations
+	migrationsDir := os.Getenv("MIGRATIONS_DIR")
+	if migrationsDir == "" {
+		migrationsDir = "/app/migrations"
+	}
+	if err := database.RunMigrations(db, migrationsDir); err != nil {
+		log.Fatalf("failed to run migrations: %v", err)
+	}
+
+	// NATS publisher
+	natsPublisher, err := nats.NewPublisher(natsURL)
+	if err != nil {
+		log.Fatalf("failed to create nats publisher: %v", err)
+	}
+	defer natsPublisher.Close()
+
+	// Event publisher (wraps NATS publisher)
+	publisher := nats.NewEventPublisher(natsPublisher)
+
+	// Repositories
+	boardRepo := postgres.NewBoardRepository(db)
+	columnRepo := postgres.NewColumnRepository(db)
+	cardRepo := postgres.NewCardRepository(db)
+	memberRepo := postgres.NewMembershipRepository(db)
+
+	// Use Cases
+	createBoardUC := usecase.NewCreateBoardUseCase(boardRepo, memberRepo, publisher)
+	getBoardUC := usecase.NewGetBoardUseCase(boardRepo, memberRepo)
+	listBoardsUC := usecase.NewListBoardsUseCase(boardRepo)
+	updateBoardUC := usecase.NewUpdateBoardUseCase(boardRepo, memberRepo, publisher)
+	deleteBoardUC := usecase.NewDeleteBoardUseCase(boardRepo, memberRepo, publisher)
+
+	addColumnUC := usecase.NewAddColumnUseCase(columnRepo, memberRepo, publisher)
+	getColumnsUC := usecase.NewGetColumnsUseCase(columnRepo, memberRepo)
+	updateColumnUC := usecase.NewUpdateColumnUseCase(columnRepo, memberRepo, publisher)
+	deleteColumnUC := usecase.NewDeleteColumnUseCase(columnRepo, memberRepo, publisher)
+	reorderColumnsUC := usecase.NewReorderColumnsUseCase(columnRepo, memberRepo, publisher)
+
+	createCardUC := usecase.NewCreateCardUseCase(cardRepo, memberRepo, publisher)
+	getCardUC := usecase.NewGetCardUseCase(cardRepo, memberRepo)
+	getCardsUC := usecase.NewGetCardsUseCase(cardRepo, memberRepo)
+	updateCardUC := usecase.NewUpdateCardUseCase(cardRepo, memberRepo, publisher)
+	moveCardUC := usecase.NewMoveCardUseCase(cardRepo, memberRepo, publisher)
+	deleteCardUC := usecase.NewDeleteCardUseCase(cardRepo, memberRepo, publisher)
+
+	addMemberUC := usecase.NewAddMemberUseCase(boardRepo, memberRepo, publisher)
+	removeMemberUC := usecase.NewRemoveMemberUseCase(boardRepo, memberRepo, publisher)
+	listMembersUC := usecase.NewListMembersUseCase(boardRepo, memberRepo)
+
+	// gRPC server
+	handler := delivery.NewBoardServiceServer(
+		createBoardUC,
+		getBoardUC,
+		listBoardsUC,
+		updateBoardUC,
+		deleteBoardUC,
+		addColumnUC,
+		getColumnsUC,
+		updateColumnUC,
+		deleteColumnUC,
+		reorderColumnsUC,
+		createCardUC,
+		getCardUC,
+		getCardsUC,
+		updateCardUC,
+		moveCardUC,
+		deleteCardUC,
+		addMemberUC,
+		removeMemberUC,
+		listMembersUC,
+	)
+
+	grpcServer := grpc.NewServer()
+	boardpb.RegisterBoardServiceServer(grpcServer, handler)
+
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		log.Fatalf("board-service: failed to listen: %v", err)
+		log.Fatalf("failed to listen: %v", err)
 	}
-	defer lis.Close()
 
-	log.Printf("board-service started on :%s", port)
-	fmt.Printf("board-service listening on :%s\n", port)
+	go func() {
+		log.Printf("board-service started on :%s", port)
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
+	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("board-service shutting down")
+	log.Println("board-service shutting down...")
+	grpcServer.GracefulStop()
 }

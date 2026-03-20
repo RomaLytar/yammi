@@ -1,41 +1,256 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import type { Board, Column } from '@/types/domain'
+import { ref, computed } from 'vue'
+import type { Board, Column, Card } from '@/types/domain'
+import * as boardsApi from '@/api/boards'
+import { ApiError } from '@/api/client'
 
-// Текущая открытая доска — aggregate root на фронте.
-// Заготовка. Board API ещё не реализован на бэкенде.
+// Генерация lexorank позиции между двумя карточками
+function generatePosition(prev?: string, next?: string): string {
+  if (!prev && !next) return 'm'
+  if (!prev) return String.fromCharCode(next!.charCodeAt(0) - 1)
+  if (!next) return prev + 'm'
+
+  // Простая реализация: среднее между позициями
+  const prevCode = prev.charCodeAt(prev.length - 1)
+  const nextCode = next.charCodeAt(0)
+  const mid = Math.floor((prevCode + nextCode) / 2)
+
+  if (mid === prevCode) {
+    return prev + 'm' // Если очень близко, добавляем букву
+  }
+
+  return String.fromCharCode(mid)
+}
+
 export const useBoardStore = defineStore('board', () => {
   const board = ref<Board | null>(null)
   const columns = ref<Column[]>([])
-  const version = ref(0)
   const loading = ref(false)
+  const error = ref<string | null>(null)
 
-  async function fetchBoard(_boardId: string): Promise<void> {
-    // TODO: const data = await boardsApi.getBoard(boardId)
-    loading.value = false
+  const boardId = computed(() => board.value?.id)
+
+  async function fetchBoard(id: string): Promise<void> {
+    try {
+      loading.value = true
+      error.value = null
+
+      const result = await boardsApi.getBoard(id)
+      board.value = result.board
+      columns.value = result.columns
+
+      // Загружаем карточки для каждой колонки
+      await Promise.all(
+        columns.value.map(async (column) => {
+          const cards = await boardsApi.getCards(column.id, id)
+          // Lexorank: строковая сортировка ("a" < "am" < "b" < "bm" < "c")
+          column.cards = cards.sort((a, b) => a.position.localeCompare(b.position))
+        }),
+      )
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка загрузки доски'
+      throw err
+    } finally {
+      loading.value = false
+    }
   }
 
-  // Optimistic move: snapshot → mutate → API → rollback on error
-  async function moveCard(
-    _cardId: string,
-    _fromColumnId: string,
-    _toColumnId: string,
-    _newPosition: number,
-  ): Promise<void> {
-    const snapshot = structuredClone(columns.value)
+  async function updateBoardInfo(title: string, description: string): Promise<void> {
+    if (!boardId.value) return
+
     try {
-      // TODO: applyCardMove locally + await boardsApi.moveCard(...)
-      void snapshot // используется для rollback при ошибке
-    } catch {
+      error.value = null
+      const updated = await boardsApi.updateBoard(boardId.value, { title, description })
+      board.value = updated
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка обновления доски'
+      throw err
+    }
+  }
+
+  async function createColumn(title: string): Promise<void> {
+    if (!boardId.value) return
+
+    try {
+      error.value = null
+      const position = columns.value.length
+      const column = await boardsApi.createColumn(boardId.value, { title, position })
+
+      columns.value.push({
+        ...column,
+        cards: [],
+      })
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка создания колонки'
+      throw err
+    }
+  }
+
+  async function updateColumn(columnId: string, title: string): Promise<void> {
+    try {
+      error.value = null
+      await boardsApi.updateColumn(columnId, { title })
+
+      const column = columns.value.find((c) => c.id === columnId)
+      if (column) {
+        column.title = title
+      }
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка обновления колонки'
+      throw err
+    }
+  }
+
+  async function deleteColumn(columnId: string): Promise<void> {
+    try {
+      error.value = null
+      await boardsApi.deleteColumn(columnId)
+      columns.value = columns.value.filter((c) => c.id !== columnId)
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка удаления колонки'
+      throw err
+    }
+  }
+
+  async function createCard(columnId: string, title: string, description: string): Promise<void> {
+    if (!boardId.value) return
+
+    try {
+      error.value = null
+
+      const column = columns.value.find((c) => c.id === columnId)
+      if (!column) return
+
+      // Генерируем позицию для конца списка
+      const lastCard = column.cards[column.cards.length - 1]
+      const position = lastCard ? lastCard.position + 'm' : 'a'
+
+      const card = await boardsApi.createCard(columnId, {
+        board_id: boardId.value,
+        title,
+        description,
+        position,
+      })
+
+      column.cards.push(card)
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка создания карточки'
+      throw err
+    }
+  }
+
+  async function updateCard(cardId: string, title: string, description: string): Promise<void> {
+    try {
+      error.value = null
+      const updated = await boardsApi.updateCard(cardId, { title, description })
+
+      // Обновляем карточку в store
+      for (const column of columns.value) {
+        const cardIndex = column.cards.findIndex((c) => c.id === cardId)
+        if (cardIndex !== -1) {
+          column.cards[cardIndex] = updated
+          break
+        }
+      }
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка обновления карточки'
+      throw err
+    }
+  }
+
+  async function deleteCard(cardId: string): Promise<void> {
+    try {
+      error.value = null
+      await boardsApi.deleteCard(cardId)
+
+      // Удаляем из store
+      for (const column of columns.value) {
+        column.cards = column.cards.filter((c) => c.id !== cardId)
+      }
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка удаления карточки'
+      throw err
+    }
+  }
+
+  // Move card - vuedraggable УЖЕ обновил UI, просто сохраняем на бэк
+  async function moveCard(
+    cardId: string,
+    fromColumnId: string,
+    toColumnId: string,
+    newIndex: number,
+  ): Promise<void> {
+    if (!boardId.value) return
+
+    // Snapshot для rollback при ошибке
+    const snapshot = structuredClone(columns.value)
+
+    try {
+      error.value = null
+
+      // Находим карточку в новой позиции (vuedraggable уже переместил)
+      const toColumn = columns.value.find((c) => c.id === toColumnId)
+      if (!toColumn) return
+
+      const card = toColumn.cards.find((c) => c.id === cardId)
+      if (!card) {
+        console.error('[moveCard] Card not found in toColumn:', cardId, toColumnId)
+        return
+      }
+
+      // Генерируем lexorank позицию между соседними карточками
+      const prevCard = toColumn.cards[newIndex - 1]
+      const nextCard = toColumn.cards[newIndex + 1]
+      const position = generatePosition(
+        prevCard?.position,
+        nextCard?.position,
+      )
+
+      console.log('[moveCard] Generated position:', position, 'between', prevCard?.position, 'and', nextCard?.position)
+
+      // Обновляем позицию и columnId
+      card.position = position
+      card.columnId = toColumnId
+
+      // Отправляем на бэк
+      console.log('[moveCard] Calling API:', { cardId, fromColumnId, toColumnId, newIndex })
+      await boardsApi.moveCard(cardId, {
+        board_id: boardId.value,
+        from_column_id: fromColumnId,
+        to_column_id: toColumnId,
+        position: newIndex,
+      })
+      console.log('[moveCard] API success')
+    } catch (err) {
+      // Rollback при ошибке
+      console.error('[moveCard] API error, rolling back:', err)
       columns.value = snapshot
+      error.value = err instanceof ApiError ? err.message : 'Ошибка перемещения карточки'
+      throw err
     }
   }
 
   function clear(): void {
     board.value = null
     columns.value = []
-    version.value = 0
+    error.value = null
   }
 
-  return { board, columns, version, loading, fetchBoard, moveCard, clear }
+  return {
+    board,
+    columns,
+    loading,
+    error,
+    boardId,
+    fetchBoard,
+    updateBoardInfo,
+    createColumn,
+    updateColumn,
+    deleteColumn,
+    createCard,
+    updateCard,
+    deleteCard,
+    moveCard,
+    clear,
+  }
 })

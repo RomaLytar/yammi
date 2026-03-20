@@ -1,5 +1,20 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useUserStore } from '@/stores/user'
 import AppHeader from '@/components/layout/AppHeader.vue'
+
+const userStore = useUserStore()
+
+onMounted(async () => {
+  // Загружаем профиль если еще не загружен
+  if (!userStore.profile) {
+    try {
+      await userStore.fetchProfile()
+    } catch (error) {
+      console.error('[DefaultLayout] Failed to fetch profile:', error)
+    }
+  }
+})
 </script>
 
 <template>

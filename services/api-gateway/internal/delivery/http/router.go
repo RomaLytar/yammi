@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/romanlovesweed/yammi/services/api-gateway/internal/infrastructure"
+	"github.com/RomaLytar/yammi/services/api-gateway/internal/infrastructure"
 )
 
 func envInt(key string, fallback int) int {
@@ -50,6 +50,34 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("GET /api/v1/users/{id}", rateLimit(requireAuth(http.HandlerFunc(user.GetProfile))))
 	mux.Handle("PUT /api/v1/users/{id}", rateLimit(requireAuth(http.HandlerFunc(OwnerOnly(user.UpdateProfile)))))
 	mux.Handle("DELETE /api/v1/users/{id}", rateLimit(requireAuth(http.HandlerFunc(OwnerOnly(user.DeleteUser)))))
+
+	// Board routes — все требуют auth
+	board := NewBoardHandler(clients.BoardClient)
+	mux.Handle("POST /api/v1/boards", rateLimit(requireAuth(http.HandlerFunc(board.CreateBoard))))
+	mux.Handle("GET /api/v1/boards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.GetBoard))))
+	mux.Handle("GET /api/v1/boards", rateLimit(requireAuth(http.HandlerFunc(board.ListBoards))))
+	mux.Handle("PUT /api/v1/boards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateBoard))))
+	mux.Handle("DELETE /api/v1/boards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteBoard))))
+
+	// Column routes
+	mux.Handle("POST /api/v1/boards/{id}/columns", rateLimit(requireAuth(http.HandlerFunc(board.AddColumn))))
+	mux.Handle("GET /api/v1/boards/{id}/columns", rateLimit(requireAuth(http.HandlerFunc(board.GetColumns))))
+	mux.Handle("PUT /api/v1/boards/{id}/columns/reorder", rateLimit(requireAuth(http.HandlerFunc(board.ReorderColumns))))
+	mux.Handle("PUT /api/v1/columns/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateColumn))))
+	mux.Handle("DELETE /api/v1/columns/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteColumn))))
+
+	// Card routes
+	mux.Handle("POST /api/v1/columns/{id}/cards", rateLimit(requireAuth(http.HandlerFunc(board.CreateCard))))
+	mux.Handle("GET /api/v1/cards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.GetCard))))
+	mux.Handle("GET /api/v1/columns/{id}/cards", rateLimit(requireAuth(http.HandlerFunc(board.GetCards))))
+	mux.Handle("PUT /api/v1/cards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateCard))))
+	mux.Handle("PUT /api/v1/cards/{id}/move", rateLimit(requireAuth(http.HandlerFunc(board.MoveCard))))
+	mux.Handle("DELETE /api/v1/cards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteCard))))
+
+	// Member routes
+	mux.Handle("POST /api/v1/boards/{id}/members", rateLimit(requireAuth(http.HandlerFunc(board.AddMember))))
+	mux.Handle("DELETE /api/v1/boards/{boardId}/members/{userId}", rateLimit(requireAuth(http.HandlerFunc(board.RemoveMember))))
+	mux.Handle("GET /api/v1/boards/{id}/members", rateLimit(requireAuth(http.HandlerFunc(board.ListMembers))))
 
 	shutdown := func() {
 		registerLimiter.Stop()

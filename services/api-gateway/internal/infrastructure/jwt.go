@@ -13,7 +13,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	authpb "github.com/romanlovesweed/yammi/services/api-gateway/api/proto/v1"
+	authpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1"
 )
 
 var (

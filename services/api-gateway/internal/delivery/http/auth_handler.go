@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	authpb "github.com/romanlovesweed/yammi/services/api-gateway/api/proto/v1"
+	authpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1"
 )
 
 type AuthHandler struct {

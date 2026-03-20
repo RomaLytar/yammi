@@ -1,0 +1,20 @@
+package usecase
+
+import "context"
+
+// EventPublisher публикует события в NATS
+type EventPublisher interface {
+	PublishBoardCreated(ctx context.Context, event BoardCreated) error
+	PublishBoardUpdated(ctx context.Context, event BoardUpdated) error
+	PublishBoardDeleted(ctx context.Context, event BoardDeleted) error
+	PublishColumnCreated(ctx context.Context, event ColumnAdded) error
+	PublishColumnUpdated(ctx context.Context, event ColumnUpdated) error
+	PublishColumnDeleted(ctx context.Context, event ColumnDeleted) error
+	PublishColumnsReordered(ctx context.Context, event ColumnsReordered) error
+	PublishCardCreated(ctx context.Context, event CardCreated) error
+	PublishCardUpdated(ctx context.Context, event CardUpdated) error
+	PublishCardMoved(ctx context.Context, event CardMoved) error
+	PublishCardDeleted(ctx context.Context, event CardDeleted) error
+	PublishMemberAdded(ctx context.Context, event MemberAdded) error
+	PublishMemberRemoved(ctx context.Context, event MemberRemoved) error
+}

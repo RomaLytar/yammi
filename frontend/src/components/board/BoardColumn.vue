@@ -23,6 +23,9 @@ const emit = defineEmits<Emits>()
 const isEditingTitle = ref(false)
 const editedTitle = ref(props.column.title)
 
+// Track card being removed for cross-column drag
+let removedCardInfo: { cardId: string; columnId: string } | null = null
+
 function startEdit() {
   isEditingTitle.value = true
   editedTitle.value = props.column.title
@@ -42,24 +45,63 @@ function cancelEdit() {
 
 // Vuedraggable events
 function onDragChange(event: any) {
-  console.log('[BoardColumn] drag change:', event)
+  console.log('[BoardColumn] onDragChange called on column:', props.column.id, props.column.title)
+  console.log('[BoardColumn] event keys:', Object.keys(event))
+
+  // Карточка удалена из этой колонки (перемещается в другую)
+  if (event.removed) {
+    const card = event.removed.element as Card
+    console.log('[BoardColumn] event.removed: card', card.id, 'removed from column', props.column.id)
+    // Сохраняем инфо для следующего event.added в целевой колонке
+    removedCardInfo = { cardId: card.id, columnId: props.column.id }
+  }
 
   // Карточка добавлена в эту колонку (из другой колонки)
   if (event.added) {
     const card = event.added.element as Card
     const newIndex = event.added.newIndex
-    const fromColumnId = card.columnId // ВАЖНО: берем ИЗ карточки ДО обновления
-    console.log('[BoardColumn] card added:', card.id, 'from:', fromColumnId, 'to:', props.column.id, 'index:', newIndex)
+
+    // Сначала пытаемся использовать removedCardInfo (самый надежный способ)
+    // Затем fallback на card.columnId
+    const fromColumnId = removedCardInfo?.cardId === card.id
+      ? removedCardInfo.columnId
+      : card.columnId
+
+    console.log('[BoardColumn] event.added detected')
+    console.log('[BoardColumn]   card.id:', card.id)
+    console.log('[BoardColumn]   fromColumnId (determined):', fromColumnId)
+    console.log('[BoardColumn]   card.columnId:', card.columnId)
+    console.log('[BoardColumn]   removedCardInfo:', removedCardInfo)
+    console.log('[BoardColumn]   toColumnId:', props.column.id)
+    console.log('[BoardColumn]   newIndex:', newIndex)
+
+    if (!fromColumnId) {
+      console.error('[BoardColumn] ERROR: fromColumnId is null/undefined!')
+      return
+    }
+
     emit('card-move', { cardId: card.id, fromColumnId, toColumnId: props.column.id, newIndex })
+    console.log('[BoardColumn] emitted card-move event')
+
+    // Очищаем removedCardInfo после использования
+    removedCardInfo = null
   }
 
   // Карточка перемещена внутри этой колонки
   if (event.moved) {
     const card = event.moved.element as Card
     const newIndex = event.moved.newIndex
-    console.log('[BoardColumn] card moved within column:', card.id, 'index:', newIndex)
-    // Для перемещения в той же колонке fromColumnId === toColumnId
+    console.log('[BoardColumn] event.moved detected')
+    console.log('[BoardColumn]   card.id:', card.id)
+    console.log('[BoardColumn]   column.id:', props.column.id)
+    console.log('[BoardColumn]   newIndex:', newIndex)
+
     emit('card-move', { cardId: card.id, fromColumnId: props.column.id, toColumnId: props.column.id, newIndex })
+    console.log('[BoardColumn] emitted card-move event')
+  }
+
+  if (!event.added && !event.moved && !event.removed) {
+    console.warn('[BoardColumn] onDragChange called but no recognized event type:', Object.keys(event))
   }
 }
 </script>

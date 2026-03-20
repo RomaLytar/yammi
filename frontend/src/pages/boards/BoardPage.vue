@@ -111,11 +111,19 @@ async function handleDeleteCard(cardId?: string) {
 }
 
 async function handleCardMove(event: { cardId: string; fromColumnId: string; toColumnId: string; newIndex: number }) {
-  console.log('[BoardPage] handleCardMove:', event)
+  console.log('[BoardPage] handleCardMove called')
+  console.log('[BoardPage]   event:', JSON.stringify(event))
+  console.log('[BoardPage]   cardId:', event.cardId)
+  console.log('[BoardPage]   fromColumnId:', event.fromColumnId)
+  console.log('[BoardPage]   toColumnId:', event.toColumnId)
+  console.log('[BoardPage]   newIndex:', event.newIndex)
+
   try {
+    console.log('[BoardPage] calling boardStore.moveCard...')
     await boardStore.moveCard(event.cardId, event.fromColumnId, event.toColumnId, event.newIndex)
+    console.log('[BoardPage] boardStore.moveCard completed successfully')
   } catch (error) {
-    console.error('Failed to move card:', error)
+    console.error('[BoardPage] Failed to move card:', error)
   }
 }
 

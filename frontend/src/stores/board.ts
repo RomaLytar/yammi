@@ -180,23 +180,51 @@ export const useBoardStore = defineStore('board', () => {
     toColumnId: string,
     newIndex: number,
   ): Promise<void> {
-    if (!boardId.value) return
+    console.log('[moveCard] FUNCTION CALLED')
+    console.log('[moveCard]   cardId:', cardId)
+    console.log('[moveCard]   fromColumnId:', fromColumnId)
+    console.log('[moveCard]   toColumnId:', toColumnId)
+    console.log('[moveCard]   newIndex:', newIndex)
+    console.log('[moveCard]   boardId.value:', boardId.value)
 
-    // Snapshot для rollback при ошибке
-    const snapshot = structuredClone(columns.value)
+    if (!boardId.value) {
+      console.error('[moveCard] EARLY RETURN: !boardId.value')
+      return
+    }
+
+    // Snapshot для rollback при ошибке (JSON клонирование для избежания проблем с Vue Proxy)
+    const snapshot = JSON.parse(JSON.stringify(columns.value))
+    console.log('[moveCard] Created snapshot, columns.value.length:', columns.value.length)
 
     try {
       error.value = null
 
       // Находим карточку в новой позиции (vuedraggable уже переместил)
+      console.log('[moveCard] Looking for toColumn with id:', toColumnId)
+      console.log('[moveCard] Available column ids:', columns.value.map((c) => c.id))
       const toColumn = columns.value.find((c) => c.id === toColumnId)
-      if (!toColumn) return
+
+      if (!toColumn) {
+        console.error('[moveCard] EARLY RETURN: toColumn not found!')
+        console.error('[moveCard]   Searched for:', toColumnId)
+        console.error('[moveCard]   Available:', columns.value.map((c) => ({ id: c.id, title: c.title })))
+        return
+      }
+
+      console.log('[moveCard] Found toColumn:', toColumn.title, 'with', toColumn.cards.length, 'cards')
+      console.log('[moveCard] Looking for card:', cardId)
+      console.log('[moveCard] Cards in toColumn:', toColumn.cards.map((c) => c.id))
 
       const card = toColumn.cards.find((c) => c.id === cardId)
       if (!card) {
-        console.error('[moveCard] Card not found in toColumn:', cardId, toColumnId)
+        console.error('[moveCard] EARLY RETURN: Card not found in toColumn!')
+        console.error('[moveCard]   cardId:', cardId)
+        console.error('[moveCard]   toColumnId:', toColumnId)
+        console.error('[moveCard]   toColumn.cards:', toColumn.cards.map((c) => ({ id: c.id, title: c.title })))
         return
       }
+
+      console.log('[moveCard] Found card:', card.title)
 
       // Генерируем lexorank позицию между соседними карточками
       const prevCard = toColumn.cards[newIndex - 1]
@@ -206,24 +234,36 @@ export const useBoardStore = defineStore('board', () => {
         nextCard?.position,
       )
 
-      console.log('[moveCard] Generated position:', position, 'between', prevCard?.position, 'and', nextCard?.position)
+      console.log('[moveCard] Generated position:', position)
+      console.log('[moveCard]   prevCard:', prevCard ? `${prevCard.title} (${prevCard.position})` : 'none')
+      console.log('[moveCard]   nextCard:', nextCard ? `${nextCard.title} (${nextCard.position})` : 'none')
 
       // Обновляем позицию и columnId
       card.position = position
       card.columnId = toColumnId
 
       // Отправляем на бэк
-      console.log('[moveCard] Calling API:', { cardId, fromColumnId, toColumnId, newIndex })
+      console.log('[moveCard] ========== CALLING API ==========')
+      console.log('[moveCard] API params:', {
+        cardId,
+        board_id: boardId.value,
+        from_column_id: fromColumnId,
+        to_column_id: toColumnId,
+        position: newIndex,
+      })
+
       await boardsApi.moveCard(cardId, {
         board_id: boardId.value,
         from_column_id: fromColumnId,
         to_column_id: toColumnId,
         position: newIndex,
       })
-      console.log('[moveCard] API success')
+
+      console.log('[moveCard] ========== API SUCCESS ==========')
     } catch (err) {
       // Rollback при ошибке
-      console.error('[moveCard] API error, rolling back:', err)
+      console.error('[moveCard] ========== API ERROR ==========')
+      console.error('[moveCard] Error:', err)
       columns.value = snapshot
       error.value = err instanceof ApiError ? err.message : 'Ошибка перемещения карточки'
       throw err

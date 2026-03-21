@@ -1,0 +1,250 @@
+package http
+
+import (
+	"encoding/json"
+	"net/http"
+
+	boardpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board"
+)
+
+// CreateCard POST /api/v1/columns/{id}/cards
+func (h *BoardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	columnID := r.PathValue("id")
+	if columnID == "" {
+		writeError(w, http.StatusBadRequest, "column id is required")
+		return
+	}
+
+	var req struct {
+		BoardID     string `json:"board_id"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		Position    string `json:"position"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	resp, err := h.client.CreateCard(r.Context(), &boardpb.CreateCardRequest{
+		ColumnId:    columnID,
+		BoardId:     req.BoardID,
+		UserId:      userID,
+		Title:       req.Title,
+		Description: req.Description,
+		Position:    req.Position,
+	})
+	if err != nil {
+		writeGRPCError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]interface{}{
+		"card": mapCardFromProto(resp.Card),
+	})
+}
+
+// GetCard GET /api/v1/cards/{id}
+func (h *BoardHandler) GetCard(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	cardID := r.PathValue("id")
+	if cardID == "" {
+		writeError(w, http.StatusBadRequest, "card id is required")
+		return
+	}
+
+	boardID := r.URL.Query().Get("board_id")
+	if boardID == "" {
+		writeError(w, http.StatusBadRequest, "board_id query parameter is required")
+		return
+	}
+
+	resp, err := h.client.GetCard(r.Context(), &boardpb.GetCardRequest{
+		CardId:  cardID,
+		BoardId: boardID,
+		UserId:  userID,
+	})
+	if err != nil {
+		writeGRPCError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"card": mapCardFromProto(resp.Card),
+	})
+}
+
+// GetCards GET /api/v1/columns/{id}/cards
+func (h *BoardHandler) GetCards(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	columnID := r.PathValue("id")
+	if columnID == "" {
+		writeError(w, http.StatusBadRequest, "column id is required")
+		return
+	}
+
+	boardID := r.URL.Query().Get("board_id")
+	if boardID == "" {
+		writeError(w, http.StatusBadRequest, "board_id query parameter is required")
+		return
+	}
+
+	resp, err := h.client.GetCards(r.Context(), &boardpb.GetCardsRequest{
+		ColumnId: columnID,
+		BoardId:  boardID,
+		UserId:   userID,
+	})
+	if err != nil {
+		writeGRPCError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"cards": mapCardsFromProto(resp.Cards),
+	})
+}
+
+// UpdateCard PUT /api/v1/cards/{id}
+func (h *BoardHandler) UpdateCard(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	cardID := r.PathValue("id")
+	if cardID == "" {
+		writeError(w, http.StatusBadRequest, "card id is required")
+		return
+	}
+
+	var req struct {
+		BoardID     string `json:"board_id"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		AssigneeID  string `json:"assignee_id"`
+		Version     int32  `json:"version"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	resp, err := h.client.UpdateCard(r.Context(), &boardpb.UpdateCardRequest{
+		CardId:      cardID,
+		BoardId:     req.BoardID,
+		UserId:      userID,
+		Title:       req.Title,
+		Description: req.Description,
+		AssigneeId:  req.AssigneeID,
+		Version:     req.Version,
+	})
+	if err != nil {
+		writeGRPCError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"card": mapCardFromProto(resp.Card),
+	})
+}
+
+// MoveCard PUT /api/v1/cards/{id}/move
+func (h *BoardHandler) MoveCard(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	cardID := r.PathValue("id")
+	if cardID == "" {
+		writeError(w, http.StatusBadRequest, "card id is required")
+		return
+	}
+
+	var req struct {
+		BoardID      string `json:"board_id"`
+		FromColumnID string `json:"from_column_id"`
+		ToColumnID   string `json:"to_column_id"`
+		Position     string `json:"position"`
+		Version      int32  `json:"version"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	resp, err := h.client.MoveCard(r.Context(), &boardpb.MoveCardRequest{
+		CardId:       cardID,
+		BoardId:      req.BoardID,
+		FromColumnId: req.FromColumnID,
+		ToColumnId:   req.ToColumnID,
+		Position:     req.Position,
+		UserId:       userID,
+		Version:      req.Version,
+	})
+	if err != nil {
+		writeGRPCError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"card":            mapCardFromProto(resp.Card),
+		"cards_in_column": mapCardsFromProto(resp.CardsInColumn),
+	})
+}
+
+// DeleteCards POST /api/v1/cards/delete — удаление одной или нескольких карточек
+func (h *BoardHandler) DeleteCards(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	var req struct {
+		CardIDs []string `json:"card_ids"`
+		BoardID string   `json:"board_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if len(req.CardIDs) == 0 {
+		writeError(w, http.StatusBadRequest, "card_ids is required")
+		return
+	}
+	if req.BoardID == "" {
+		writeError(w, http.StatusBadRequest, "board_id is required")
+		return
+	}
+
+	_, err := h.client.DeleteCard(r.Context(), &boardpb.DeleteCardRequest{
+		CardIds: req.CardIDs,
+		BoardId: req.BoardID,
+		UserId:  userID,
+	})
+	if err != nil {
+		writeGRPCError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, statusResponse{Status: "deleted"})
+}

@@ -1,0 +1,126 @@
+package grpc
+
+import (
+	"context"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
+
+	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
+)
+
+// CreateBoard создает новую доску
+func (s *BoardServiceServer) CreateBoard(ctx context.Context, req *boardpb.CreateBoardRequest) (*boardpb.CreateBoardResponse, error) {
+	if req.GetTitle() == "" {
+		return nil, status.Error(codes.InvalidArgument, "title is required")
+	}
+	if req.GetOwnerId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "owner_id is required")
+	}
+
+	board, err := s.createBoard.Execute(ctx, req.GetTitle(), req.GetDescription(), req.GetOwnerId())
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	return &boardpb.CreateBoardResponse{
+		Board: mapBoardToProto(board),
+	}, nil
+}
+
+// GetBoard возвращает доску со всеми колонками и участниками
+func (s *BoardServiceServer) GetBoard(ctx context.Context, req *boardpb.GetBoardRequest) (*boardpb.GetBoardResponse, error) {
+	if req.GetBoardId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "board_id is required")
+	}
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	board, err := s.getBoard.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	// Загружаем columns и members отдельно (granular API)
+	columns, err := s.getColumns.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	members, err := s.listMembers.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	return &boardpb.GetBoardResponse{
+		Board:   mapBoardToProto(board),
+		Columns: mapColumnsToProto(columns),
+		Members: mapMembersToProto(members),
+	}, nil
+}
+
+// ListBoards возвращает список досок пользователя с cursor-based pagination
+func (s *BoardServiceServer) ListBoards(ctx context.Context, req *boardpb.ListBoardsRequest) (*boardpb.ListBoardsResponse, error) {
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	limit := int(req.GetLimit())
+	if limit <= 0 {
+		limit = 20 // default limit
+	}
+	if limit > 100 {
+		limit = 100 // max limit
+	}
+
+	boards, nextCursor, err := s.listBoards.Execute(ctx, req.GetUserId(), limit, req.GetCursor(), req.GetOwnerOnly(), req.GetSearch(), req.GetSortBy())
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	return &boardpb.ListBoardsResponse{
+		Boards:     mapBoardsToProto(boards),
+		NextCursor: nextCursor,
+	}, nil
+}
+
+// UpdateBoard обновляет метаданные доски
+func (s *BoardServiceServer) UpdateBoard(ctx context.Context, req *boardpb.UpdateBoardRequest) (*boardpb.UpdateBoardResponse, error) {
+	if req.GetBoardId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "board_id is required")
+	}
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	if req.GetTitle() == "" {
+		return nil, status.Error(codes.InvalidArgument, "title is required")
+	}
+
+	board, err := s.updateBoard.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), int(req.GetVersion()))
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	return &boardpb.UpdateBoardResponse{
+		Board: mapBoardToProto(board),
+	}, nil
+}
+
+// DeleteBoard удаляет одну или несколько досок (batch)
+func (s *BoardServiceServer) DeleteBoard(ctx context.Context, req *boardpb.DeleteBoardRequest) (*emptypb.Empty, error) {
+	if len(req.GetBoardIds()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "board_ids is required")
+	}
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	err := s.deleteBoard.Execute(ctx, req.GetBoardIds(), req.GetUserId())
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	return &emptypb.Empty{}, nil
+}

@@ -11,6 +11,8 @@ import MembersModal from '@/components/board/MembersModal.vue'
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
+import { useBulkSelect } from '@/composables/useBulkSelect'
+import { useDebouncedSearch } from '@/composables/useDebouncedSearch'
 
 const router = useRouter()
 const boardsStore = useBoardsStore()
@@ -28,15 +30,28 @@ const detailsTarget = ref<Board | null>(null)
 const membersTarget = ref<Board | null>(null)
 const showBulkDeleteConfirm = ref(false)
 
-// Search
-const searchInput = ref('')
-let searchTimer: ReturnType<typeof setTimeout> | null = null
+// Debounced search
+const { searchInput, debouncedValue, clearSearch: clearSearchInput } = useDebouncedSearch(300)
+
+watch(debouncedValue, (val) => {
+  boardsStore.search = val
+  reload()
+})
+
+function clearSearch() {
+  clearSearchInput()
+  boardsStore.search = ''
+  reload()
+}
 
 // Bulk select
-const selectMode = ref(false)
-const selectedIds = ref<Set<string>>(new Set())
+const { selectMode, selectedIds, selectedCount, toggleSelectMode, toggleSelect, toggleSelectAll: toggleSelectAllRaw, clearSelection } = useBulkSelect(
+  (id: string) => {
+    const board = boardsStore.boards.find(b => b.id === id)
+    return !!board && board.ownerId === authStore.userId
+  }
+)
 
-const selectedCount = computed(() => selectedIds.value.size)
 const selectableBoards = computed(() =>
   boardsStore.boards.filter(b => b.ownerId === authStore.userId)
 )
@@ -44,26 +59,15 @@ const allSelectableSelected = computed(() =>
   selectableBoards.value.length > 0 && selectableBoards.value.every(b => selectedIds.value.has(b.id))
 )
 
+function toggleSelectAll() {
+  toggleSelectAllRaw(boardsStore.boards.map(b => b.id))
+}
+
 // Owner profiles cache
 const ownerProfiles = reactive<Record<string, { name: string; avatarUrl: string }>>({})
 
 function isOwner(board: Board): boolean {
   return board.ownerId === authStore.userId
-}
-
-// Debounced search
-watch(searchInput, (val) => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => {
-    boardsStore.search = val.trim()
-    reload()
-  }, 300)
-})
-
-function clearSearch() {
-  searchInput.value = ''
-  boardsStore.search = ''
-  reload()
 }
 
 async function reload() {
@@ -81,37 +85,11 @@ function setSortBy(val: 'updated_at' | 'created_at' | 'title') {
   reload()
 }
 
-// Bulk
-function toggleSelectMode() {
-  selectMode.value = !selectMode.value
-  selectedIds.value = new Set()
-}
-
-function toggleSelect(boardId: string, e: Event) {
-  e.stopPropagation()
-  const s = new Set(selectedIds.value)
-  if (s.has(boardId)) {
-    s.delete(boardId)
-  } else {
-    s.add(boardId)
-  }
-  selectedIds.value = s
-}
-
-function toggleSelectAll() {
-  if (allSelectableSelected.value) {
-    selectedIds.value = new Set()
-  } else {
-    selectedIds.value = new Set(selectableBoards.value.map(b => b.id))
-  }
-}
-
 async function handleBulkDelete() {
   if (selectedIds.value.size === 0) return
   try {
     await boardsStore.deleteBoards([...selectedIds.value])
-    selectedIds.value = new Set()
-    selectMode.value = false
+    clearSelection()
   } catch (err) {
     console.error('Failed to batch delete:', err)
   } finally {

@@ -3,14 +3,25 @@ import type { WsMessage } from '@/types/events'
 // Маршрутизация WebSocket-событий в stores.
 // Транспорт (useWebSocket) вызывает dispatch(), сервис направляет в нужный store.
 
-type Handler = (data: unknown) => void
+type Handler = (data: unknown, message: WsMessage) => void
 
-const handlers = new Map<string, Handler>()
+const handlers = new Map<string, Set<Handler>>()
 const processedIds = new Set<string>()
 const MAX_PROCESSED = 1000
 
 export function registerHandler(eventType: string, handler: Handler): void {
-  handlers.set(eventType, handler)
+  if (!handlers.has(eventType)) {
+    handlers.set(eventType, new Set())
+  }
+  handlers.get(eventType)!.add(handler)
+}
+
+export function unregisterHandler(eventType: string, handler: Handler): void {
+  const set = handlers.get(eventType)
+  if (set) {
+    set.delete(handler)
+    if (set.size === 0) handlers.delete(eventType)
+  }
 }
 
 export function dispatch(message: WsMessage): void {
@@ -22,8 +33,10 @@ export function dispatch(message: WsMessage): void {
     if (first) processedIds.delete(first)
   }
 
-  const handler = handlers.get(message.type)
-  if (handler) {
-    handler(message.data)
+  const set = handlers.get(message.type)
+  if (set) {
+    for (const handler of set) {
+      handler(message.data, message)
+    }
   }
 }

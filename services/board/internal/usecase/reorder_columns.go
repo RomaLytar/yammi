@@ -74,6 +74,7 @@ func (uc *ReorderColumnsUseCase) Execute(ctx context.Context, boardID, userID st
 			EventVersion: 1,
 			OccurredAt:   getCurrentTime(),
 			BoardID:      boardID,
+			ActorID:      userID,
 			Columns:      columnIDs,
 		})
 	}()

@@ -3,7 +3,14 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBoardStore } from '@/stores/board'
 import { useAuthStore } from '@/stores/auth'
+import { useRealtimeConnection } from '@/composables/useRealtimeBoard'
+import { registerHandler, unregisterHandler } from '@/services/realtimeService'
 import type { Card } from '@/types/domain'
+import type {
+  CardCreatedData, CardUpdatedData, CardDeletedData, CardMovedData,
+  ColumnCreatedData, ColumnUpdatedData, ColumnDeletedData,
+  BoardUpdatedData, BoardDeletedData, MemberRemovedData,
+} from '@/types/events'
 import BoardColumn from '@/components/board/BoardColumn.vue'
 import CreateColumnModal from '@/components/board/CreateColumnModal.vue'
 import CreateCardModal from '@/components/board/CreateCardModal.vue'
@@ -16,6 +23,7 @@ const route = useRoute()
 const router = useRouter()
 const boardStore = useBoardStore()
 const authStore = useAuthStore()
+const { subscribeBoard, unsubscribeBoard } = useRealtimeConnection()
 
 const isOwner = computed(() => boardStore.board?.ownerId === authStore.userId)
 const currentUserId = computed(() => authStore.userId || '')
@@ -63,6 +71,133 @@ async function handleBulkDeleteCards() {
   }
 }
 
+// --- Real-time event handlers ---
+
+function onCardCreated(data: unknown) {
+  const d = data as CardCreatedData
+  if (d.actor_id === authStore.userId) return
+  const column = boardStore.columns.find(c => c.id === d.column_id)
+  if (!column) return
+  // Avoid duplicates
+  if (column.cards.some(c => c.id === d.card_id)) return
+  column.cards.push({
+    id: d.card_id,
+    title: d.title,
+    description: d.description || '',
+    position: d.position,
+    columnId: d.column_id,
+    creatorId: d.actor_id,
+    version: 1,
+    createdAt: new Date().toISOString(),
+  })
+  column.cards.sort((a, b) => a.position.localeCompare(b.position))
+}
+
+function onCardUpdated(data: unknown) {
+  const d = data as CardUpdatedData
+  if (d.actor_id === authStore.userId) return
+  for (const column of boardStore.columns) {
+    const card = column.cards.find(c => c.id === d.card_id)
+    if (card) {
+      card.title = d.title
+      card.description = d.description
+      if (d.assignee_id !== undefined) card.assigneeId = d.assignee_id
+      break
+    }
+  }
+}
+
+function onCardDeleted(data: unknown) {
+  const d = data as CardDeletedData
+  if (d.actor_id === authStore.userId) return
+  for (const column of boardStore.columns) {
+    const idx = column.cards.findIndex(c => c.id === d.card_id)
+    if (idx !== -1) {
+      column.cards.splice(idx, 1)
+      break
+    }
+  }
+}
+
+function onCardMoved(data: unknown) {
+  const d = data as CardMovedData
+  if (d.actor_id === authStore.userId) return
+  const fromColumn = boardStore.columns.find(c => c.id === d.from_column_id)
+  const toColumn = boardStore.columns.find(c => c.id === d.to_column_id)
+  if (!fromColumn || !toColumn) return
+
+  const cardIndex = fromColumn.cards.findIndex(c => c.id === d.card_id)
+  if (cardIndex === -1) return
+
+  const [card] = fromColumn.cards.splice(cardIndex, 1)
+  card.position = d.new_position
+  card.columnId = d.to_column_id
+  toColumn.cards.push(card)
+  toColumn.cards.sort((a, b) => a.position.localeCompare(b.position))
+}
+
+function onColumnCreated(data: unknown) {
+  const d = data as ColumnCreatedData
+  if (d.actor_id === authStore.userId) return
+  if (boardStore.columns.some(c => c.id === d.column_id)) return
+  boardStore.columns.push({
+    id: d.column_id,
+    title: d.title,
+    position: d.position,
+    cards: [],
+  })
+  boardStore.columns.sort((a, b) => a.position - b.position)
+}
+
+function onColumnUpdated(data: unknown) {
+  const d = data as ColumnUpdatedData
+  if (d.actor_id === authStore.userId) return
+  const column = boardStore.columns.find(c => c.id === d.column_id)
+  if (column) column.title = d.title
+}
+
+function onColumnDeleted(data: unknown) {
+  const d = data as ColumnDeletedData
+  if (d.actor_id === authStore.userId) return
+  boardStore.columns = boardStore.columns.filter(c => c.id !== d.column_id)
+}
+
+function onBoardUpdated(data: unknown) {
+  const d = data as BoardUpdatedData
+  if (d.actor_id === authStore.userId) return
+  if (boardStore.board) {
+    boardStore.board.title = d.title
+    boardStore.board.description = d.description
+  }
+}
+
+function onBoardDeleted(data: unknown) {
+  const d = data as BoardDeletedData
+  if (boardStore.board?.id === d.board_id) {
+    router.push('/boards')
+  }
+}
+
+function onMemberRemoved(data: unknown) {
+  const d = data as MemberRemovedData
+  if (d.user_id === authStore.userId && d.board_id === boardStore.board?.id) {
+    router.push('/boards')
+  }
+}
+
+const realtimeHandlers: Array<[string, (data: unknown) => void]> = [
+  ['card.created', onCardCreated],
+  ['card.updated', onCardUpdated],
+  ['card.deleted', onCardDeleted],
+  ['card.moved', onCardMoved],
+  ['column.created', onColumnCreated],
+  ['column.updated', onColumnUpdated],
+  ['column.deleted', onColumnDeleted],
+  ['board.updated', onBoardUpdated],
+  ['board.deleted', onBoardDeleted],
+  ['member.removed', onMemberRemoved],
+]
+
 onMounted(async () => {
   const boardId = route.params.boardId as string
   try {
@@ -70,10 +205,29 @@ onMounted(async () => {
   } catch (error) {
     console.error('Failed to load board:', error)
     router.push('/boards')
+    return
+  }
+
+  // Subscribe to board updates via WebSocket
+  subscribeBoard(boardId)
+
+  // Register real-time handlers
+  for (const [event, handler] of realtimeHandlers) {
+    registerHandler(event, handler)
   }
 })
 
 onUnmounted(() => {
+  const boardId = route.params.boardId as string
+
+  // Unsubscribe from board updates
+  if (boardId) unsubscribeBoard(boardId)
+
+  // Unregister real-time handlers
+  for (const [event, handler] of realtimeHandlers) {
+    unregisterHandler(event, handler)
+  }
+
   boardStore.clear()
 })
 

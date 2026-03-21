@@ -80,6 +80,15 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("DELETE /api/v1/boards/{boardId}/members/{userId}", rateLimit(requireAuth(http.HandlerFunc(board.RemoveMember))))
 	mux.Handle("GET /api/v1/boards/{id}/members", rateLimit(requireAuth(http.HandlerFunc(board.ListMembers))))
 
+	// Notification routes
+	notification := NewNotificationHandler(clients.NotificationClient)
+	mux.Handle("GET /api/v1/notifications", rateLimit(requireAuth(http.HandlerFunc(notification.ListNotifications))))
+	mux.Handle("POST /api/v1/notifications/read", rateLimit(requireAuth(http.HandlerFunc(notification.MarkAsRead))))
+	mux.Handle("POST /api/v1/notifications/read-all", rateLimit(requireAuth(http.HandlerFunc(notification.MarkAllAsRead))))
+	mux.Handle("GET /api/v1/notifications/unread-count", rateLimit(requireAuth(http.HandlerFunc(notification.GetUnreadCount))))
+	mux.Handle("GET /api/v1/notifications/settings", rateLimit(requireAuth(http.HandlerFunc(notification.GetSettings))))
+	mux.Handle("PUT /api/v1/notifications/settings", rateLimit(requireAuth(http.HandlerFunc(notification.UpdateSettings))))
+
 	shutdown := func() {
 		registerLimiter.Stop()
 		loginLimiter.Stop()

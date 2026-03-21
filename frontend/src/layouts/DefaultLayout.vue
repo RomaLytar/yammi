@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
+import { useNotificationsStore } from '@/stores/notifications'
+import { useRealtimeConnection } from '@/composables/useRealtimeBoard'
 import AppHeader from '@/components/layout/AppHeader.vue'
+import NotificationToastContainer from '@/components/notification/NotificationToastContainer.vue'
 
 const userStore = useUserStore()
+const notificationsStore = useNotificationsStore()
+const { connect } = useRealtimeConnection()
 
 onMounted(async () => {
   // Загружаем профиль если еще не загружен
@@ -14,6 +19,12 @@ onMounted(async () => {
       console.error('[DefaultLayout] Failed to fetch profile:', error)
     }
   }
+
+  // Инициализируем WebSocket соединение
+  connect()
+
+  // Загружаем начальный счётчик непрочитанных уведомлений
+  notificationsStore.fetchUnreadCount()
 })
 </script>
 
@@ -23,6 +34,7 @@ onMounted(async () => {
     <main class="default-layout__content">
       <slot />
     </main>
+    <NotificationToastContainer />
   </div>
 </template>
 

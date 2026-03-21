@@ -53,7 +53,7 @@ func (uc *UpdateBoardUseCase) Execute(ctx context.Context, boardID, userID, titl
 			EventVersion: 1,
 			OccurredAt:   board.UpdatedAt,
 			BoardID:      board.ID,
-			UserID:       userID,
+			ActorID:      userID,
 			Title:        board.Title,
 			Description:  board.Description,
 		})

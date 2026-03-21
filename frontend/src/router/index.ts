@@ -25,6 +25,11 @@ export const router = createRouter({
       meta: { layout: 'board', requiresAuth: true },
     },
     {
+      path: '/notifications',
+      component: () => import('@/pages/notifications/NotificationsPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/profile',
       component: () => import('@/pages/profile/ProfilePage.vue'),
       meta: { requiresAuth: true },

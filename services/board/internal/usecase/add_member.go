@@ -52,7 +52,9 @@ func (uc *AddMemberUseCase) Execute(ctx context.Context, boardID, userID, member
 			OccurredAt:   time.Now(),
 			BoardID:      boardID,
 			UserID:       memberUserID,
+			ActorID:      userID,
 			Role:         string(role),
+			BoardTitle:   board.Title,
 		})
 	}()
 

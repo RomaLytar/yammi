@@ -48,6 +48,7 @@ func (uc *DeleteColumnUseCase) Execute(ctx context.Context, columnID, boardID, u
 			OccurredAt:   getCurrentTime(),
 			BoardID:      boardID,
 			ColumnID:     columnID,
+			ActorID:      userID,
 		})
 	}()
 

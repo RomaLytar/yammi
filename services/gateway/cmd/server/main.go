@@ -1,12 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"github.com/romanlovesweed/yammi/services/gateway/internal/delivery/websocket"
+	"github.com/romanlovesweed/yammi/services/gateway/internal/infrastructure/auth"
+	"github.com/romanlovesweed/yammi/services/gateway/internal/infrastructure/queue"
 )
 
 func main() {
@@ -15,7 +21,34 @@ func main() {
 		port = "8081"
 	}
 
+	natsURL := os.Getenv("NATS_URL")
+	if natsURL == "" {
+		natsURL = "nats://localhost:4222"
+	}
+
+	// JWT верификатор — загружает публичный ключ из env или через HTTP.
+	verifier, err := auth.NewJWTVerifier()
+	if err != nil {
+		log.Fatalf("ws-gateway: failed to create JWT verifier: %v", err)
+	}
+
+	// Hub — управление соединениями и маршрутизация.
+	hub := websocket.NewHub()
+	go hub.Run()
+
+	// NATS consumer — подписка на события.
+	consumer, err := queue.NewConsumer(natsURL, hub)
+	if err != nil {
+		log.Fatalf("ws-gateway: failed to create NATS consumer: %v", err)
+	}
+
+	if err := consumer.Start(); err != nil {
+		log.Fatalf("ws-gateway: failed to start NATS consumer: %v", err)
+	}
+
+	// HTTP маршруты.
 	mux := http.NewServeMux()
+
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -26,8 +59,7 @@ func main() {
 	})
 
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		// TODO: implement WebSocket upgrade
-		http.Error(w, "websocket not yet implemented", http.StatusNotImplemented)
+		websocket.ServeWS(hub, verifier, w, r)
 	})
 
 	server := &http.Server{
@@ -42,10 +74,21 @@ func main() {
 		}
 	}()
 
+	// Graceful shutdown.
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("ws-gateway shutting down")
-	server.Close()
+	log.Println("ws-gateway shutting down...")
+
+	consumer.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Printf("ws-gateway: shutdown error: %v", err)
+	}
+
+	log.Println("ws-gateway stopped")
 }

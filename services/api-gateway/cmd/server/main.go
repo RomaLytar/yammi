@@ -32,8 +32,13 @@ func main() {
 		boardAddr = "localhost:50053"
 	}
 
+	notificationAddr := os.Getenv("NOTIFICATION_GRPC_ADDR")
+	if notificationAddr == "" {
+		notificationAddr = "localhost:50055"
+	}
+
 	// gRPC clients
-	clients, err := infrastructure.NewGRPCClients(authAddr, userAddr, boardAddr)
+	clients, err := infrastructure.NewGRPCClients(authAddr, userAddr, boardAddr, notificationAddr)
 	if err != nil {
 		log.Fatalf("failed to create grpc clients: %v", err)
 	}

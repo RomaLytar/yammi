@@ -59,6 +59,7 @@ func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 			OccurredAt:   card.UpdatedAt,
 			BoardID:      boardID,
 			CardID:       card.ID,
+			ActorID:      userID,
 			Title:        card.Title,
 			Description:  card.Description,
 			AssigneeID:   card.AssigneeID,

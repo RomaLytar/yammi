@@ -145,8 +145,8 @@ services:
 
   notification:
     build:
-      context: ./services/notification
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/notification/Dockerfile
     environment:
       NOTIFICATION_GRPC_PORT: "50055"
       DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_notification?sslmode=disable"
@@ -169,6 +169,7 @@ services:
       USER_GRPC_ADDR: "user:50052"
       BOARD_GRPC_ADDR: "board:50053"
       COMMENT_GRPC_ADDR: "comment:50054"
+      NOTIFICATION_GRPC_ADDR: "notification:50055"
       RATE_LIMIT_REGISTER: "${RATE_LIMIT_REGISTER:-50}"
       RATE_LIMIT_LOGIN: "${RATE_LIMIT_LOGIN:-50}"
       RATE_LIMIT_REFRESH: "${RATE_LIMIT_REFRESH:-50}"
@@ -180,6 +181,7 @@ services:
       - user
       - board
       - comment
+      - notification
 
   gateway:
     build:
@@ -188,11 +190,14 @@ services:
     environment:
       WS_GATEWAY_PORT: "8081"
       NATS_URL: "nats://nats:4222"
+      AUTH_PUBLIC_KEY_URL: "http://api-gateway:8080/api/v1/auth/public-key"
     ports:
       - "8081:8081"
     depends_on:
       nats:
         condition: service_healthy
+      api-gateway:
+        condition: service_started
 
   frontend:
     build:

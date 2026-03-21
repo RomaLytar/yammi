@@ -22,7 +22,7 @@ type BoardUpdated struct {
 	EventVersion int       `json:"event_version"`
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
-	UserID       string    `json:"user_id"`
+	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description"`
 }
@@ -32,7 +32,7 @@ type BoardDeleted struct {
 	EventVersion int       `json:"event_version"`
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
-	UserID       string    `json:"user_id"`
+	ActorID      string    `json:"actor_id"`
 }
 
 type ColumnAdded struct {
@@ -41,6 +41,7 @@ type ColumnAdded struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
 	ColumnID     string    `json:"column_id"`
+	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 	Position     int       `json:"position"`
 }
@@ -51,6 +52,7 @@ type ColumnUpdated struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
 	ColumnID     string    `json:"column_id"`
+	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 }
 
@@ -60,6 +62,7 @@ type ColumnDeleted struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
 	ColumnID     string    `json:"column_id"`
+	ActorID      string    `json:"actor_id"`
 }
 
 type ColumnsReordered struct {
@@ -67,6 +70,7 @@ type ColumnsReordered struct {
 	EventVersion int       `json:"event_version"`
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
 	Columns      []string  `json:"columns"` // ordered column IDs
 }
 
@@ -77,6 +81,7 @@ type CardCreated struct {
 	BoardID      string    `json:"board_id"`
 	ColumnID     string    `json:"column_id"`
 	CardID       string    `json:"card_id"`
+	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description"`
 	Position     string    `json:"position"`
@@ -88,20 +93,22 @@ type CardUpdated struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
 	CardID       string    `json:"card_id"`
+	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description"`
 	AssigneeID   *string   `json:"assignee_id"`
 }
 
 type CardMoved struct {
-	EventID        string    `json:"event_id"`
-	EventVersion   int       `json:"event_version"`
-	OccurredAt     time.Time `json:"occurred_at"`
-	BoardID        string    `json:"board_id"`
-	CardID         string    `json:"card_id"`
-	FromColumnID   string    `json:"from_column_id"`
-	ToColumnID     string    `json:"to_column_id"`
-	NewPosition    string    `json:"new_position"`
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	BoardID      string    `json:"board_id"`
+	CardID       string    `json:"card_id"`
+	ActorID      string    `json:"actor_id"`
+	FromColumnID string    `json:"from_column_id"`
+	ToColumnID   string    `json:"to_column_id"`
+	NewPosition  string    `json:"new_position"`
 }
 
 type CardDeleted struct {
@@ -110,6 +117,7 @@ type CardDeleted struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
 	CardID       string    `json:"card_id"`
+	ActorID      string    `json:"actor_id"`
 }
 
 type MemberAdded struct {
@@ -118,7 +126,9 @@ type MemberAdded struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
 	UserID       string    `json:"user_id"`
+	ActorID      string    `json:"actor_id"`
 	Role         string    `json:"role"`
+	BoardTitle   string    `json:"board_title"`
 }
 
 type MemberRemoved struct {
@@ -127,6 +137,8 @@ type MemberRemoved struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
 	UserID       string    `json:"user_id"`
+	ActorID      string    `json:"actor_id"`
+	BoardTitle   string    `json:"board_title"`
 }
 
 func generateEventID() string {

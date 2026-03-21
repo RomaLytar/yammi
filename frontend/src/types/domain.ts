@@ -46,3 +46,18 @@ export interface Comment {
   text: string
   createdAt: string
 }
+
+export interface Notification {
+  id: string
+  type: string
+  title: string
+  message: string
+  metadata: Record<string, string>
+  isRead: boolean
+  createdAt: string
+}
+
+export interface NotificationSettings {
+  enabled: boolean
+  realtimeEnabled: boolean
+}

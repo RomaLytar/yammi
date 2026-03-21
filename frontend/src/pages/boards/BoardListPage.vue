@@ -3,8 +3,10 @@ import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBoardsStore } from '@/stores/boards'
 import { useAuthStore } from '@/stores/auth'
+import { registerHandler, unregisterHandler } from '@/services/realtimeService'
 import * as usersApi from '@/api/users'
 import type { Board } from '@/types/domain'
+import type { BoardDeletedData, MemberAddedData, MemberRemovedData } from '@/types/events'
 import CreateBoardModal from '@/components/board/CreateBoardModal.vue'
 import BoardDetailsModal from '@/components/board/BoardDetailsModal.vue'
 import MembersModal from '@/components/board/MembersModal.vue'
@@ -97,14 +99,53 @@ async function handleBulkDelete() {
   }
 }
 
+// --- Real-time event handlers ---
+
+function onBoardDeleted(data: unknown) {
+  const d = data as BoardDeletedData
+  boardsStore.boards = boardsStore.boards.filter(b => b.id !== d.board_id)
+}
+
+function onMemberAdded(data: unknown) {
+  const d = data as MemberAddedData
+  if (d.user_id === authStore.userId) {
+    // Current user was added to a board — refresh the list
+    boardsStore.fetchBoards(true).then(() => fetchOwnerProfiles())
+  }
+}
+
+function onMemberRemoved(data: unknown) {
+  const d = data as MemberRemovedData
+  if (d.user_id === authStore.userId) {
+    // Current user was removed from a board — remove it from list
+    boardsStore.boards = boardsStore.boards.filter(b => b.id !== d.board_id)
+  }
+}
+
+const listRealtimeHandlers: Array<[string, (data: unknown) => void]> = [
+  ['board.deleted', onBoardDeleted],
+  ['member.added', onMemberAdded],
+  ['member.removed', onMemberRemoved],
+]
+
 onMounted(async () => {
   await boardsStore.fetchBoards(true)
   fetchOwnerProfiles()
   document.addEventListener('click', closeMenu)
+
+  // Register real-time handlers
+  for (const [event, handler] of listRealtimeHandlers) {
+    registerHandler(event, handler)
+  }
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', closeMenu)
+
+  // Unregister real-time handlers
+  for (const [event, handler] of listRealtimeHandlers) {
+    unregisterHandler(event, handler)
+  }
 })
 
 function closeMenu() {

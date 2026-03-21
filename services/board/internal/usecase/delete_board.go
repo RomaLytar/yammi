@@ -47,7 +47,7 @@ func (uc *DeleteBoardUseCase) Execute(ctx context.Context, boardIDs []string, us
 				EventVersion: 1,
 				OccurredAt:   getCurrentTime(),
 				BoardID:      bid,
-				UserID:       userID,
+				ActorID:      userID,
 			})
 		}()
 	}

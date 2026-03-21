@@ -167,6 +167,29 @@ export interface SearchUsersResponse {
   users: SearchUserItem[]
 }
 
+// --- Notifications ---
+
+export interface NotificationResponse {
+  id: string
+  type: string
+  title: string
+  message: string
+  metadata: Record<string, string>
+  is_read: boolean
+  created_at: string
+}
+
+export interface ListNotificationsResponse {
+  notifications: NotificationResponse[]
+  next_cursor?: string
+  total_unread: number
+}
+
+export interface NotificationSettingsResponse {
+  enabled: boolean
+  realtime_enabled: boolean
+}
+
 // --- Errors ---
 
 export interface ErrorResponse {

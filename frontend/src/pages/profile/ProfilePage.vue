@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 import { ApiError } from '@/api/client'
 import BaseInput from '@/components/shared/BaseInput.vue'
@@ -7,6 +8,7 @@ import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseAvatar from '@/components/shared/BaseAvatar.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
 
+const authStore = useAuthStore()
 const userStore = useUserStore()
 
 const name = ref('')
@@ -60,6 +62,13 @@ async function handleSave(): Promise<void> {
           <span class="profile-page__name">{{ userStore.profile.name }}</span>
           <span class="profile-page__email">{{ userStore.profile.email }}</span>
         </div>
+        <button class="profile-page__logout" @click="authStore.logout" title="Выйти из аккаунта">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </button>
       </div>
 
       <BaseInput v-model="name" label="Имя" />
@@ -111,6 +120,26 @@ async function handleSave(): Promise<void> {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+}
+
+.profile-page__logout {
+  background: var(--color-danger-soft);
+  border: 1px solid transparent;
+  color: var(--color-danger);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+.profile-page__logout:hover {
+  background: var(--color-danger);
+  color: white;
 }
 
 .profile-page__name {

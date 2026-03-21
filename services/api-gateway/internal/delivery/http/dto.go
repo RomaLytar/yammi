@@ -73,6 +73,23 @@ type memberResponse struct {
 	JoinedAt string `json:"joined_at"`
 }
 
+// --- Notification responses ---
+
+type notificationResponse struct {
+	ID        string            `json:"id"`
+	Type      string            `json:"type"`
+	Title     string            `json:"title"`
+	Message   string            `json:"message"`
+	Metadata  map[string]string `json:"metadata"`
+	IsRead    bool              `json:"is_read"`
+	CreatedAt string            `json:"created_at"`
+}
+
+type settingsResponse struct {
+	Enabled         bool `json:"enabled"`
+	RealtimeEnabled bool `json:"realtime_enabled"`
+}
+
 // --- Generic responses ---
 
 type statusResponse struct {

@@ -59,6 +59,7 @@ func (uc *UpdateColumnUseCase) Execute(ctx context.Context, columnID, boardID, u
 			OccurredAt:   getCurrentTime(),
 			BoardID:      boardID,
 			ColumnID:     column.ID,
+			ActorID:      userID,
 			Title:        column.Title,
 		})
 	}()

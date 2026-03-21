@@ -3,19 +3,20 @@ package events
 import "time"
 
 const (
-	SubjectBoardCreated  = "board.created"
-	SubjectBoardUpdated  = "board.updated"
-	SubjectBoardDeleted  = "board.deleted"
-	SubjectColumnCreated = "column.created"
-	SubjectColumnUpdated = "column.updated"
-	SubjectColumnDeleted = "column.deleted"
-	SubjectCardCreated   = "card.created"
-	SubjectCardUpdated   = "card.updated"
-	SubjectCardMoved     = "card.moved"
-	SubjectCardDeleted   = "card.deleted"
-	SubjectMemberAdded   = "member.added"
-	SubjectMemberRemoved = "member.removed"
-	StreamBoards         = "BOARDS"
+	SubjectBoardCreated     = "board.created"
+	SubjectBoardUpdated     = "board.updated"
+	SubjectBoardDeleted     = "board.deleted"
+	SubjectColumnCreated    = "column.created"
+	SubjectColumnUpdated    = "column.updated"
+	SubjectColumnDeleted    = "column.deleted"
+	SubjectColumnsReordered = "columns.reordered"
+	SubjectCardCreated      = "card.created"
+	SubjectCardUpdated      = "card.updated"
+	SubjectCardMoved        = "card.moved"
+	SubjectCardDeleted      = "card.deleted"
+	SubjectMemberAdded      = "member.added"
+	SubjectMemberRemoved    = "member.removed"
+	StreamBoards            = "BOARDS"
 )
 
 // BoardCreated событие создания доски
@@ -35,6 +36,7 @@ type BoardUpdated struct {
 	EventVersion int       `json:"event_version"`
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description"`
 }
@@ -45,6 +47,7 @@ type BoardDeleted struct {
 	EventVersion int       `json:"event_version"`
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
 }
 
 // ColumnCreated событие создания колонки
@@ -54,6 +57,7 @@ type ColumnCreated struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	ColumnID     string    `json:"column_id"`
 	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 	Position     int       `json:"position"`
 }
@@ -65,6 +69,7 @@ type ColumnUpdated struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	ColumnID     string    `json:"column_id"`
 	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 }
 
@@ -75,6 +80,17 @@ type ColumnDeleted struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	ColumnID     string    `json:"column_id"`
 	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+// ColumnsReordered событие переупорядочивания колонок
+type ColumnsReordered struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Columns      []string  `json:"columns"`
 }
 
 // CardCreated событие создания карточки
@@ -85,6 +101,7 @@ type CardCreated struct {
 	CardID       string    `json:"card_id"`
 	ColumnID     string    `json:"column_id"`
 	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description"`
 	Position     string    `json:"position"`
@@ -99,6 +116,7 @@ type CardUpdated struct {
 	CardID       string    `json:"card_id"`
 	ColumnID     string    `json:"column_id"`
 	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description"`
 	AssigneeID   *string   `json:"assignee_id,omitempty"`
@@ -106,14 +124,15 @@ type CardUpdated struct {
 
 // CardMoved событие перемещения карточки
 type CardMoved struct {
-	EventID         string    `json:"event_id"`
-	EventVersion    int       `json:"event_version"`
-	OccurredAt      time.Time `json:"occurred_at"`
-	CardID          string    `json:"card_id"`
-	BoardID         string    `json:"board_id"`
-	SourceColumnID  string    `json:"source_column_id"`
-	TargetColumnID  string    `json:"target_column_id"`
-	NewPosition     string    `json:"new_position"`
+	EventID        string    `json:"event_id"`
+	EventVersion   int       `json:"event_version"`
+	OccurredAt     time.Time `json:"occurred_at"`
+	CardID         string    `json:"card_id"`
+	BoardID        string    `json:"board_id"`
+	ActorID        string    `json:"actor_id"`
+	SourceColumnID string    `json:"source_column_id"`
+	TargetColumnID string    `json:"target_column_id"`
+	NewPosition    string    `json:"new_position"`
 }
 
 // CardDeleted событие удаления карточки
@@ -124,6 +143,7 @@ type CardDeleted struct {
 	CardID       string    `json:"card_id"`
 	ColumnID     string    `json:"column_id"`
 	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
 }
 
 // MemberAdded событие добавления участника
@@ -133,7 +153,9 @@ type MemberAdded struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
 	UserID       string    `json:"user_id"`
+	ActorID      string    `json:"actor_id"`
 	Role         string    `json:"role"`
+	BoardTitle   string    `json:"board_title"`
 }
 
 // MemberRemoved событие удаления участника
@@ -143,4 +165,6 @@ type MemberRemoved struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
 	UserID       string    `json:"user_id"`
+	ActorID      string    `json:"actor_id"`
+	BoardTitle   string    `json:"board_title"`
 }

@@ -56,6 +56,7 @@ func (uc *AddColumnUseCase) Execute(ctx context.Context, boardID, userID, title 
 			OccurredAt:   time.Now(),
 			ColumnID:     column.ID,
 			BoardID:      column.BoardID,
+			ActorID:      userID,
 			Title:        column.Title,
 			Position:     column.Position,
 		})

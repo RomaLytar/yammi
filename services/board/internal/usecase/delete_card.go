@@ -62,6 +62,7 @@ func (uc *DeleteCardUseCase) Execute(ctx context.Context, cardIDs []string, boar
 				OccurredAt:   getCurrentTime(),
 				BoardID:      boardID,
 				CardID:       cardID,
+				ActorID:      userID,
 			})
 		}
 	}()

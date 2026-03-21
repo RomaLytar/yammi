@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { useAuthStore } from '@/stores/auth'
+import { ref } from 'vue'
 import { useUserStore } from '@/stores/user'
 import BaseAvatar from '@/components/shared/BaseAvatar.vue'
+import NotificationBell from '@/components/notification/NotificationBell.vue'
+import NotificationPanel from '@/components/notification/NotificationPanel.vue'
 
-const authStore = useAuthStore()
 const userStore = useUserStore()
+
+const showNotifications = ref(false)
+const notificationsRef = ref<HTMLElement | null>(null)
+
+function toggleNotifications() {
+  showNotifications.value = !showNotifications.value
+}
 </script>
 
 <template>
@@ -16,10 +24,15 @@ const userStore = useUserStore()
     </nav>
 
     <div class="app-header__right">
+      <div ref="notificationsRef" class="app-header__notifications">
+        <NotificationBell @toggle="toggleNotifications" />
+        <Teleport to="body">
+          <NotificationPanel v-if="showNotifications" :anchor-el="notificationsRef" @close="showNotifications = false" />
+        </Teleport>
+      </div>
       <RouterLink v-if="userStore.profile" to="/profile" class="app-header__profile">
-        <BaseAvatar :name="userStore.profile.name" :src="userStore.profile.avatarUrl || undefined" size="sm" />
+        <BaseAvatar :name="userStore.profile.name" :src="userStore.profile.avatarUrl || undefined" size="md" />
       </RouterLink>
-      <button class="app-header__logout" @click="authStore.logout">Выйти</button>
     </div>
   </header>
 </template>
@@ -63,20 +76,11 @@ const userStore = useUserStore()
 
 .app-header__right { display: flex; align-items: center; gap: var(--space-sm); }
 
-.app-header__profile { text-decoration: none; }
+.app-header__notifications { position: relative; }
 
-.app-header__logout {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.85);
-  padding: 6px 16px;
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  transition: all var(--transition-fast);
-}
-.app-header__logout:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+.app-header__profile {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
 }
 </style>

@@ -12,16 +12,19 @@ import (
 
 	authpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1"
 	boardpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board"
+	notificationpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/notification"
 	userpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/user"
 )
 
 type GRPCClients struct {
-	authConn    *grpc.ClientConn
-	AuthClient  authpb.AuthServiceClient
-	userConn    *grpc.ClientConn
-	UserClient  userpb.UserServiceClient
-	boardConn   *grpc.ClientConn
-	BoardClient boardpb.BoardServiceClient
+	authConn           *grpc.ClientConn
+	AuthClient         authpb.AuthServiceClient
+	userConn           *grpc.ClientConn
+	UserClient         userpb.UserServiceClient
+	boardConn          *grpc.ClientConn
+	BoardClient        boardpb.BoardServiceClient
+	notificationConn   *grpc.ClientConn
+	NotificationClient notificationpb.NotificationServiceClient
 }
 
 var defaultDialOpts = []grpc.DialOption{
@@ -38,7 +41,7 @@ var defaultDialOpts = []grpc.DialOption{
 	}),
 }
 
-func NewGRPCClients(authAddr, userAddr, boardAddr string) (*GRPCClients, error) {
+func NewGRPCClients(authAddr, userAddr, boardAddr, notificationAddr string) (*GRPCClients, error) {
 	authConn, err := grpc.NewClient("dns:///"+authAddr, defaultDialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to auth service: %w", err)
@@ -60,13 +63,24 @@ func NewGRPCClients(authAddr, userAddr, boardAddr string) (*GRPCClients, error) 
 	}
 	log.Printf("connected to board service at %s", boardAddr)
 
+	notificationConn, err := grpc.NewClient("dns:///"+notificationAddr, defaultDialOpts...)
+	if err != nil {
+		authConn.Close()
+		userConn.Close()
+		boardConn.Close()
+		return nil, fmt.Errorf("failed to connect to notification service: %w", err)
+	}
+	log.Printf("connected to notification service at %s", notificationAddr)
+
 	return &GRPCClients{
-		authConn:    authConn,
-		AuthClient:  authpb.NewAuthServiceClient(authConn),
-		userConn:    userConn,
-		UserClient:  userpb.NewUserServiceClient(userConn),
-		boardConn:   boardConn,
-		BoardClient: boardpb.NewBoardServiceClient(boardConn),
+		authConn:           authConn,
+		AuthClient:         authpb.NewAuthServiceClient(authConn),
+		userConn:           userConn,
+		UserClient:         userpb.NewUserServiceClient(userConn),
+		boardConn:          boardConn,
+		BoardClient:        boardpb.NewBoardServiceClient(boardConn),
+		notificationConn:   notificationConn,
+		NotificationClient: notificationpb.NewNotificationServiceClient(notificationConn),
 	}, nil
 }
 
@@ -79,5 +93,8 @@ func (c *GRPCClients) Close() {
 	}
 	if c.boardConn != nil {
 		c.boardConn.Close()
+	}
+	if c.notificationConn != nil {
+		c.notificationConn.Close()
 	}
 }

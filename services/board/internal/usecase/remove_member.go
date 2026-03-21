@@ -30,12 +30,18 @@ func (uc *RemoveMemberUseCase) Execute(ctx context.Context, boardID, userID, mem
 		return domain.ErrAccessDenied
 	}
 
-	// 2. Удаляем участника
+	// 2. Загружаем доску для BoardTitle
+	board, err := uc.boardRepo.GetByID(ctx, boardID)
+	if err != nil {
+		return err
+	}
+
+	// 3. Удаляем участника
 	if err := uc.memberRepo.RemoveMember(ctx, boardID, memberUserID); err != nil {
 		return err
 	}
 
-	// 3. Публикуем событие
+	// 4. Публикуем событие
 	go func() {
 		_ = uc.publisher.PublishMemberRemoved(context.Background(), MemberRemoved{
 			EventID:      generateEventID(),
@@ -43,6 +49,8 @@ func (uc *RemoveMemberUseCase) Execute(ctx context.Context, boardID, userID, mem
 			OccurredAt:   getCurrentTime(),
 			BoardID:      boardID,
 			UserID:       memberUserID,
+			ActorID:      userID,
+			BoardTitle:   board.Title,
 		})
 	}()
 

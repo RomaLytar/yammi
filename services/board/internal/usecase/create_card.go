@@ -69,6 +69,7 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 			CardID:       card.ID,
 			ColumnID:     card.ColumnID,
 			BoardID:      boardID,
+			ActorID:      userID,
 			Title:        card.Title,
 			Description:  card.Description,
 			Position:     card.Position,

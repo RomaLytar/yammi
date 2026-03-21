@@ -65,6 +65,7 @@ func (uc *MoveCardUseCase) Execute(ctx context.Context, cardID, boardID, fromCol
 			OccurredAt:     card.UpdatedAt,
 			CardID:         cardID,
 			BoardID:        boardID,
+			ActorID:        userID,
 			FromColumnID:   fromColumnID,
 			ToColumnID:     toColumnID,
 			NewPosition:    newPosition,

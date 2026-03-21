@@ -50,7 +50,7 @@ func TestListBoardsUseCase_Execute(t *testing.T) {
 						UpdatedAt:   time.Now(),
 					},
 				}
-				boardRepo.On("ListByUserID", mock.Anything, "user-123", 20, "").Return(boards, "cursor-next", nil)
+				boardRepo.On("ListByUserID", mock.Anything, "user-123", 20, "", false, "", "updated_at").Return(boards, "cursor-next", nil)
 			},
 			wantErr:        false,
 			expectedLimit:  20,
@@ -74,7 +74,7 @@ func TestListBoardsUseCase_Execute(t *testing.T) {
 						UpdatedAt:   time.Now(),
 					},
 				}
-				boardRepo.On("ListByUserID", mock.Anything, "user-123", 50, "cursor-123").Return(boards, "cursor-next-2", nil)
+				boardRepo.On("ListByUserID", mock.Anything, "user-123", 50, "cursor-123", false, "", "updated_at").Return(boards, "cursor-next-2", nil)
 			},
 			wantErr:        false,
 			expectedLimit:  50,
@@ -88,7 +88,7 @@ func TestListBoardsUseCase_Execute(t *testing.T) {
 			cursor: "",
 			setupMocks: func(boardRepo *MockBoardRepository) {
 				boards := []*domain.Board{}
-				boardRepo.On("ListByUserID", mock.Anything, "user-123", 20, "").Return(boards, "", nil)
+				boardRepo.On("ListByUserID", mock.Anything, "user-123", 20, "", false, "", "updated_at").Return(boards, "", nil)
 			},
 			wantErr:        false,
 			expectedLimit:  20,
@@ -102,7 +102,7 @@ func TestListBoardsUseCase_Execute(t *testing.T) {
 			cursor: "",
 			setupMocks: func(boardRepo *MockBoardRepository) {
 				boards := []*domain.Board{}
-				boardRepo.On("ListByUserID", mock.Anything, "user-123", 20, "").Return(boards, "", nil)
+				boardRepo.On("ListByUserID", mock.Anything, "user-123", 20, "", false, "", "updated_at").Return(boards, "", nil)
 			},
 			wantErr:        false,
 			expectedLimit:  20,
@@ -115,7 +115,7 @@ func TestListBoardsUseCase_Execute(t *testing.T) {
 			limit:  20,
 			cursor: "",
 			setupMocks: func(boardRepo *MockBoardRepository) {
-				boardRepo.On("ListByUserID", mock.Anything, "user-123", 20, "").Return(nil, "", errors.New("database error"))
+				boardRepo.On("ListByUserID", mock.Anything, "user-123", 20, "", false, "", "updated_at").Return(nil, "", errors.New("database error"))
 			},
 			wantErr:     true,
 			expectedErr: errors.New("database error"),
@@ -129,7 +129,7 @@ func TestListBoardsUseCase_Execute(t *testing.T) {
 			tt.setupMocks(boardRepo)
 
 			useCase := NewListBoardsUseCase(boardRepo)
-			boards, cursor, err := useCase.Execute(context.Background(), tt.userID, tt.limit, tt.cursor)
+			boards, cursor, err := useCase.Execute(context.Background(), tt.userID, tt.limit, tt.cursor, false, "", "updated_at")
 
 			if tt.wantErr {
 				assert.Error(t, err)

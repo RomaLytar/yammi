@@ -34,6 +34,8 @@ export interface Card {
   position: string // lexorank позиция (строка типа "a", "am", "b")
   columnId: string
   assigneeId?: string
+  creatorId: string
+  version: number  // optimistic locking version
   createdAt: string
 }
 

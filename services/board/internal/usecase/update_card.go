@@ -8,13 +8,15 @@ import (
 
 type UpdateCardUseCase struct {
 	cardRepo   CardRepository
+	boardRepo  BoardRepository
 	memberRepo MembershipRepository
 	publisher  EventPublisher
 }
 
-func NewUpdateCardUseCase(cardRepo CardRepository, memberRepo MembershipRepository, publisher EventPublisher) *UpdateCardUseCase {
+func NewUpdateCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, publisher EventPublisher) *UpdateCardUseCase {
 	return &UpdateCardUseCase{
 		cardRepo:   cardRepo,
+		boardRepo:  boardRepo,
 		memberRepo: memberRepo,
 		publisher:  publisher,
 	}
@@ -46,7 +48,10 @@ func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 		return nil, err
 	}
 
-	// 5. Публикуем событие
+	// 5. Обновляем updated_at доски
+	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
+
+	// 6. Публикуем событие
 	go func() {
 		_ = uc.publisher.PublishCardUpdated(context.Background(), CardUpdated{
 			EventID:      generateEventID(),

@@ -16,12 +16,13 @@ type Card struct {
 	Description string
 	Position    string  // lexorank (a, am, b, c, ...) — НЕ INT!
 	AssigneeID  *string // опциональный исполнитель
+	CreatorID   string  // кто создал карточку
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
 
 // NewCard создает новую карточку с валидацией
-func NewCard(columnID, title, description, position string, assigneeID *string) (*Card, error) {
+func NewCard(columnID, title, description, position string, assigneeID *string, creatorID string) (*Card, error) {
 	if columnID == "" {
 		return nil, ErrColumnNotFound
 	}
@@ -42,6 +43,7 @@ func NewCard(columnID, title, description, position string, assigneeID *string) 
 		Description: description,
 		Position:    position,
 		AssigneeID:  assigneeID,
+		CreatorID:   creatorID,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}, nil

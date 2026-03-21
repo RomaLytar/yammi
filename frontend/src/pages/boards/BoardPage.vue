@@ -1,24 +1,67 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBoardStore } from '@/stores/board'
+import { useAuthStore } from '@/stores/auth'
 import type { Card } from '@/types/domain'
 import BoardColumn from '@/components/board/BoardColumn.vue'
 import CreateColumnModal from '@/components/board/CreateColumnModal.vue'
 import CreateCardModal from '@/components/board/CreateCardModal.vue'
 import EditCardModal from '@/components/board/EditCardModal.vue'
+import ConfirmModal from '@/components/shared/ConfirmModal.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
 
 const route = useRoute()
 const router = useRouter()
 const boardStore = useBoardStore()
+const authStore = useAuthStore()
+
+const isOwner = computed(() => boardStore.board?.ownerId === authStore.userId)
+const currentUserId = computed(() => authStore.userId || '')
 
 const showCreateColumnModal = ref(false)
 const showCreateCardModal = ref(false)
 const showEditCardModal = ref(false)
+const showConfirmDeleteColumn = ref(false)
+const showBulkDeleteCards = ref(false)
 const activeColumnId = ref<string | null>(null)
 const activeCard = ref<Card | null>(null)
+const pendingDeleteColumnId = ref<string | null>(null)
+
+// Bulk card select
+const cardSelectMode = ref(false)
+const selectedCardIds = ref<Set<string>>(new Set())
+const selectedCardCount = computed(() => selectedCardIds.value.size)
+
+function canDeleteCard(card: Card): boolean {
+  return isOwner.value || card.creatorId === currentUserId.value
+}
+
+function toggleCardSelectMode() {
+  cardSelectMode.value = !cardSelectMode.value
+  selectedCardIds.value = new Set()
+}
+
+function toggleCardSelect(cardId: string) {
+  const s = new Set(selectedCardIds.value)
+  if (s.has(cardId)) s.delete(cardId)
+  else s.add(cardId)
+  selectedCardIds.value = s
+}
+
+async function handleBulkDeleteCards() {
+  if (selectedCardIds.value.size === 0) return
+  try {
+    await boardStore.deleteCards([...selectedCardIds.value])
+    selectedCardIds.value = new Set()
+    cardSelectMode.value = false
+  } catch (err) {
+    console.error('Failed to bulk delete cards:', err)
+  } finally {
+    showBulkDeleteCards.value = false
+  }
+}
 
 onMounted(async () => {
   const boardId = route.params.boardId as string
@@ -51,14 +94,26 @@ async function handleUpdateColumn(columnId: string, title: string) {
   }
 }
 
-async function handleDeleteColumn(columnId: string) {
-  if (confirm('Удалить колонку и все карточки в ней?')) {
-    try {
-      await boardStore.deleteColumn(columnId)
-    } catch (error) {
-      console.error('Failed to delete column:', error)
-    }
+function handleDeleteColumn(columnId: string) {
+  pendingDeleteColumnId.value = columnId
+  showConfirmDeleteColumn.value = true
+}
+
+async function confirmDeleteColumn() {
+  if (!pendingDeleteColumnId.value) return
+
+  try {
+    await boardStore.deleteColumn(pendingDeleteColumnId.value)
+    showConfirmDeleteColumn.value = false
+    pendingDeleteColumnId.value = null
+  } catch (error) {
+    console.error('Failed to delete column:', error)
   }
+}
+
+function cancelDeleteColumn() {
+  showConfirmDeleteColumn.value = false
+  pendingDeleteColumnId.value = null
 }
 
 function handleAddCard(columnId: string) {
@@ -100,7 +155,8 @@ async function handleDeleteCard(cardId?: string) {
   if (!id) return
 
   try {
-    await boardStore.deleteCard(id)
+    await boardStore.deleteCards([id])
+
     if (showEditCardModal.value) {
       showEditCardModal.value = false
       activeCard.value = null
@@ -159,9 +215,29 @@ function closeEditCardModal() {
             {{ boardStore.board.description }}
           </p>
         </div>
-        <BaseButton @click="showCreateColumnModal = true">
-          + Добавить колонку
-        </BaseButton>
+        <div class="board-page__actions">
+          <button
+            class="select-toggle"
+            :class="{ 'select-toggle--active': cardSelectMode }"
+            @click="toggleCardSelectMode"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 11 12 14 22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+            {{ cardSelectMode ? 'Отмена' : 'Выбрать' }}
+          </button>
+          <button
+            v-if="cardSelectMode && selectedCardCount > 0"
+            class="bulk-delete-btn"
+            @click="showBulkDeleteCards = true"
+          >
+            Удалить ({{ selectedCardCount }})
+          </button>
+          <BaseButton v-if="isOwner && !cardSelectMode" @click="showCreateColumnModal = true">
+            + Добавить колонку
+          </BaseButton>
+        </div>
       </div>
 
       <div class="board-page__content">
@@ -170,15 +246,20 @@ function closeEditCardModal() {
             v-for="column in boardStore.columns"
             :key="column.id"
             :column="column"
+            :is-owner="isOwner"
+            :current-user-id="currentUserId"
+            :select-mode="cardSelectMode"
+            :selected-ids="selectedCardIds"
             @add-card="handleAddCard(column.id)"
             @card-click="handleCardClick"
             @card-delete="handleDeleteCard"
             @card-move="handleCardMove"
+            @card-toggle-select="toggleCardSelect"
             @update-title="(title) => handleUpdateColumn(column.id, title)"
             @delete="handleDeleteColumn(column.id)"
           />
 
-          <div class="board-columns__placeholder">
+          <div v-if="isOwner" class="board-columns__placeholder">
             <button
               class="add-column-button"
               @click="showCreateColumnModal = true"
@@ -205,9 +286,31 @@ function closeEditCardModal() {
     <EditCardModal
       v-if="showEditCardModal && activeCard"
       :card="activeCard"
+      :can-delete="isOwner || activeCard.creatorId === currentUserId"
       @close="closeEditCardModal"
       @update="handleUpdateCard"
       @delete="handleDeleteCard()"
+    />
+
+    <ConfirmModal
+      v-if="showBulkDeleteCards"
+      title="Удалить выбранные карточки"
+      :message="`Удалить ${selectedCardCount} карточек? Это действие нельзя отменить.`"
+      confirm-text="Удалить"
+      variant="danger"
+      @confirm="handleBulkDeleteCards"
+      @cancel="showBulkDeleteCards = false"
+    />
+
+    <ConfirmModal
+      v-if="showConfirmDeleteColumn"
+      title="Удалить колонку?"
+      message="Вы уверены, что хотите удалить эту колонку? Все карточки в ней также будут удалены. Это действие нельзя отменить."
+      confirm-text="Удалить"
+      cancel-text="Отмена"
+      variant="danger"
+      @confirm="confirmDeleteColumn"
+      @cancel="cancelDeleteColumn"
     />
   </div>
 </template>
@@ -216,8 +319,34 @@ function closeEditCardModal() {
 .board-page {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  background: var(--gradient-auth-bg);
+  overflow: hidden;
+  position: relative;
+}
+
+.board-page::before {
+  content: '';
+  position: absolute;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
+  top: -200px;
+  right: -200px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.board-page::after {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
+  bottom: -150px;
+  left: -150px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .board-page__loading,
@@ -237,59 +366,134 @@ function closeEditCardModal() {
 .board-page__header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: 24px 32px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  align-items: center;
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+  box-shadow: 0 1px 3px rgba(139, 92, 246, 0.1);
+  position: relative;
+  z-index: 1;
 }
+
+.board-page__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.select-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 8px;
+  font-size: 13px;
+  color: #6b7280;
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.select-toggle:hover { border-color: #9ca3af; color: #374151; }
+.select-toggle--active { border-color: #3b82f6; color: #3b82f6; background: rgba(219,234,254,0.6); }
+
+.bulk-delete-btn {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  background: #dc2626;
+  color: white;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.bulk-delete-btn:hover { background: #b91c1c; }
 
 .board-page__title {
   margin: 0;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
-  color: white;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .board-page__description {
   margin: 4px 0 0 0;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-secondary);
 }
 
 .board-page__content {
   flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 24px 32px;
+  padding: 20px 0;
+  position: relative;
+  z-index: 1;
 }
 
 .board-columns {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   min-height: 100%;
   align-items: flex-start;
+  padding: 0 24px;
 }
 
 .board-columns__placeholder {
-  min-width: 280px;
+  min-width: 300px;
+  flex-shrink: 0;
 }
 
 .add-column-button {
   width: 100%;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 2px dashed rgba(99, 102, 241, 0.3);
+  border-radius: 16px;
+  color: var(--color-primary);
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .add-column-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1), 0 2px 4px -1px rgba(99, 102, 241, 0.06);
+}
+
+.add-column-button:active {
+  transform: translateY(0);
+}
+
+/* Кастомный scrollbar */
+.board-page__content::-webkit-scrollbar {
+  height: 12px;
+}
+
+.board-page__content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  margin: 0 24px;
+}
+
+.board-page__content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.board-page__content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 </style>

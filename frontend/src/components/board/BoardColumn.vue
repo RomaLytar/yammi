@@ -6,6 +6,10 @@ import Draggable from 'vuedraggable'
 
 interface Props {
   column: Column
+  isOwner: boolean
+  currentUserId: string
+  selectMode?: boolean
+  selectedIds?: Set<string>
 }
 
 interface Emits {
@@ -15,6 +19,7 @@ interface Emits {
   (e: 'card-move', event: { cardId: string; fromColumnId: string; toColumnId: string; newIndex: number }): void
   (e: 'update-title', title: string): void
   (e: 'delete'): void
+  (e: 'card-toggle-select', cardId: string): void
 }
 
 const props = defineProps<Props>()
@@ -22,9 +27,6 @@ const emit = defineEmits<Emits>()
 
 const isEditingTitle = ref(false)
 const editedTitle = ref(props.column.title)
-
-// Track card being removed for cross-column drag
-let removedCardInfo: { cardId: string; columnId: string } | null = null
 
 function startEdit() {
   isEditingTitle.value = true
@@ -45,63 +47,36 @@ function cancelEdit() {
 
 // Vuedraggable events
 function onDragChange(event: any) {
-  console.log('[BoardColumn] onDragChange called on column:', props.column.id, props.column.title)
-  console.log('[BoardColumn] event keys:', Object.keys(event))
+  console.log('[BoardColumn]', props.column.title, '- onDragChange:', Object.keys(event))
 
-  // Карточка удалена из этой колонки (перемещается в другую)
-  if (event.removed) {
-    const card = event.removed.element as Card
-    console.log('[BoardColumn] event.removed: card', card.id, 'removed from column', props.column.id)
-    // Сохраняем инфо для следующего event.added в целевой колонке
-    removedCardInfo = { cardId: card.id, columnId: props.column.id }
+  // Карточка перемещена внутри этой колонки
+  if (event.moved) {
+    const card = event.moved.element as Card
+    const newIndex = event.moved.newIndex
+    console.log('[BoardColumn] MOVED within column:', card.title, 'to index', newIndex)
+    emit('card-move', {
+      cardId: card.id,
+      fromColumnId: props.column.id,
+      toColumnId: props.column.id,
+      newIndex
+    })
   }
 
   // Карточка добавлена в эту колонку (из другой колонки)
   if (event.added) {
     const card = event.added.element as Card
     const newIndex = event.added.newIndex
+    const fromColumnId = card.columnId
 
-    // Сначала пытаемся использовать removedCardInfo (самый надежный способ)
-    // Затем fallback на card.columnId
-    const fromColumnId = removedCardInfo?.cardId === card.id
-      ? removedCardInfo.columnId
-      : card.columnId
+    console.log('[BoardColumn] ADDED to column:', card.title)
+    console.log('[BoardColumn]   from:', fromColumnId, 'to:', props.column.id, 'index:', newIndex)
 
-    console.log('[BoardColumn] event.added detected')
-    console.log('[BoardColumn]   card.id:', card.id)
-    console.log('[BoardColumn]   fromColumnId (determined):', fromColumnId)
-    console.log('[BoardColumn]   card.columnId:', card.columnId)
-    console.log('[BoardColumn]   removedCardInfo:', removedCardInfo)
-    console.log('[BoardColumn]   toColumnId:', props.column.id)
-    console.log('[BoardColumn]   newIndex:', newIndex)
-
-    if (!fromColumnId) {
-      console.error('[BoardColumn] ERROR: fromColumnId is null/undefined!')
-      return
-    }
-
-    emit('card-move', { cardId: card.id, fromColumnId, toColumnId: props.column.id, newIndex })
-    console.log('[BoardColumn] emitted card-move event')
-
-    // Очищаем removedCardInfo после использования
-    removedCardInfo = null
-  }
-
-  // Карточка перемещена внутри этой колонки
-  if (event.moved) {
-    const card = event.moved.element as Card
-    const newIndex = event.moved.newIndex
-    console.log('[BoardColumn] event.moved detected')
-    console.log('[BoardColumn]   card.id:', card.id)
-    console.log('[BoardColumn]   column.id:', props.column.id)
-    console.log('[BoardColumn]   newIndex:', newIndex)
-
-    emit('card-move', { cardId: card.id, fromColumnId: props.column.id, toColumnId: props.column.id, newIndex })
-    console.log('[BoardColumn] emitted card-move event')
-  }
-
-  if (!event.added && !event.moved && !event.removed) {
-    console.warn('[BoardColumn] onDragChange called but no recognized event type:', Object.keys(event))
+    emit('card-move', {
+      cardId: card.id,
+      fromColumnId,
+      toColumnId: props.column.id,
+      newIndex
+    })
   }
 }
 </script>
@@ -127,7 +102,7 @@ function onDragChange(event: any) {
         <span class="board-column__count">{{ column.cards.length }}</span>
       </h3>
 
-      <div class="board-column__actions">
+      <div v-if="isOwner" class="board-column__actions">
         <button
           class="board-column__action"
           title="Удалить колонку"
@@ -151,8 +126,13 @@ function onDragChange(event: any) {
         <BoardCard
           :key="element.id"
           :card="element"
-          @click="$emit('card-click', element)"
+          :can-delete="isOwner || element.creatorId === currentUserId"
+          :select-mode="selectMode"
+          :selected="selectedIds?.has(element.id)"
+          :can-select="isOwner || element.creatorId === currentUserId"
+          @click="selectMode ? (isOwner || element.creatorId === currentUserId) && $emit('card-toggle-select', element.id) : $emit('card-click', element)"
           @delete="$emit('card-delete', element.id)"
+          @toggle-select="$emit('card-toggle-select', element.id)"
         />
       </template>
     </Draggable>
@@ -165,59 +145,71 @@ function onDragChange(event: any) {
 
 <style scoped>
 .board-column {
-  background: var(--color-surface-alt, #f9fafb);
-  border-radius: 12px;
-  padding: 12px;
-  min-width: 280px;
-  max-width: 280px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 16px;
+  min-width: 300px;
+  max-width: 300px;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 200px);
+  max-height: calc(100vh - 180px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.board-column:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .board-column__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   gap: 8px;
 }
 
 .board-column__title {
   flex: 1;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--color-text-primary, #111827);
   margin: 0;
-  padding: 6px 8px;
-  border-radius: 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  transition: background 0.2s;
 }
 
 .board-column__title:hover {
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, #f3f4f6);
 }
 
 .board-column__count {
   font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-tertiary, #9ca3af);
-  background: var(--color-surface, #fff);
-  padding: 2px 8px;
-  border-radius: 12px;
+  font-weight: 600;
+  color: var(--color-text-tertiary, #6b7280);
+  background: var(--color-surface, #e5e7eb);
+  padding: 3px 10px;
+  border-radius: 14px;
+  min-width: 24px;
+  text-align: center;
 }
 
 .board-column__title-input {
   flex: 1;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 6px 8px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 8px 10px;
   border: 2px solid var(--color-primary, #3b82f6);
-  border-radius: 4px;
+  border-radius: 8px;
   outline: none;
+  background: white;
 }
 
 .board-column__actions {
@@ -235,15 +227,16 @@ function onDragChange(event: any) {
   background: none;
   border: none;
   color: var(--color-text-tertiary, #9ca3af);
-  font-size: 20px;
+  font-size: 22px;
   cursor: pointer;
   padding: 4px;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: 6px;
+  transition: all 0.2s;
 }
 
 .board-column__action:hover {
@@ -255,31 +248,57 @@ function onDragChange(event: any) {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  min-height: 100px;
+  min-height: 120px;
   padding: 2px;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.board-column__cards::-webkit-scrollbar {
+  width: 8px;
+}
+
+.board-column__cards::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.board-column__cards::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.board-column__cards::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
 .board-column__add-card {
-  margin-top: 8px;
-  padding: 8px 12px;
+  margin-top: 10px;
+  padding: 10px 14px;
   background: none;
-  border: 2px dashed var(--color-border, #e5e7eb);
-  border-radius: 8px;
-  color: var(--color-text-tertiary, #9ca3af);
+  border: 2px dashed var(--color-border, #d1d5db);
+  border-radius: 10px;
+  color: var(--color-text-tertiary, #6b7280);
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .board-column__add-card:hover {
   border-color: var(--color-primary, #3b82f6);
   color: var(--color-primary, #3b82f6);
   background: var(--color-primary-light, #eff6ff);
+  transform: translateY(-1px);
+}
+
+.board-column__add-card:active {
+  transform: translateY(0);
 }
 
 .ghost-card {
-  opacity: 0.5;
-  background: var(--color-primary-light, #eff6ff);
+  opacity: 0.4;
+  background: var(--color-primary-light, #dbeafe);
   border: 2px dashed var(--color-primary, #3b82f6);
+  border-radius: 12px;
 }
 </style>

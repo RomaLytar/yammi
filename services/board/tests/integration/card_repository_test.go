@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 	"github.com/RomaLytar/yammi/services/board/internal/repository/postgres"
 )
@@ -27,15 +29,16 @@ func TestCardRepository_Create(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board and column
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
 	// Create card
-	assignee := "user-123"
-	card, err := domain.NewCard(column.ID, "Task 1", "Description", "n", &assignee)
+	assignee := uuid.NewString()
+	card, err := domain.NewCard(column.ID, "Task 1", "Description", "n", &assignee, ownerID)
 	if err != nil {
 		t.Fatalf("Failed to create domain card: %v", err)
 	}
@@ -86,14 +89,15 @@ func TestCardRepository_CreateWithoutAssignee(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board and column
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
 	// Create card without assignee
-	card, err := domain.NewCard(column.ID, "Task 1", "Description", "n", nil)
+	card, err := domain.NewCard(column.ID, "Task 1", "Description", "n", nil, ownerID)
 	if err != nil {
 		t.Fatalf("Failed to create domain card: %v", err)
 	}
@@ -125,7 +129,7 @@ func TestCardRepository_GetByID_NotFound(t *testing.T) {
 	cardRepo := postgres.NewCardRepository(db)
 	ctx := context.Background()
 
-	_, err = cardRepo.GetByID(ctx, "non-existent-id")
+	_, err = cardRepo.GetByID(ctx, uuid.NewString())
 	if err != domain.ErrCardNotFound {
 		t.Errorf("Expected ErrCardNotFound, got %v", err)
 	}
@@ -149,7 +153,8 @@ func TestCardRepository_ListByColumnID(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board and column
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
@@ -158,7 +163,7 @@ func TestCardRepository_ListByColumnID(t *testing.T) {
 	// Create cards with lexorank positions
 	positions := []string{"a", "m", "z"}
 	for i, pos := range positions {
-		card, _ := domain.NewCard(column.ID, fmt.Sprintf("Task %d", i), "", pos, nil)
+		card, _ := domain.NewCard(column.ID, fmt.Sprintf("Task %d", i), "", pos, nil, ownerID)
 		cardRepo.Create(ctx, card)
 	}
 
@@ -198,7 +203,8 @@ func TestCardRepository_LexorankPositioning(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board and column
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
@@ -218,7 +224,7 @@ func TestCardRepository_LexorankPositioning(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		card, _ := domain.NewCard(column.ID, tc.title, "", tc.position, nil)
+		card, _ := domain.NewCard(column.ID, tc.title, "", tc.position, nil, ownerID)
 		cardRepo.Create(ctx, card)
 	}
 
@@ -258,18 +264,19 @@ func TestCardRepository_Update(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board and column
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
 	// Create card
-	card, _ := domain.NewCard(column.ID, "Original Title", "Original Desc", "n", nil)
+	card, _ := domain.NewCard(column.ID, "Original Title", "Original Desc", "n", nil, ownerID)
 	cardRepo.Create(ctx, card)
 
 	// Update card
-	newAssignee := "user-456"
+	newAssignee := uuid.NewString()
 	err = card.Update("Updated Title", "Updated Desc", &newAssignee)
 	if err != nil {
 		t.Fatalf("Failed to update domain card: %v", err)
@@ -313,7 +320,8 @@ func TestCardRepository_Move(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board and two columns
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	column1, _ := domain.NewColumn(board.ID, "To Do", 0)
@@ -323,7 +331,7 @@ func TestCardRepository_Move(t *testing.T) {
 	columnRepo.Create(ctx, column2)
 
 	// Create card in column1
-	card, _ := domain.NewCard(column1.ID, "Task", "Desc", "n", nil)
+	card, _ := domain.NewCard(column1.ID, "Task", "Desc", "n", nil, ownerID)
 	cardRepo.Create(ctx, card)
 
 	// Move card to column2
@@ -366,13 +374,14 @@ func TestCardRepository_Delete(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board, column, and card
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
-	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", nil)
+	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", nil, ownerID)
 	cardRepo.Create(ctx, card)
 
 	// Delete card
@@ -406,24 +415,25 @@ func TestCardRepository_Partitioning(t *testing.T) {
 	ctx := context.Background()
 
 	// Create 10 boards with 10 cards each
+	ownerID := uuid.NewString()
 	totalCards := 0
 	for i := 0; i < 10; i++ {
-		board, _ := domain.NewBoard(fmt.Sprintf("Board %d", i), "Desc", "owner-123")
+		board, _ := domain.NewBoard(fmt.Sprintf("Board %d", i), "Desc", ownerID)
 		boardRepo.Create(ctx, board)
 
 		column, _ := domain.NewColumn(board.ID, "To Do", 0)
 		columnRepo.Create(ctx, column)
 
 		for j := 0; j < 10; j++ {
-			card, _ := domain.NewCard(column.ID, fmt.Sprintf("Card %d", j), "", "n", nil)
+			card, _ := domain.NewCard(column.ID, fmt.Sprintf("Card %d", j), "", "n", nil, ownerID)
 			cardRepo.Create(ctx, card)
 			totalCards++
 		}
 	}
 
-	// Query partition distribution
-	query := `SELECT tableoid::regclass, COUNT(*) FROM cards GROUP BY tableoid ORDER BY tableoid`
-	rows, err := db.Query(query)
+	// Query partition distribution (filter by creator_id to isolate from other parallel tests)
+	query := `SELECT tableoid::regclass, COUNT(*) FROM cards WHERE creator_id = $1 GROUP BY tableoid ORDER BY tableoid`
+	rows, err := db.Query(query, ownerID)
 	if err != nil {
 		t.Fatalf("Failed to query partitions: %v", err)
 	}

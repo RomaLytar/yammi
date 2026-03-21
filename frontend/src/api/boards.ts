@@ -11,6 +11,7 @@ import type {
   CreateCardRequest,
   UpdateCardRequest,
   MoveCardRequest,
+  DeleteCardsRequest,
   CardResponse,
   AddMemberRequest,
   MemberResponse,
@@ -43,9 +44,11 @@ function mapCard(dto: CardResponse): Card {
     id: dto.id,
     title: dto.title,
     description: dto.description,
-    position: dto.position, // lexorank остается строкой
+    position: dto.position,
     columnId: dto.column_id,
     assigneeId: dto.assignee_id,
+    creatorId: dto.creator_id,
+    version: dto.version,
     createdAt: dto.created_at,
   }
 }
@@ -57,9 +60,18 @@ export async function createBoard(req: CreateBoardRequest): Promise<Board> {
   return mapBoard(data.board)
 }
 
-export async function getBoards(limit = 20, cursor?: string): Promise<{ boards: Board[]; nextCursor?: string }> {
+export async function getBoards(
+  limit = 20,
+  cursor?: string,
+  ownerOnly = false,
+  search = '',
+  sortBy = 'updated_at',
+): Promise<{ boards: Board[]; nextCursor?: string }> {
   const params = new URLSearchParams({ limit: limit.toString() })
   if (cursor) params.append('cursor', cursor)
+  if (ownerOnly) params.append('owner_only', 'true')
+  if (search) params.append('search', search)
+  if (sortBy && sortBy !== 'updated_at') params.append('sort_by', sortBy)
 
   const { data } = await api.get<ListBoardsResponse>(`/v1/boards?${params}`)
   return {
@@ -93,8 +105,8 @@ export async function updateBoard(boardId: string, req: UpdateBoardRequest): Pro
   return mapBoard(data.board)
 }
 
-export async function deleteBoard(boardId: string): Promise<void> {
-  await api.delete(`/v1/boards/${boardId}`)
+export async function deleteBoards(boardIds: string[]): Promise<void> {
+  await api.post('/v1/boards/delete', { board_ids: boardIds })
 }
 
 // --- Columns ---
@@ -114,8 +126,8 @@ export async function updateColumn(columnId: string, req: UpdateColumnRequest): 
   return mapColumn(data.column)
 }
 
-export async function deleteColumn(columnId: string): Promise<void> {
-  await api.delete(`/v1/columns/${columnId}`)
+export async function deleteColumn(columnId: string, boardId: string): Promise<void> {
+  await api.delete(`/v1/columns/${columnId}`, { data: { board_id: boardId } })
 }
 
 export async function reorderColumns(boardId: string, columnIds: string[]): Promise<void> {
@@ -146,12 +158,12 @@ export async function updateCard(cardId: string, req: UpdateCardRequest): Promis
   return mapCard(data.card)
 }
 
-export async function deleteCard(cardId: string): Promise<void> {
-  await api.delete(`/v1/cards/${cardId}`)
+export async function deleteCards(req: DeleteCardsRequest): Promise<void> {
+  await api.post('/v1/cards/delete', req)
 }
 
 export async function moveCard(cardId: string, req: MoveCardRequest): Promise<Card> {
-  const { data } = await api.post<{ card: CardResponse }>(`/v1/cards/${cardId}/move`, req)
+  const { data } = await api.put<{ card: CardResponse }>(`/v1/cards/${cardId}/move`, req)
   return mapCard(data.card)
 }
 

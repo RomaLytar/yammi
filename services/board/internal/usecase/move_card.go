@@ -9,19 +9,21 @@ import (
 
 type MoveCardUseCase struct {
 	cardRepo   CardRepository
+	boardRepo  BoardRepository
 	memberRepo MembershipRepository
 	publisher  EventPublisher
 }
 
-func NewMoveCardUseCase(cardRepo CardRepository, memberRepo MembershipRepository, publisher EventPublisher) *MoveCardUseCase {
+func NewMoveCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, publisher EventPublisher) *MoveCardUseCase {
 	return &MoveCardUseCase{
 		cardRepo:   cardRepo,
+		boardRepo:  boardRepo,
 		memberRepo: memberRepo,
 		publisher:  publisher,
 	}
 }
 
-func (uc *MoveCardUseCase) Execute(ctx context.Context, cardID, boardID, fromColumnID, toColumnID, userID string, targetPosition int) (*domain.Card, error) {
+func (uc *MoveCardUseCase) Execute(ctx context.Context, cardID, boardID, fromColumnID, toColumnID, userID, newPosition string) (*domain.Card, error) {
 	// 1. Проверка доступа
 	isMember, _, err := uc.memberRepo.IsMember(ctx, boardID, userID)
 	if err != nil {
@@ -37,44 +39,23 @@ func (uc *MoveCardUseCase) Execute(ctx context.Context, cardID, boardID, fromCol
 		return nil, err
 	}
 
-	// 3. Получаем карточки в целевой колонке
-	cardsInColumn, err := uc.cardRepo.ListByColumnID(ctx, toColumnID)
-	if err != nil {
+	// 3. Валидируем lexorank позицию
+	if err := domain.ValidateLexorank(newPosition); err != nil {
 		return nil, err
 	}
 
-	// 4. Вычисляем новую lexorank позицию
-	var prevPosition, nextPosition string
-	if targetPosition == 0 {
-		// В начало колонки
-		if len(cardsInColumn) > 0 {
-			nextPosition = cardsInColumn[0].Position
-		}
-	} else if targetPosition >= len(cardsInColumn) {
-		// В конец колонки
-		if len(cardsInColumn) > 0 {
-			prevPosition = cardsInColumn[len(cardsInColumn)-1].Position
-		}
-	} else {
-		// Между карточками
-		prevPosition = cardsInColumn[targetPosition-1].Position
-		nextPosition = cardsInColumn[targetPosition].Position
-	}
-
-	newPosition, err := domain.LexorankBetween(prevPosition, nextPosition)
-	if err != nil {
-		return nil, err
-	}
-
-	// 5. Перемещаем карточку (domain logic)
+	// 4. Перемещаем карточку (domain logic)
 	if err := card.Move(toColumnID, newPosition); err != nil {
 		return nil, err
 	}
 
-	// 6. Сохраняем
+	// 5. Сохраняем
 	if err := uc.cardRepo.Update(ctx, card); err != nil {
 		return nil, err
 	}
+
+	// 6. Обновляем updated_at доски
+	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
 
 	// 7. Публикуем событие
 	go func() {

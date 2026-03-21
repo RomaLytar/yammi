@@ -172,6 +172,7 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 			publisher := new(MockEventPublisher)
 
 			tt.setupMocks(boardRepo, memberRepo, publisher)
+			publisher.On("PublishMemberAdded", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 			useCase := NewAddMemberUseCase(boardRepo, memberRepo, publisher)
 			err := useCase.Execute(context.Background(), tt.boardID, tt.userID, tt.memberUserID, tt.role)

@@ -9,13 +9,15 @@ import (
 
 type CreateCardUseCase struct {
 	cardRepo   CardRepository
+	boardRepo  BoardRepository
 	memberRepo MembershipRepository
 	publisher  EventPublisher
 }
 
-func NewCreateCardUseCase(cardRepo CardRepository, memberRepo MembershipRepository, publisher EventPublisher) *CreateCardUseCase {
+func NewCreateCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, publisher EventPublisher) *CreateCardUseCase {
 	return &CreateCardUseCase{
 		cardRepo:   cardRepo,
+		boardRepo:  boardRepo,
 		memberRepo: memberRepo,
 		publisher:  publisher,
 	}
@@ -45,7 +47,7 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 	}
 
 	// 3. Создаем карточку (валидация lexorank внутри)
-	card, err := domain.NewCard(columnID, title, description, position, assigneeID)
+	card, err := domain.NewCard(columnID, title, description, position, assigneeID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,10 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 		return nil, err
 	}
 
-	// 5. Публикуем событие
+	// 5. Обновляем updated_at доски
+	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
+
+	// 6. Публикуем событие
 	go func() {
 		_ = uc.publisher.PublishCardCreated(context.Background(), CardCreated{
 			EventID:      generateEventID(),

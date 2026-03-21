@@ -46,6 +46,30 @@ func (r *UserRepo) GetByID(ctx context.Context, id string) (*domain.User, error)
 	return user, nil
 }
 
+func (r *UserRepo) SearchByEmail(ctx context.Context, query string, limit int) ([]*domain.User, error) {
+	if limit <= 0 || limit > 10 {
+		limit = 5
+	}
+
+	sqlQuery := `SELECT id, email, name, avatar_url FROM profiles WHERE email ILIKE $1 ORDER BY email LIMIT $2`
+
+	rows, err := r.db.QueryContext(ctx, sqlQuery, "%"+query+"%", limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*domain.User
+	for rows.Next() {
+		u := &domain.User{}
+		if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.AvatarURL); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
 func (r *UserRepo) Update(ctx context.Context, user *domain.User) error {
 	query := `UPDATE profiles SET name = $1, avatar_url = $2, bio = $3, updated_at = $4 WHERE id = $5`
 

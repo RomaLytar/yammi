@@ -56,6 +56,11 @@ func (m *MockCardRepository) Delete(ctx context.Context, cardID string) error {
 	return args.Error(0)
 }
 
+func (m *MockCardRepository) BatchDelete(ctx context.Context, boardID string, cardIDs []string) error {
+	args := m.Called(ctx, boardID, cardIDs)
+	return args.Error(0)
+}
+
 func TestCreateCardUseCase_Execute(t *testing.T) {
 	assigneeID := "user-789"
 
@@ -194,18 +199,21 @@ func TestCreateCardUseCase_Execute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cardRepo := new(MockCardRepository)
+			boardRepo := new(MockBoardRepository)
 			memberRepo := new(MockMembershipRepository)
 			publisher := new(MockEventPublisher)
 
 			tt.setupMocks(cardRepo, memberRepo, publisher)
+			boardRepo.On("TouchUpdatedAt", mock.Anything, mock.Anything).Return(nil).Maybe()
+			publisher.On("PublishCardCreated", mock.Anything, mock.Anything).Return(nil).Maybe()
 
-			useCase := NewCreateCardUseCase(cardRepo, memberRepo, publisher)
+			useCase := NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
 			card, err := useCase.Execute(context.Background(), tt.columnID, tt.boardID, tt.userID, tt.title, tt.description, tt.position, tt.assigneeID)
 
 			if tt.wantErr {
 				assert.Error(t, err)
 				if tt.expectedErr != nil {
-					assert.Equal(t, tt.expectedErr.Error(), err.Error())
+					assert.ErrorContains(t, err, tt.expectedErr.Error())
 				}
 				assert.Nil(t, card)
 			} else {

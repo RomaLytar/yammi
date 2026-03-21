@@ -8,21 +8,23 @@ import (
 
 type DeleteCardUseCase struct {
 	cardRepo   CardRepository
+	boardRepo  BoardRepository
 	memberRepo MembershipRepository
 	publisher  EventPublisher
 }
 
-func NewDeleteCardUseCase(cardRepo CardRepository, memberRepo MembershipRepository, publisher EventPublisher) *DeleteCardUseCase {
+func NewDeleteCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, publisher EventPublisher) *DeleteCardUseCase {
 	return &DeleteCardUseCase{
 		cardRepo:   cardRepo,
+		boardRepo:  boardRepo,
 		memberRepo: memberRepo,
 		publisher:  publisher,
 	}
 }
 
-func (uc *DeleteCardUseCase) Execute(ctx context.Context, cardID, boardID, columnID, userID string) error {
+func (uc *DeleteCardUseCase) Execute(ctx context.Context, cardIDs []string, boardID, userID string) error {
 	// 1. Проверка доступа
-	isMember, _, err := uc.memberRepo.IsMember(ctx, boardID, userID)
+	isMember, role, err := uc.memberRepo.IsMember(ctx, boardID, userID)
 	if err != nil {
 		return err
 	}
@@ -30,21 +32,38 @@ func (uc *DeleteCardUseCase) Execute(ctx context.Context, cardID, boardID, colum
 		return domain.ErrAccessDenied
 	}
 
-	// 2. Удаляем
-	if err := uc.cardRepo.Delete(ctx, cardID); err != nil {
+	// 2. Если не owner, проверяем что каждая карточка принадлежит пользователю
+	if role != domain.RoleOwner {
+		for _, cardID := range cardIDs {
+			card, err := uc.cardRepo.GetByID(ctx, cardID)
+			if err != nil {
+				return err
+			}
+			if card.CreatorID != userID {
+				return domain.ErrAccessDenied
+			}
+		}
+	}
+
+	// 3. Batch delete
+	if err := uc.cardRepo.BatchDelete(ctx, boardID, cardIDs); err != nil {
 		return err
 	}
 
-	// 3. Публикуем событие
+	// 4. Обновляем updated_at доски
+	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
+
+	// 5. Публикуем события
 	go func() {
-		_ = uc.publisher.PublishCardDeleted(context.Background(), CardDeleted{
-			EventID:      generateEventID(),
-			EventVersion: 1,
-			OccurredAt:   getCurrentTime(),
-			BoardID:      boardID,
-			CardID:       cardID,
-			ColumnID:     columnID,
-		})
+		for _, cardID := range cardIDs {
+			_ = uc.publisher.PublishCardDeleted(context.Background(), CardDeleted{
+				EventID:      generateEventID(),
+				EventVersion: 1,
+				OccurredAt:   getCurrentTime(),
+				BoardID:      boardID,
+				CardID:       cardID,
+			})
+		}
 	}()
 
 	return nil

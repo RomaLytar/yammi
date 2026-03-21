@@ -136,12 +136,15 @@ func TestAddColumnUseCase_Execute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			columnRepo := new(MockColumnRepository)
+			boardRepo := new(MockBoardRepository)
 			memberRepo := new(MockMembershipRepository)
 			publisher := new(MockEventPublisher)
 
 			tt.setupMocks(columnRepo, memberRepo, publisher)
+			boardRepo.On("TouchUpdatedAt", mock.Anything, mock.Anything).Return(nil).Maybe()
+			publisher.On("PublishColumnCreated", mock.Anything, mock.Anything).Return(nil).Maybe()
 
-			useCase := NewAddColumnUseCase(columnRepo, memberRepo, publisher)
+			useCase := NewAddColumnUseCase(columnRepo, boardRepo, memberRepo, publisher)
 			column, err := useCase.Execute(context.Background(), tt.boardID, tt.userID, tt.title, tt.position)
 
 			if tt.wantErr {

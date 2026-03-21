@@ -110,7 +110,6 @@ type CardDeleted struct {
 	OccurredAt   time.Time `json:"occurred_at"`
 	BoardID      string    `json:"board_id"`
 	CardID       string    `json:"card_id"`
-	ColumnID     string    `json:"column_id"`
 }
 
 type MemberAdded struct {

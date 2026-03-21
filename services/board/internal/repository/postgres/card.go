@@ -29,13 +29,13 @@ func (r *CardRepository) Create(ctx context.Context, card *domain.Card) error {
 	}
 
 	query := `
-		INSERT INTO cards (id, column_id, board_id, title, description, position, assignee_id, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO cards (id, column_id, board_id, title, description, position, assignee_id, creator_id, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 
 	_, err = r.db.ExecContext(ctx, query,
 		card.ID, card.ColumnID, boardID, card.Title, card.Description,
-		card.Position, card.AssigneeID, card.CreatedAt, card.UpdatedAt,
+		card.Position, card.AssigneeID, card.CreatorID, card.CreatedAt, card.UpdatedAt,
 	)
 	if err != nil {
 		return fmt.Errorf("insert card: %w", err)
@@ -47,7 +47,7 @@ func (r *CardRepository) Create(ctx context.Context, card *domain.Card) error {
 // GetByID возвращает карточку по ID (партиции прозрачны)
 func (r *CardRepository) GetByID(ctx context.Context, cardID string) (*domain.Card, error) {
 	query := `
-		SELECT id, column_id, title, description, position, assignee_id, created_at, updated_at
+		SELECT id, column_id, title, description, position, assignee_id, creator_id, created_at, updated_at
 		FROM cards
 		WHERE id = $1
 	`
@@ -57,7 +57,7 @@ func (r *CardRepository) GetByID(ctx context.Context, cardID string) (*domain.Ca
 
 	err := r.db.QueryRowContext(ctx, query, cardID).Scan(
 		&card.ID, &card.ColumnID, &card.Title, &card.Description,
-		&card.Position, &assigneeID, &card.CreatedAt, &card.UpdatedAt,
+		&card.Position, &assigneeID, &card.CreatorID, &card.CreatedAt, &card.UpdatedAt,
 	)
 
 	if err == sql.ErrNoRows {
@@ -77,7 +77,7 @@ func (r *CardRepository) GetByID(ctx context.Context, cardID string) (*domain.Ca
 // GetLastInColumn возвращает последнюю карточку в колонке (для генерации lexorank)
 func (r *CardRepository) GetLastInColumn(ctx context.Context, columnID string) (*domain.Card, error) {
 	query := `
-		SELECT id, column_id, title, description, position, assignee_id, created_at, updated_at
+		SELECT id, column_id, title, description, position, assignee_id, creator_id, created_at, updated_at
 		FROM cards
 		WHERE column_id = $1
 		ORDER BY position DESC
@@ -89,7 +89,7 @@ func (r *CardRepository) GetLastInColumn(ctx context.Context, columnID string) (
 
 	err := r.db.QueryRowContext(ctx, query, columnID).Scan(
 		&card.ID, &card.ColumnID, &card.Title, &card.Description,
-		&card.Position, &assigneeID, &card.CreatedAt, &card.UpdatedAt,
+		&card.Position, &assigneeID, &card.CreatorID, &card.CreatedAt, &card.UpdatedAt,
 	)
 
 	if err == sql.ErrNoRows {
@@ -109,7 +109,7 @@ func (r *CardRepository) GetLastInColumn(ctx context.Context, columnID string) (
 // ListByColumnID возвращает все карточки колонки в порядке lexorank position
 func (r *CardRepository) ListByColumnID(ctx context.Context, columnID string) ([]*domain.Card, error) {
 	query := `
-		SELECT id, column_id, title, description, position, assignee_id, created_at, updated_at
+		SELECT id, column_id, title, description, position, assignee_id, creator_id, created_at, updated_at
 		FROM cards
 		WHERE column_id = $1
 		ORDER BY position ASC
@@ -126,7 +126,7 @@ func (r *CardRepository) ListByColumnID(ctx context.Context, columnID string) ([
 		var c domain.Card
 		var assigneeID sql.NullString
 
-		if err := rows.Scan(&c.ID, &c.ColumnID, &c.Title, &c.Description, &c.Position, &assigneeID, &c.CreatedAt, &c.UpdatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.ColumnID, &c.Title, &c.Description, &c.Position, &assigneeID, &c.CreatorID, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan card: %w", err)
 		}
 
@@ -180,6 +180,39 @@ func (r *CardRepository) Delete(ctx context.Context, cardID string) error {
 	result, err := r.db.ExecContext(ctx, query, cardID)
 	if err != nil {
 		return fmt.Errorf("delete card: %w", err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return domain.ErrCardNotFound
+	}
+
+	return nil
+}
+
+// BatchDelete удаляет несколько карточек по ID в рамках одной доски (partition key)
+func (r *CardRepository) BatchDelete(ctx context.Context, boardID string, cardIDs []string) error {
+	if len(cardIDs) == 0 {
+		return nil
+	}
+
+	// Строим запрос с плейсхолдерами: DELETE FROM cards WHERE board_id = $1 AND id IN ($2, $3, ...)
+	query := `DELETE FROM cards WHERE board_id = $1 AND id IN (`
+	args := make([]interface{}, 0, len(cardIDs)+1)
+	args = append(args, boardID)
+
+	for i, id := range cardIDs {
+		if i > 0 {
+			query += ", "
+		}
+		query += fmt.Sprintf("$%d", i+2)
+		args = append(args, id)
+	}
+	query += ")"
+
+	result, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("batch delete cards: %w", err)
 	}
 
 	rows, _ := result.RowsAffected()

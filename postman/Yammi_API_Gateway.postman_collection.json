@@ -88,8 +88,15 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/register",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "auth", "register"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register"
+							]
 						},
 						"description": "Регистрация нового пользователя.\n\nТокены автоматически сохраняются в переменные коллекции."
 					},
@@ -127,8 +134,15 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/login",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "auth", "login"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
 						},
 						"description": "Логин. Возвращает user_id, access_token, refresh_token.\n\nТокены автоматически сохраняются в переменные коллекции."
 					},
@@ -165,8 +179,15 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/refresh",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "auth", "refresh"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"refresh"
+							]
 						},
 						"description": "Обновление токенов. Использует refresh_token из переменных коллекции.\n\nНовые токены автоматически сохраняются."
 					},
@@ -188,8 +209,15 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/revoke",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "auth", "revoke"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"revoke"
+							]
 						},
 						"description": "Отзыв refresh токена (logout)."
 					},
@@ -202,8 +230,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/public-key",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "auth", "public-key"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"public-key"
+							]
 						},
 						"description": "Получить публичный ключ EdDSA для локальной валидации JWT."
 					},
@@ -222,8 +257,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/api/v1/users/{{user_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "users", "{{user_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"{{user_id}}"
+							]
 						},
 						"description": "Получить профиль пользователя по ID.\n\nПрофиль создаётся автоматически через NATS после регистрации."
 					},
@@ -245,8 +287,15 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/users/{{user_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "users", "{{user_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"{{user_id}}"
+							]
 						},
 						"description": "Обновить профиль пользователя (name, avatar_url, bio)."
 					},
@@ -259,10 +308,45 @@
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/api/v1/users/{{user_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "users", "{{user_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"{{user_id}}"
+							]
 						},
 						"description": "Удалить пользователя.\n\nЦепочка:\n1. Auth Service удаляет из yammi_auth (+ каскадно refresh_tokens)\n2. Публикует UserDeleted в NATS\n3. User Service удаляет профиль из yammi_user\n\nПосле удаления логин невозможен."
+					},
+					"response": []
+				},
+				{
+					"name": "Search User by Email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/search?q=test",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "test",
+									"description": "Частичный email для поиска (мин. 3 символа). Возвращает до 5 совпадений."
+								}
+							]
+						},
+						"description": "Поиск пользователей по частичному email (ILIKE). Возвращает список {users: [{id, email, name, avatar_url}]}. Используется для добавления участников в доску. Оптимизирован через pg_trgm индекс."
 					},
 					"response": []
 				}
@@ -315,8 +399,14 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/boards",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "boards"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards"
+									]
 								},
 								"description": "Создать новую доску.\n\nboard_id автоматически сохраняется в переменные коллекции."
 							},
@@ -332,8 +422,14 @@
 										},
 										"url": {
 											"raw": "{{base_url}}/api/v1/boards",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "boards"]
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"boards"
+											]
 										}
 									},
 									"status": "Created",
@@ -362,8 +458,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/api/v1/boards/:id",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "boards", ":id"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":id"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -381,8 +484,15 @@
 										"header": [],
 										"url": {
 											"raw": "{{base_url}}/api/v1/boards/:id",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "boards", ":id"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"boards",
+												":id"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -416,21 +526,45 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{base_url}}/api/v1/boards?limit=20&cursor=",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "boards"],
+									"raw": "{{base_url}}/api/v1/boards?limit=20&owner_only=false&search=&sort_by=updated_at",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards"
+									],
 									"query": [
 										{
 											"key": "limit",
-											"value": "20"
+											"value": "20",
+											"description": "Количество досок на страницу (макс 100)"
 										},
 										{
 											"key": "cursor",
-											"value": ""
+											"value": "",
+											"description": "Курсор для пагинации (offset-based)",
+											"disabled": true
+										},
+										{
+											"key": "owner_only",
+											"value": "false",
+											"description": "true — только свои доски, false — все (свои + как участник)"
+										},
+										{
+											"key": "search",
+											"value": "",
+											"description": "Поиск по названию (частичное совпадение ILIKE, pg_trgm)"
+										},
+										{
+											"key": "sort_by",
+											"value": "updated_at",
+											"description": "Сортировка: updated_at (по активности), created_at (по дате), title (по алфавиту)"
 										}
 									]
 								},
-								"description": "Получить список досок текущего пользователя.\n\nПоддерживает пагинацию через cursor."
+								"description": "Список досок пользователя с фильтрацией, поиском и сортировкой.\n\nПараметры:\n- owner_only: true — только мои доски\n- search: частичный поиск по названию\n- sort_by: updated_at (дефолт, по активности), created_at, title"
 							},
 							"response": [
 								{
@@ -440,8 +574,14 @@
 										"header": [],
 										"url": {
 											"raw": "{{base_url}}/api/v1/boards?limit=20&cursor=",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "boards"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"boards"
+											],
 											"query": [
 												{
 													"key": "limit",
@@ -489,8 +629,15 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/boards/:id",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "boards", ":id"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":id"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -512,8 +659,15 @@
 										},
 										"url": {
 											"raw": "{{base_url}}/api/v1/boards/:id",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "boards", ":id"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"boards",
+												":id"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -532,32 +686,32 @@
 							]
 						},
 						{
-							"name": "Delete Board",
+							"name": "Delete Boards",
 							"request": {
-								"auth": {
-									"type": "bearer",
-									"bearer": [
-										{
-											"key": "token",
-											"value": "{{access_token}}",
-											"type": "string"
-										}
-									]
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"board_ids\": [\"{{board_id}}\"]}"
 								},
-								"method": "DELETE",
-								"header": [],
 								"url": {
-									"raw": "{{base_url}}/api/v1/boards/:id",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "boards", ":id"],
-									"variable": [
-										{
-											"key": "id",
-											"value": "{{board_id}}"
-										}
+									"raw": "{{base_url}}/api/v1/boards/delete",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										"delete"
 									]
 								},
-								"description": "Удалить доску.\n\nТолько владелец может удалить доску."
+								"description": "Удаление одной или нескольких досок. Принимает массив board_ids. Только owner может удалить. Одна транзакция."
 							},
 							"response": []
 						}
@@ -607,8 +761,16 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/boards/:id/columns",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "boards", ":id", "columns"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":id",
+										"columns"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -630,8 +792,16 @@
 										},
 										"url": {
 											"raw": "{{base_url}}/api/v1/boards/:id/columns",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "boards", ":id", "columns"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"boards",
+												":id",
+												"columns"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -666,8 +836,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/api/v1/boards/:id/columns",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "boards", ":id", "columns"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":id",
+										"columns"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -685,8 +863,16 @@
 										"header": [],
 										"url": {
 											"raw": "{{base_url}}/api/v1/boards/:id/columns",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "boards", ":id", "columns"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"boards",
+												":id",
+												"columns"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -730,8 +916,15 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/columns/:id",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "columns", ":id"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"columns",
+										":id"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -753,8 +946,15 @@
 										},
 										"url": {
 											"raw": "{{base_url}}/api/v1/columns/:id",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "columns", ":id"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"columns",
+												":id"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -789,8 +989,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/api/v1/columns/:id",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "columns", ":id"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"columns",
+										":id"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -848,8 +1055,16 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/columns/:id/cards",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "columns", ":id", "cards"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"columns",
+										":id",
+										"cards"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -871,8 +1086,16 @@
 										},
 										"url": {
 											"raw": "{{base_url}}/api/v1/columns/:id/cards",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "columns", ":id", "cards"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"columns",
+												":id",
+												"cards"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -907,8 +1130,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/api/v1/cards/:id",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "cards", ":id"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										":id"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -926,8 +1156,15 @@
 										"header": [],
 										"url": {
 											"raw": "{{base_url}}/api/v1/cards/:id",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "cards", ":id"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"cards",
+												":id"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -962,8 +1199,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/api/v1/columns/:id/cards",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "columns", ":id", "cards"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"columns",
+										":id",
+										"cards"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -981,8 +1226,16 @@
 										"header": [],
 										"url": {
 											"raw": "{{base_url}}/api/v1/columns/:id/cards",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "columns", ":id", "cards"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"columns",
+												":id",
+												"cards"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -1026,8 +1279,15 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/cards/:id",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "cards", ":id"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										":id"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -1049,8 +1309,15 @@
 										},
 										"url": {
 											"raw": "{{base_url}}/api/v1/cards/:id",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "cards", ":id"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"cards",
+												":id"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -1094,8 +1361,16 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/cards/:id/move",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "cards", ":id", "move"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										":id",
+										"move"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -1117,8 +1392,16 @@
 										},
 										"url": {
 											"raw": "{{base_url}}/api/v1/cards/:id/move",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "cards", ":id", "move"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"cards",
+												":id",
+												"move"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -1137,32 +1420,32 @@
 							]
 						},
 						{
-							"name": "Delete Card",
+							"name": "Delete Cards",
 							"request": {
-								"auth": {
-									"type": "bearer",
-									"bearer": [
-										{
-											"key": "token",
-											"value": "{{access_token}}",
-											"type": "string"
-										}
-									]
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"card_ids\": [\"{{card_id}}\"], \"board_id\": \"{{board_id}}\"}"
 								},
-								"method": "DELETE",
-								"header": [],
 								"url": {
-									"raw": "{{base_url}}/api/v1/cards/:id",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "cards", ":id"],
-									"variable": [
-										{
-											"key": "id",
-											"value": "{{card_id}}"
-										}
+									"raw": "{{base_url}}/api/v1/cards/delete",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										"delete"
 									]
 								},
-								"description": "Удалить карточку."
+								"description": "Удаление одной или нескольких карточек. Только создатель или owner доски может удалять. Batch в одной транзакции."
 							},
 							"response": []
 						}
@@ -1198,8 +1481,16 @@
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/boards/:id/members",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "boards", ":id", "members"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":id",
+										"members"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -1221,8 +1512,16 @@
 										},
 										"url": {
 											"raw": "{{base_url}}/api/v1/boards/:id/members",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "boards", ":id", "members"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"boards",
+												":id",
+												"members"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -1257,8 +1556,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/api/v1/boards/:id/members",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "boards", ":id", "members"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":id",
+										"members"
+									],
 									"variable": [
 										{
 											"key": "id",
@@ -1276,8 +1583,16 @@
 										"header": [],
 										"url": {
 											"raw": "{{base_url}}/api/v1/boards/:id/members",
-											"host": ["{{base_url}}"],
-											"path": ["api", "v1", "boards", ":id", "members"],
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"boards",
+												":id",
+												"members"
+											],
 											"variable": [
 												{
 													"key": "id",
@@ -1312,8 +1627,17 @@
 								"header": [],
 								"url": {
 									"raw": "{{base_url}}/api/v1/boards/:boardId/members/:userId",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "boards", ":boardId", "members", ":userId"],
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"members",
+										":userId"
+									],
 									"variable": [
 										{
 											"key": "boardId",
@@ -1355,8 +1679,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/health",
-							"host": ["{{base_url}}"],
-							"path": ["health"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
 						},
 						"description": "Проверка доступности API Gateway."
 					},

@@ -8,13 +8,15 @@ import (
 
 type DeleteColumnUseCase struct {
 	columnRepo ColumnRepository
+	boardRepo  BoardRepository
 	memberRepo MembershipRepository
 	publisher  EventPublisher
 }
 
-func NewDeleteColumnUseCase(columnRepo ColumnRepository, memberRepo MembershipRepository, publisher EventPublisher) *DeleteColumnUseCase {
+func NewDeleteColumnUseCase(columnRepo ColumnRepository, boardRepo BoardRepository, memberRepo MembershipRepository, publisher EventPublisher) *DeleteColumnUseCase {
 	return &DeleteColumnUseCase{
 		columnRepo: columnRepo,
+		boardRepo:  boardRepo,
 		memberRepo: memberRepo,
 		publisher:  publisher,
 	}
@@ -35,7 +37,10 @@ func (uc *DeleteColumnUseCase) Execute(ctx context.Context, columnID, boardID, u
 		return err
 	}
 
-	// 3. Публикуем событие
+	// 3. Обновляем updated_at доски
+	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
+
+	// 4. Публикуем событие
 	go func() {
 		_ = uc.publisher.PublishColumnDeleted(context.Background(), ColumnDeleted{
 			EventID:      generateEventID(),

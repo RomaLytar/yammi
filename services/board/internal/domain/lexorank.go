@@ -152,7 +152,7 @@ func ValidateLexorank(s string) error {
 	}
 
 	for _, c := range s {
-		if !isValidLexorankChar(byte(c)) {
+		if c > 127 || !isValidLexorankChar(byte(c)) {
 			return fmt.Errorf("%w: invalid character '%c'", ErrInvalidLexorank, c)
 		}
 	}

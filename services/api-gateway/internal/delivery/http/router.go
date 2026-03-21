@@ -50,6 +50,7 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("GET /api/v1/users/{id}", rateLimit(requireAuth(http.HandlerFunc(user.GetProfile))))
 	mux.Handle("PUT /api/v1/users/{id}", rateLimit(requireAuth(http.HandlerFunc(OwnerOnly(user.UpdateProfile)))))
 	mux.Handle("DELETE /api/v1/users/{id}", rateLimit(requireAuth(http.HandlerFunc(OwnerOnly(user.DeleteUser)))))
+	mux.Handle("GET /api/v1/users/search", rateLimit(requireAuth(http.HandlerFunc(user.SearchByEmail))))
 
 	// Board routes — все требуют auth
 	board := NewBoardHandler(clients.BoardClient)
@@ -57,7 +58,7 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("GET /api/v1/boards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.GetBoard))))
 	mux.Handle("GET /api/v1/boards", rateLimit(requireAuth(http.HandlerFunc(board.ListBoards))))
 	mux.Handle("PUT /api/v1/boards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateBoard))))
-	mux.Handle("DELETE /api/v1/boards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteBoard))))
+	mux.Handle("POST /api/v1/boards/delete", rateLimit(requireAuth(http.HandlerFunc(board.DeleteBoards))))
 
 	// Column routes
 	mux.Handle("POST /api/v1/boards/{id}/columns", rateLimit(requireAuth(http.HandlerFunc(board.AddColumn))))
@@ -72,7 +73,7 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("GET /api/v1/columns/{id}/cards", rateLimit(requireAuth(http.HandlerFunc(board.GetCards))))
 	mux.Handle("PUT /api/v1/cards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateCard))))
 	mux.Handle("PUT /api/v1/cards/{id}/move", rateLimit(requireAuth(http.HandlerFunc(board.MoveCard))))
-	mux.Handle("DELETE /api/v1/cards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteCard))))
+	mux.Handle("POST /api/v1/cards/delete", rateLimit(requireAuth(http.HandlerFunc(board.DeleteCards))))
 
 	// Member routes
 	mux.Handle("POST /api/v1/boards/{id}/members", rateLimit(requireAuth(http.HandlerFunc(board.AddMember))))

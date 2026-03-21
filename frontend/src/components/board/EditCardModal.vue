@@ -4,9 +4,11 @@ import type { Card } from '@/types/domain'
 import BaseModal from '@/components/shared/BaseModal.vue'
 import BaseInput from '@/components/shared/BaseInput.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
+import ConfirmModal from '@/components/shared/ConfirmModal.vue'
 
 interface Props {
   card: Card
+  canDelete?: boolean
 }
 
 interface Emits {
@@ -21,6 +23,7 @@ const emit = defineEmits<Emits>()
 const title = ref(props.card.title)
 const description = ref(props.card.description)
 const loading = ref(false)
+const showConfirmDelete = ref(false)
 
 watch(() => props.card, (newCard) => {
   title.value = newCard.title
@@ -38,10 +41,17 @@ function handleUpdate() {
 }
 
 function handleDelete() {
-  if (confirm('Удалить карточку?')) {
-    loading.value = true
-    emit('delete')
-  }
+  showConfirmDelete.value = true
+}
+
+function confirmDelete() {
+  loading.value = true
+  showConfirmDelete.value = false
+  emit('delete')
+}
+
+function cancelDelete() {
+  showConfirmDelete.value = false
 }
 
 function handleClose() {
@@ -82,6 +92,7 @@ function handleClose() {
 
       <div class="modal-actions">
         <BaseButton
+          v-if="canDelete"
           type="button"
           variant="danger"
           :disabled="loading"
@@ -108,6 +119,17 @@ function handleClose() {
         </div>
       </div>
     </form>
+
+    <ConfirmModal
+      v-if="showConfirmDelete"
+      title="Удалить карточку?"
+      message="Вы уверены, что хотите удалить эту карточку? Это действие нельзя отменить."
+      confirm-text="Удалить"
+      cancel-text="Отмена"
+      variant="danger"
+      @confirm="confirmDelete"
+      @cancel="cancelDelete"
+    />
   </BaseModal>
 </template>
 

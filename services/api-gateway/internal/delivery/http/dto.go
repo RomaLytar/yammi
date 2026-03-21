@@ -60,6 +60,7 @@ type cardResponse struct {
 	Description string `json:"description"`
 	Position    string `json:"position"`
 	AssigneeID  string `json:"assignee_id,omitempty"`
+	CreatorID   string `json:"creator_id"`
 	Version     int32  `json:"version"`
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`

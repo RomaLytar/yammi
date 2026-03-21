@@ -5,6 +5,23 @@ option go_package = "github.com/romanlovesweed/yammi/services/user/api/proto/v1;
 service UserService {
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc SearchByEmail(SearchByEmailRequest) returns (SearchByEmailResponse);
+}
+
+message SearchByEmailRequest {
+  string query = 1;
+  int32 limit = 2;
+}
+
+message SearchByEmailResponse {
+  repeated UserInfo users = 1;
+}
+
+message UserInfo {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string avatar_url = 4;
 }
 
 message GetProfileRequest {

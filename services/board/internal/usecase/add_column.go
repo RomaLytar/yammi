@@ -10,13 +10,15 @@ import (
 
 type AddColumnUseCase struct {
 	columnRepo ColumnRepository
+	boardRepo  BoardRepository
 	memberRepo MembershipRepository
 	publisher  EventPublisher
 }
 
-func NewAddColumnUseCase(columnRepo ColumnRepository, memberRepo MembershipRepository, publisher EventPublisher) *AddColumnUseCase {
+func NewAddColumnUseCase(columnRepo ColumnRepository, boardRepo BoardRepository, memberRepo MembershipRepository, publisher EventPublisher) *AddColumnUseCase {
 	return &AddColumnUseCase{
 		columnRepo: columnRepo,
+		boardRepo:  boardRepo,
 		memberRepo: memberRepo,
 		publisher:  publisher,
 	}
@@ -43,7 +45,10 @@ func (uc *AddColumnUseCase) Execute(ctx context.Context, boardID, userID, title 
 		return nil, err
 	}
 
-	// 4. Публикуем событие
+	// 4. Обновляем updated_at доски
+	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
+
+	// 5. Публикуем событие
 	go func() {
 		_ = uc.publisher.PublishColumnCreated(context.Background(), ColumnAdded{
 			EventID:      generateEventID(),

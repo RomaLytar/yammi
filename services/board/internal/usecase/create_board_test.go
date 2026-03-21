@@ -29,8 +29,8 @@ func (m *MockBoardRepository) GetByID(ctx context.Context, boardID string) (*dom
 	return args.Get(0).(*domain.Board), args.Error(1)
 }
 
-func (m *MockBoardRepository) ListByUserID(ctx context.Context, userID string, limit int, cursor string) ([]*domain.Board, string, error) {
-	args := m.Called(ctx, userID, limit, cursor)
+func (m *MockBoardRepository) ListByUserID(ctx context.Context, userID string, limit int, cursor string, ownerOnly bool, search string, sortBy string) ([]*domain.Board, string, error) {
+	args := m.Called(ctx, userID, limit, cursor, ownerOnly, search, sortBy)
 	if args.Get(0) == nil {
 		return nil, args.String(1), args.Error(2)
 	}
@@ -43,6 +43,16 @@ func (m *MockBoardRepository) Update(ctx context.Context, board *domain.Board) e
 }
 
 func (m *MockBoardRepository) Delete(ctx context.Context, boardID string) error {
+	args := m.Called(ctx, boardID)
+	return args.Error(0)
+}
+
+func (m *MockBoardRepository) BatchDelete(ctx context.Context, boardIDs []string) error {
+	args := m.Called(ctx, boardIDs)
+	return args.Error(0)
+}
+
+func (m *MockBoardRepository) TouchUpdatedAt(ctx context.Context, boardID string) error {
 	args := m.Called(ctx, boardID)
 	return args.Error(0)
 }
@@ -80,62 +90,67 @@ type MockEventPublisher struct {
 	mock.Mock
 }
 
-func (m *MockEventPublisher) PublishBoardCreated(ctx context.Context, event // events.BoardCreated) error {
+func (m *MockEventPublisher) PublishBoardCreated(ctx context.Context, event BoardCreated) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventPublisher) PublishBoardUpdated(ctx context.Context, event // events.BoardUpdated) error {
+func (m *MockEventPublisher) PublishBoardUpdated(ctx context.Context, event BoardUpdated) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventPublisher) PublishBoardDeleted(ctx context.Context, event // events.BoardDeleted) error {
+func (m *MockEventPublisher) PublishBoardDeleted(ctx context.Context, event BoardDeleted) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventPublisher) PublishColumnCreated(ctx context.Context, event // events.ColumnCreated) error {
+func (m *MockEventPublisher) PublishColumnCreated(ctx context.Context, event ColumnAdded) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventPublisher) PublishColumnUpdated(ctx context.Context, event // events.ColumnUpdated) error {
+func (m *MockEventPublisher) PublishColumnUpdated(ctx context.Context, event ColumnUpdated) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventPublisher) PublishColumnDeleted(ctx context.Context, event // events.ColumnDeleted) error {
+func (m *MockEventPublisher) PublishColumnDeleted(ctx context.Context, event ColumnDeleted) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventPublisher) PublishCardCreated(ctx context.Context, event // events.CardCreated) error {
+func (m *MockEventPublisher) PublishColumnsReordered(ctx context.Context, event ColumnsReordered) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventPublisher) PublishCardUpdated(ctx context.Context, event // events.CardUpdated) error {
+func (m *MockEventPublisher) PublishCardCreated(ctx context.Context, event CardCreated) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventPublisher) PublishCardMoved(ctx context.Context, event // events.CardMoved) error {
+func (m *MockEventPublisher) PublishCardUpdated(ctx context.Context, event CardUpdated) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventPublisher) PublishCardDeleted(ctx context.Context, event // events.CardDeleted) error {
+func (m *MockEventPublisher) PublishCardMoved(ctx context.Context, event CardMoved) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventPublisher) PublishMemberAdded(ctx context.Context, event // events.MemberAdded) error {
+func (m *MockEventPublisher) PublishCardDeleted(ctx context.Context, event CardDeleted) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
 
-func (m *MockEventPublisher) PublishMemberRemoved(ctx context.Context, event // events.MemberRemoved) error {
+func (m *MockEventPublisher) PublishMemberAdded(ctx context.Context, event MemberAdded) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishMemberRemoved(ctx context.Context, event MemberRemoved) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }
@@ -198,6 +213,7 @@ func TestCreateBoardUseCase_Execute(t *testing.T) {
 			publisher := new(MockEventPublisher)
 
 			tt.setupMocks(boardRepo, memberRepo, publisher)
+			publisher.On("PublishBoardCreated", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 			useCase := NewCreateBoardUseCase(boardRepo, memberRepo, publisher)
 			board, err := useCase.Execute(context.Background(), tt.title, tt.description, tt.ownerID)

@@ -160,7 +160,7 @@ func (s *BoardServiceServer) ListBoards(ctx context.Context, req *boardpb.ListBo
 		limit = 100 // max limit
 	}
 
-	boards, nextCursor, err := s.listBoards.Execute(ctx, req.GetUserId(), limit, req.GetCursor())
+	boards, nextCursor, err := s.listBoards.Execute(ctx, req.GetUserId(), limit, req.GetCursor(), req.GetOwnerOnly(), req.GetSearch(), req.GetSortBy())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -193,16 +193,16 @@ func (s *BoardServiceServer) UpdateBoard(ctx context.Context, req *boardpb.Updat
 	}, nil
 }
 
-// DeleteBoard удаляет доску
+// DeleteBoard удаляет одну или несколько досок (batch)
 func (s *BoardServiceServer) DeleteBoard(ctx context.Context, req *boardpb.DeleteBoardRequest) (*emptypb.Empty, error) {
-	if req.GetBoardId() == "" {
-		return nil, status.Error(codes.InvalidArgument, "board_id is required")
+	if len(req.GetBoardIds()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "board_ids is required")
 	}
 	if req.GetUserId() == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.deleteBoard.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	err := s.deleteBoard.Execute(ctx, req.GetBoardIds(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -457,13 +457,8 @@ func (s *BoardServiceServer) MoveCard(ctx context.Context, req *boardpb.MoveCard
 		return nil, status.Error(codes.InvalidArgument, "position (lexorank) is required")
 	}
 
-	// MoveCardUseCase принимает targetPosition как int (индекс), а не lexorank строку
-	// Но req.GetPosition() это lexorank строка. Нужно передать targetPosition = 0 (в конец)
-	// TODO: Возможно нужно пересмотреть API - либо принимать индекс, либо lexorank
-	// Пока используем 0 как сигнал "вставить в начало" или вычислить позицию из lexorank
-
-	// Временное решение: передаем 0 (в начало), usecase сам вычислит lexorank
-	card, err := s.moveCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetFromColumnId(), req.GetToColumnId(), req.GetUserId(), 0)
+	// Передаём lexorank позицию напрямую (вычисляется на фронтенде)
+	card, err := s.moveCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetFromColumnId(), req.GetToColumnId(), req.GetUserId(), req.GetPosition())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -480,22 +475,19 @@ func (s *BoardServiceServer) MoveCard(ctx context.Context, req *boardpb.MoveCard
 	}, nil
 }
 
-// DeleteCard удаляет карточку
+// DeleteCard удаляет одну или несколько карточек (batch)
 func (s *BoardServiceServer) DeleteCard(ctx context.Context, req *boardpb.DeleteCardRequest) (*emptypb.Empty, error) {
-	if req.GetCardId() == "" {
-		return nil, status.Error(codes.InvalidArgument, "card_id is required")
+	if len(req.GetCardIds()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "card_ids is required")
 	}
 	if req.GetBoardId() == "" {
 		return nil, status.Error(codes.InvalidArgument, "board_id is required")
-	}
-	if req.GetColumnId() == "" {
-		return nil, status.Error(codes.InvalidArgument, "column_id is required")
 	}
 	if req.GetUserId() == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.deleteCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetColumnId(), req.GetUserId())
+	err := s.deleteCard.Execute(ctx, req.GetCardIds(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -656,6 +648,7 @@ func mapCardToProto(c *domain.Card, boardID string) *boardpb.Card {
 		Version:     0, // Card не имеет version в domain.Card, но есть в proto
 		CreatedAt:   timestamppb.New(c.CreatedAt),
 		UpdatedAt:   timestamppb.New(c.UpdatedAt),
+		CreatorId:   c.CreatorID,
 	}
 }
 

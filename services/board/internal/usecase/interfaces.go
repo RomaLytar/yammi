@@ -14,15 +14,20 @@ type BoardRepository interface {
 	// GetByID возвращает доску по ID
 	GetByID(ctx context.Context, boardID string) (*domain.Board, error)
 
-	// ListByUserID возвращает список досок пользователя (с пагинацией)
-	// cursor — для cursor-based pagination (пустая строка для первой страницы)
-	ListByUserID(ctx context.Context, userID string, limit int, cursor string) ([]*domain.Board, string, error)
+	// ListByUserID возвращает список досок пользователя (с фильтрацией, поиском, сортировкой)
+	ListByUserID(ctx context.Context, userID string, limit int, cursor string, ownerOnly bool, search string, sortBy string) ([]*domain.Board, string, error)
 
 	// Update обновляет доску (с проверкой оптимистичной блокировки)
 	Update(ctx context.Context, board *domain.Board) error
 
 	// Delete удаляет доску по ID
 	Delete(ctx context.Context, boardID string) error
+
+	// BatchDelete удаляет несколько досок в одной транзакции
+	BatchDelete(ctx context.Context, boardIDs []string) error
+
+	// TouchUpdatedAt обновляет updated_at доски (при изменении карточек/колонок)
+	TouchUpdatedAt(ctx context.Context, boardID string) error
 }
 
 // ColumnRepository определяет интерфейс для работы с колонками
@@ -62,6 +67,9 @@ type CardRepository interface {
 
 	// Delete удаляет карточку по ID
 	Delete(ctx context.Context, cardID string) error
+
+	// BatchDelete удаляет несколько карточек по ID в рамках одной доски
+	BatchDelete(ctx context.Context, boardID string, cardIDs []string) error
 }
 
 // MembershipRepository определяет интерфейс для работы с членством в досках

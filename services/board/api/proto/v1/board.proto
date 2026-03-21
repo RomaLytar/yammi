@@ -63,7 +63,10 @@ message GetBoardResponse {
 message ListBoardsRequest {
   string user_id = 1;
   int32 limit = 2;
-  string cursor = 3;  // cursor-based pagination (created_at_id)
+  string cursor = 3;
+  bool owner_only = 4;
+  string search = 5;       // partial title search (ILIKE)
+  string sort_by = 6;      // "updated_at" (default), "created_at", "title"
 }
 
 message ListBoardsResponse {
@@ -84,7 +87,7 @@ message UpdateBoardResponse {
 }
 
 message DeleteBoardRequest {
-  string board_id = 1;
+  repeated string board_ids = 1;
   string user_id = 2;
 }
 
@@ -213,10 +216,9 @@ message MoveCardResponse {
 }
 
 message DeleteCardRequest {
-  string card_id = 1;
+  repeated string card_ids = 1;
   string board_id = 2;
-  string column_id = 3;
-  string user_id = 4;
+  string user_id = 3;
 }
 
 // ============================================================================
@@ -284,6 +286,7 @@ message Card {
   int32 version = 8;
   google.protobuf.Timestamp created_at = 9;
   google.protobuf.Timestamp updated_at = 10;
+  string creator_id = 11;
 }
 
 message BoardMember {

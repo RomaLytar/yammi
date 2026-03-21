@@ -40,6 +40,10 @@ func (uc *UserUseCase) UpdateProfile(ctx context.Context, userID, name, avatarUR
 	return user, nil
 }
 
+func (uc *UserUseCase) SearchByEmail(ctx context.Context, query string, limit int) ([]*domain.User, error) {
+	return uc.userRepo.SearchByEmail(ctx, query, limit)
+}
+
 func (uc *UserUseCase) DeleteProfile(ctx context.Context, userID string) error {
 	return uc.userRepo.Delete(ctx, userID)
 }

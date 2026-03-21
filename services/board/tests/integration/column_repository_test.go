@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 	"github.com/RomaLytar/yammi/services/board/internal/repository/postgres"
 )
@@ -25,7 +27,8 @@ func TestColumnRepository_Create(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board first
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Create column
@@ -73,7 +76,7 @@ func TestColumnRepository_GetByID_NotFound(t *testing.T) {
 	columnRepo := postgres.NewColumnRepository(db)
 	ctx := context.Background()
 
-	_, err = columnRepo.GetByID(ctx, "non-existent-id")
+	_, err = columnRepo.GetByID(ctx, uuid.NewString())
 	if err != domain.ErrColumnNotFound {
 		t.Errorf("Expected ErrColumnNotFound, got %v", err)
 	}
@@ -96,7 +99,8 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Create columns with different positions
@@ -152,7 +156,8 @@ func TestColumnRepository_Update(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board and column
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
@@ -210,7 +215,8 @@ func TestColumnRepository_Delete(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board and column
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
@@ -252,7 +258,8 @@ func TestColumnRepository_CascadeDelete(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Create multiple columns

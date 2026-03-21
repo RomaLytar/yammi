@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"errors"
 	"testing"
 	"time"
 )
@@ -94,9 +95,9 @@ func TestNewCard(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			card, err := NewCard(tt.columnID, tt.title, tt.description, tt.position, tt.assigneeID)
+			card, err := NewCard(tt.columnID, tt.title, tt.description, tt.position, tt.assigneeID, "test-creator")
 
-			if err != tt.wantErr {
+			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("NewCard() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -214,7 +215,7 @@ func TestCard_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Создаем тестовую карточку
 			originalAssignee := "original-user"
-			card, err := NewCard("column-123", "Original Task", "Original description", "n", &originalAssignee)
+			card, err := NewCard("column-123", "Original Task", "Original description", "n", &originalAssignee, "test-creator")
 			if err != nil {
 				t.Fatalf("Failed to create test card: %v", err)
 			}
@@ -225,7 +226,7 @@ func TestCard_Update(t *testing.T) {
 			// Обновляем карточку
 			err = card.Update(tt.title, tt.description, tt.assigneeID)
 
-			if err != tt.wantErr {
+			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("Card.Update() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -319,7 +320,7 @@ func TestCard_Move(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Создаем тестовую карточку
-			card, err := NewCard("column-123", "Test Task", "Description", "n", nil)
+			card, err := NewCard("column-123", "Test Task", "Description", "n", nil, "test-creator")
 			if err != nil {
 				t.Fatalf("Failed to create test card: %v", err)
 			}
@@ -332,7 +333,7 @@ func TestCard_Move(t *testing.T) {
 			// Перемещаем карточку
 			err = card.Move(tt.targetColumnID, tt.newPosition)
 
-			if err != tt.wantErr {
+			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("Card.Move() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -411,7 +412,7 @@ func TestCard_Reorder(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Создаем тестовую карточку
-			card, err := NewCard("column-123", "Test Task", "Description", "n", nil)
+			card, err := NewCard("column-123", "Test Task", "Description", "n", nil, "test-creator")
 			if err != nil {
 				t.Fatalf("Failed to create test card: %v", err)
 			}
@@ -424,7 +425,7 @@ func TestCard_Reorder(t *testing.T) {
 			// Изменяем позицию
 			err = card.Reorder(tt.newPosition)
 
-			if err != tt.wantErr {
+			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("Card.Reorder() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -467,7 +468,7 @@ func TestCard_LexorankValidation(t *testing.T) {
 
 	for _, pos := range validPositions {
 		t.Run("valid_"+pos, func(t *testing.T) {
-			card, err := NewCard("column-123", "Task", "Desc", pos, nil)
+			card, err := NewCard("column-123", "Task", "Desc", pos, nil, "test-creator")
 			if err != nil {
 				t.Errorf("NewCard() with valid position %q returned error: %v", pos, err)
 			}
@@ -479,8 +480,8 @@ func TestCard_LexorankValidation(t *testing.T) {
 
 	for _, pos := range invalidPositions {
 		t.Run("invalid_"+pos, func(t *testing.T) {
-			card, err := NewCard("column-123", "Task", "Desc", pos, nil)
-			if err != ErrInvalidLexorank {
+			card, err := NewCard("column-123", "Task", "Desc", pos, nil, "test-creator")
+			if !errors.Is(err, ErrInvalidLexorank) {
 				t.Errorf("NewCard() with invalid position %q error = %v, want ErrInvalidLexorank", pos, err)
 			}
 			if card != nil {

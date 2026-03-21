@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 	"github.com/RomaLytar/yammi/services/board/internal/repository/postgres"
 )
@@ -25,17 +27,19 @@ func TestMembershipRepository_AddMember(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Add member
-	err = memberRepo.AddMember(ctx, board.ID, "user-456", domain.RoleMember)
+	userID := uuid.NewString()
+	err = memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 	if err != nil {
 		t.Fatalf("Failed to add member: %v", err)
 	}
 
 	// Verify member exists
-	isMember, role, err := memberRepo.IsMember(ctx, board.ID, "user-456")
+	isMember, role, err := memberRepo.IsMember(ctx, board.ID, userID)
 	if err != nil {
 		t.Fatalf("Failed to check membership: %v", err)
 	}
@@ -66,14 +70,16 @@ func TestMembershipRepository_AddMember_Duplicate(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Add member
-	memberRepo.AddMember(ctx, board.ID, "user-456", domain.RoleMember)
+	userID := uuid.NewString()
+	memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 
 	// Try to add same member again
-	err = memberRepo.AddMember(ctx, board.ID, "user-456", domain.RoleMember)
+	err = memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 	if err != domain.ErrMemberExists {
 		t.Errorf("Expected ErrMemberExists, got %v", err)
 	}
@@ -96,11 +102,13 @@ func TestMembershipRepository_AddMember_InvalidRole(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Try to add member with invalid role
-	err = memberRepo.AddMember(ctx, board.ID, "user-456", domain.Role("invalid"))
+	userID := uuid.NewString()
+	err = memberRepo.AddMember(ctx, board.ID, userID, domain.Role("invalid"))
 	if err != domain.ErrInvalidRole {
 		t.Errorf("Expected ErrInvalidRole, got %v", err)
 	}
@@ -123,20 +131,22 @@ func TestMembershipRepository_RemoveMember(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Add member
-	memberRepo.AddMember(ctx, board.ID, "user-456", domain.RoleMember)
+	userID := uuid.NewString()
+	memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 
 	// Remove member
-	err = memberRepo.RemoveMember(ctx, board.ID, "user-456")
+	err = memberRepo.RemoveMember(ctx, board.ID, userID)
 	if err != nil {
 		t.Fatalf("Failed to remove member: %v", err)
 	}
 
 	// Verify member removed
-	isMember, _, err := memberRepo.IsMember(ctx, board.ID, "user-456")
+	isMember, _, err := memberRepo.IsMember(ctx, board.ID, userID)
 	if err != nil {
 		t.Fatalf("Failed to check membership: %v", err)
 	}
@@ -163,11 +173,13 @@ func TestMembershipRepository_RemoveMember_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Try to remove non-existent member
-	err = memberRepo.RemoveMember(ctx, board.ID, "non-existent-user")
+	nonExistentUserID := uuid.NewString()
+	err = memberRepo.RemoveMember(ctx, board.ID, nonExistentUserID)
 	if err != domain.ErrMemberNotFound {
 		t.Errorf("Expected ErrMemberNotFound, got %v", err)
 	}
@@ -190,11 +202,12 @@ func TestMembershipRepository_RemoveMember_CannotRemoveOwner(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board (owner automatically added)
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Try to remove owner
-	err = memberRepo.RemoveMember(ctx, board.ID, "owner-123")
+	err = memberRepo.RemoveMember(ctx, board.ID, ownerID)
 	if err != domain.ErrCannotRemoveOwner {
 		t.Errorf("Expected ErrCannotRemoveOwner, got %v", err)
 	}
@@ -217,11 +230,12 @@ func TestMembershipRepository_IsMember(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Check owner is member
-	isMember, role, err := memberRepo.IsMember(ctx, board.ID, "owner-123")
+	isMember, role, err := memberRepo.IsMember(ctx, board.ID, ownerID)
 	if err != nil {
 		t.Fatalf("Failed to check membership: %v", err)
 	}
@@ -235,7 +249,8 @@ func TestMembershipRepository_IsMember(t *testing.T) {
 	}
 
 	// Check non-member
-	isMember, _, err = memberRepo.IsMember(ctx, board.ID, "non-member")
+	nonMemberID := uuid.NewString()
+	isMember, _, err = memberRepo.IsMember(ctx, board.ID, nonMemberID)
 	if err != nil {
 		t.Fatalf("Failed to check membership: %v", err)
 	}
@@ -262,13 +277,17 @@ func TestMembershipRepository_ListMembers(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Add members
-	memberRepo.AddMember(ctx, board.ID, "user-1", domain.RoleMember)
-	memberRepo.AddMember(ctx, board.ID, "user-2", domain.RoleMember)
-	memberRepo.AddMember(ctx, board.ID, "user-3", domain.RoleMember)
+	user1ID := uuid.NewString()
+	user2ID := uuid.NewString()
+	user3ID := uuid.NewString()
+	memberRepo.AddMember(ctx, board.ID, user1ID, domain.RoleMember)
+	memberRepo.AddMember(ctx, board.ID, user2ID, domain.RoleMember)
+	memberRepo.AddMember(ctx, board.ID, user3ID, domain.RoleMember)
 
 	// List members (limit 10, offset 0)
 	members, err := memberRepo.ListMembers(ctx, board.ID, 10, 0)
@@ -282,8 +301,8 @@ func TestMembershipRepository_ListMembers(t *testing.T) {
 	}
 
 	// Verify owner is first (ordered by joined_at)
-	if members[0].UserID != "owner-123" {
-		t.Errorf("Expected first member to be owner-123, got %s", members[0].UserID)
+	if members[0].UserID != ownerID {
+		t.Errorf("Expected first member to be owner, got %s", members[0].UserID)
 	}
 
 	if members[0].Role != domain.RoleOwner {
@@ -308,12 +327,13 @@ func TestMembershipRepository_ListMembers_Pagination(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test Board", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Add 10 members
 	for i := 1; i <= 10; i++ {
-		memberRepo.AddMember(ctx, board.ID, fmt.Sprintf("user-%d", i), domain.RoleMember)
+		memberRepo.AddMember(ctx, board.ID, uuid.NewString(), domain.RoleMember)
 	}
 
 	// Page 1 (limit 5, offset 0)

@@ -35,9 +35,5 @@ onMounted(async () => {
 
 .default-layout__content {
   flex: 1;
-  padding: var(--space-xl) var(--space-lg);
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
 }
 </style>

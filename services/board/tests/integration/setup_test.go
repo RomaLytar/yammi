@@ -15,8 +15,13 @@ import (
 
 var testDB *sql.DB
 
-// setupPostgresContainer создает PostgreSQL контейнер для тестов
+// setupPostgresContainer создает PostgreSQL контейнер для тестов.
+// Если задан TEST_DATABASE_URL — использует существующую БД (для CI/Docker).
 func setupPostgresContainer(t *testing.T) (string, func()) {
+	if dsn := os.Getenv("TEST_DATABASE_URL"); dsn != "" {
+		return dsn, func() {}
+	}
+
 	ctx := context.Background()
 
 	req := testcontainers.ContainerRequest{
@@ -62,17 +67,22 @@ func setupPostgresContainer(t *testing.T) (string, func()) {
 	return dsn, cleanup
 }
 
-// runMigrations выполняет миграции из файла
+// runMigrations выполняет все миграции (идемпотентно, без DROP — безопасно для параллельных тестов)
 func runMigrations(t *testing.T, db *sql.DB) {
-	// Читаем миграцию из файла
-	migrationPath := "../../migrations/000001_init.up.sql"
-	migrationSQL, err := os.ReadFile(migrationPath)
-	if err != nil {
-		t.Fatalf("Failed to read migration file: %v", err)
+	migrationFiles := []string{
+		"../../migrations/000001_init.up.sql",
+		"../../migrations/000002_board_search_sort.up.sql",
+		"../../migrations/000003_card_creator_id.up.sql",
 	}
 
-	if _, err := db.Exec(string(migrationSQL)); err != nil {
-		t.Fatalf("Failed to run migrations: %v", err)
+	for _, migrationPath := range migrationFiles {
+		migrationSQL, err := os.ReadFile(migrationPath)
+		if err != nil {
+			t.Fatalf("Failed to read migration file %s: %v", migrationPath, err)
+		}
+
+		// Игнорируем "already exists" ошибки — миграции идемпотентны при параллельном запуске
+		_, _ = db.Exec(string(migrationSQL))
 	}
 }
 

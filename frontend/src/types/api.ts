@@ -111,6 +111,7 @@ export interface CreateCardRequest {
 }
 
 export interface UpdateCardRequest {
+  board_id: string
   title: string
   description: string
   assignee_id?: string
@@ -120,7 +121,13 @@ export interface MoveCardRequest {
   board_id: string
   from_column_id: string
   to_column_id: string
-  position: number
+  position: string  // lexorank position (string, not index)
+  version: number   // optimistic locking version
+}
+
+export interface DeleteCardsRequest {
+  card_ids: string[]
+  board_id: string
 }
 
 export interface CardResponse {
@@ -130,6 +137,8 @@ export interface CardResponse {
   description: string
   position: string
   assignee_id?: string
+  creator_id: string
+  version: number
   created_at: string
   updated_at: string
 }
@@ -143,6 +152,19 @@ export interface MemberResponse {
   user_id: string
   role: 'owner' | 'member'
   added_at: string
+}
+
+// --- User Search ---
+
+export interface SearchUserItem {
+  id: string
+  email: string
+  name: string
+  avatar_url: string
+}
+
+export interface SearchUsersResponse {
+  users: SearchUserItem[]
 }
 
 // --- Errors ---

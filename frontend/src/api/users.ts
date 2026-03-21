@@ -1,5 +1,5 @@
 import api from './client'
-import type { ProfileResponse } from '@/types/api'
+import type { ProfileResponse, SearchUsersResponse } from '@/types/api'
 import type { UserProfile } from '@/types/domain'
 
 function mapProfile(data: ProfileResponse): UserProfile {
@@ -29,6 +29,16 @@ export async function updateProfile(
     bio: fields.bio,
   })
   return mapProfile(data)
+}
+
+export async function searchByEmail(query: string): Promise<{ id: string; email: string; name: string; avatarUrl: string }[]> {
+  const { data } = await api.get<SearchUsersResponse>(`/v1/users/search?q=${encodeURIComponent(query)}`)
+  return data.users.map(u => ({
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    avatarUrl: u.avatar_url,
+  }))
 }
 
 export async function deleteUser(userId: string): Promise<void> {

@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 	"github.com/RomaLytar/yammi/services/board/internal/repository/postgres"
 	"github.com/RomaLytar/yammi/services/board/internal/usecase"
-	
 )
 
 // Mock publisher для тестов
@@ -15,37 +16,67 @@ type mockPublisher struct {
 	events []interface{}
 }
 
-func (m *mockPublisher) PublishBoardCreated(ctx context.Context, event events.BoardCreated) error {
+func (m *mockPublisher) PublishBoardCreated(ctx context.Context, event usecase.BoardCreated) error {
 	m.events = append(m.events, event)
 	return nil
 }
 
-func (m *mockPublisher) PublishBoardUpdated(ctx context.Context, event events.BoardUpdated) error {
+func (m *mockPublisher) PublishBoardUpdated(ctx context.Context, event usecase.BoardUpdated) error {
 	m.events = append(m.events, event)
 	return nil
 }
 
-func (m *mockPublisher) PublishBoardDeleted(ctx context.Context, event events.BoardDeleted) error {
+func (m *mockPublisher) PublishBoardDeleted(ctx context.Context, event usecase.BoardDeleted) error {
 	m.events = append(m.events, event)
 	return nil
 }
 
-func (m *mockPublisher) PublishColumnCreated(ctx context.Context, event events.ColumnCreated) error {
+func (m *mockPublisher) PublishColumnCreated(ctx context.Context, event usecase.ColumnAdded) error {
 	m.events = append(m.events, event)
 	return nil
 }
 
-func (m *mockPublisher) PublishCardCreated(ctx context.Context, event events.CardCreated) error {
+func (m *mockPublisher) PublishColumnUpdated(ctx context.Context, event usecase.ColumnUpdated) error {
 	m.events = append(m.events, event)
 	return nil
 }
 
-func (m *mockPublisher) PublishCardMoved(ctx context.Context, event events.CardMoved) error {
+func (m *mockPublisher) PublishColumnDeleted(ctx context.Context, event usecase.ColumnDeleted) error {
 	m.events = append(m.events, event)
 	return nil
 }
 
-func (m *mockPublisher) PublishMemberAdded(ctx context.Context, event events.MemberAdded) error {
+func (m *mockPublisher) PublishColumnsReordered(ctx context.Context, event usecase.ColumnsReordered) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCardCreated(ctx context.Context, event usecase.CardCreated) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCardUpdated(ctx context.Context, event usecase.CardUpdated) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCardMoved(ctx context.Context, event usecase.CardMoved) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCardDeleted(ctx context.Context, event usecase.CardDeleted) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishMemberAdded(ctx context.Context, event usecase.MemberAdded) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishMemberRemoved(ctx context.Context, event usecase.MemberRemoved) error {
 	m.events = append(m.events, event)
 	return nil
 }
@@ -74,7 +105,8 @@ func TestCreateBoardUseCase_Integration(t *testing.T) {
 
 	// Execute
 	ctx := context.Background()
-	board, err := uc.Execute(ctx, "Integration Test", "Description", "user-123")
+	userID := uuid.NewString()
+	board, err := uc.Execute(ctx, "Integration Test", "Description", userID)
 	if err != nil {
 		t.Fatalf("Failed to create board: %v", err)
 	}
@@ -94,7 +126,7 @@ func TestCreateBoardUseCase_Integration(t *testing.T) {
 	}
 
 	// Verify owner membership
-	isMember, role, err := memberRepo.IsMember(ctx, board.ID, "user-123")
+	isMember, role, err := memberRepo.IsMember(ctx, board.ID, userID)
 	if err != nil {
 		t.Fatalf("Failed to check membership: %v", err)
 	}
@@ -128,17 +160,19 @@ func TestGetBoardUseCase_Integration(t *testing.T) {
 
 	// Create board
 	ctx := context.Background()
-	board, _ := domain.NewBoard("Test Board", "Description", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Description", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Add member
-	memberRepo.AddMember(ctx, board.ID, "user-456", domain.RoleMember)
+	memberID := uuid.NewString()
+	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
 	// Create use case
 	uc := usecase.NewGetBoardUseCase(boardRepo, memberRepo)
 
 	// Execute as owner
-	loaded, err := uc.Execute(ctx, board.ID, "owner-123")
+	loaded, err := uc.Execute(ctx, board.ID, ownerID)
 	if err != nil {
 		t.Fatalf("Failed to get board: %v", err)
 	}
@@ -148,7 +182,7 @@ func TestGetBoardUseCase_Integration(t *testing.T) {
 	}
 
 	// Execute as member
-	loaded, err = uc.Execute(ctx, board.ID, "user-456")
+	loaded, err = uc.Execute(ctx, board.ID, memberID)
 	if err != nil {
 		t.Fatalf("Failed to get board as member: %v", err)
 	}
@@ -158,7 +192,8 @@ func TestGetBoardUseCase_Integration(t *testing.T) {
 	}
 
 	// Execute as non-member (should fail)
-	_, err = uc.Execute(ctx, board.ID, "non-member")
+	nonMemberID := uuid.NewString()
+	_, err = uc.Execute(ctx, board.ID, nonMemberID)
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
@@ -184,14 +219,15 @@ func TestAddColumnUseCase_Integration(t *testing.T) {
 
 	// Create board
 	ctx := context.Background()
-	board, _ := domain.NewBoard("Test Board", "Description", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Description", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Create use case
-	uc := usecase.NewAddColumnUseCase(boardRepo, columnRepo, memberRepo, publisher)
+	uc := usecase.NewAddColumnUseCase(columnRepo, boardRepo, memberRepo, publisher)
 
 	// Execute as owner
-	column, err := uc.Execute(ctx, board.ID, "To Do", 0, "owner-123")
+	column, err := uc.Execute(ctx, board.ID, ownerID, "To Do", 0)
 	if err != nil {
 		t.Fatalf("Failed to add column: %v", err)
 	}
@@ -211,7 +247,8 @@ func TestAddColumnUseCase_Integration(t *testing.T) {
 	}
 
 	// Try as non-member (should fail)
-	_, err = uc.Execute(ctx, board.ID, "Done", 1, "non-member")
+	nonMemberID := uuid.NewString()
+	_, err = uc.Execute(ctx, board.ID, nonMemberID, "Done", 1)
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
@@ -238,21 +275,23 @@ func TestCreateCardUseCase_Integration(t *testing.T) {
 
 	// Create board and column
 	ctx := context.Background()
-	board, _ := domain.NewBoard("Test Board", "Description", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Description", ownerID)
 	boardRepo.Create(ctx, board)
 
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
 	// Add member
-	memberRepo.AddMember(ctx, board.ID, "user-456", domain.RoleMember)
+	memberID := uuid.NewString()
+	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
 	// Create use case
-	uc := usecase.NewCreateCardUseCase(boardRepo, columnRepo, cardRepo, memberRepo, publisher)
+	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
 
 	// Execute as member
-	assignee := "user-789"
-	card, err := uc.Execute(ctx, column.ID, "Task 1", "Description", &assignee, "user-456")
+	assignee := uuid.NewString()
+	card, err := uc.Execute(ctx, column.ID, board.ID, memberID, "Task 1", "Description", "", &assignee)
 	if err != nil {
 		t.Fatalf("Failed to create card: %v", err)
 	}
@@ -276,7 +315,8 @@ func TestCreateCardUseCase_Integration(t *testing.T) {
 	}
 
 	// Try as non-member (should fail)
-	_, err = uc.Execute(ctx, column.ID, "Task 2", "Desc", nil, "non-member")
+	nonMemberID := uuid.NewString()
+	_, err = uc.Execute(ctx, column.ID, board.ID, nonMemberID, "Task 2", "Desc", "", nil)
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
@@ -303,7 +343,8 @@ func TestMoveCardUseCase_Integration(t *testing.T) {
 
 	// Create board and two columns
 	ctx := context.Background()
-	board, _ := domain.NewBoard("Test Board", "Description", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Description", ownerID)
 	boardRepo.Create(ctx, board)
 
 	column1, _ := domain.NewColumn(board.ID, "To Do", 0)
@@ -313,17 +354,18 @@ func TestMoveCardUseCase_Integration(t *testing.T) {
 	columnRepo.Create(ctx, column2)
 
 	// Create card in column1
-	card, _ := domain.NewCard(column1.ID, "Task", "Desc", "n", nil)
+	card, _ := domain.NewCard(column1.ID, "Task", "Desc", "n", nil, ownerID)
 	cardRepo.Create(ctx, card)
 
 	// Add member
-	memberRepo.AddMember(ctx, board.ID, "user-456", domain.RoleMember)
+	memberID := uuid.NewString()
+	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
 	// Create use case
-	uc := usecase.NewMoveCardUseCase(boardRepo, columnRepo, cardRepo, memberRepo, publisher)
+	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
 
 	// Execute as member (move to column2)
-	err = uc.Execute(ctx, card.ID, column2.ID, "m", "user-456")
+	_, err = uc.Execute(ctx, card.ID, board.ID, column1.ID, column2.ID, memberID, "m")
 	if err != nil {
 		t.Fatalf("Failed to move card: %v", err)
 	}
@@ -343,7 +385,8 @@ func TestMoveCardUseCase_Integration(t *testing.T) {
 	}
 
 	// Try as non-member (should fail)
-	err = uc.Execute(ctx, card.ID, column1.ID, "a", "non-member")
+	nonMemberID := uuid.NewString()
+	_, err = uc.Execute(ctx, card.ID, board.ID, column2.ID, column1.ID, nonMemberID, "a")
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
@@ -368,20 +411,22 @@ func TestAddMemberUseCase_Integration(t *testing.T) {
 
 	// Create board
 	ctx := context.Background()
-	board, _ := domain.NewBoard("Test Board", "Description", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test Board", "Description", ownerID)
 	boardRepo.Create(ctx, board)
 
 	// Create use case
 	uc := usecase.NewAddMemberUseCase(boardRepo, memberRepo, publisher)
 
 	// Execute as owner
-	err = uc.Execute(ctx, board.ID, "user-456", domain.RoleMember, "owner-123")
+	newMemberID := uuid.NewString()
+	err = uc.Execute(ctx, board.ID, ownerID, newMemberID, domain.RoleMember)
 	if err != nil {
 		t.Fatalf("Failed to add member: %v", err)
 	}
 
 	// Verify in DB
-	isMember, role, err := memberRepo.IsMember(ctx, board.ID, "user-456")
+	isMember, role, err := memberRepo.IsMember(ctx, board.ID, newMemberID)
 	if err != nil {
 		t.Fatalf("Failed to check membership: %v", err)
 	}
@@ -395,8 +440,10 @@ func TestAddMemberUseCase_Integration(t *testing.T) {
 	}
 
 	// Try as non-owner (should fail)
-	memberRepo.AddMember(ctx, board.ID, "user-789", domain.RoleMember)
-	err = uc.Execute(ctx, board.ID, "user-999", domain.RoleMember, "user-789")
+	nonOwnerID := uuid.NewString()
+	memberRepo.AddMember(ctx, board.ID, nonOwnerID, domain.RoleMember)
+	anotherUserID := uuid.NewString()
+	err = uc.Execute(ctx, board.ID, nonOwnerID, anotherUserID, domain.RoleMember)
 	if err != domain.ErrNotOwner {
 		t.Errorf("Expected ErrNotOwner for non-owner, got %v", err)
 	}

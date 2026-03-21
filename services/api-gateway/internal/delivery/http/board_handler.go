@@ -92,11 +92,17 @@ func (h *BoardHandler) ListBoards(w http.ResponseWriter, r *http.Request) {
 
 	limit := parseIntQueryParam(r, "limit", 20)
 	cursor := r.URL.Query().Get("cursor")
+	ownerOnly := r.URL.Query().Get("owner_only") == "true"
+	search := r.URL.Query().Get("search")
+	sortBy := r.URL.Query().Get("sort_by")
 
 	resp, err := h.client.ListBoards(r.Context(), &boardpb.ListBoardsRequest{
-		UserId: userID,
-		Limit:  int32(limit),
-		Cursor: cursor,
+		UserId:    userID,
+		Limit:     int32(limit),
+		Cursor:    cursor,
+		OwnerOnly: ownerOnly,
+		Search:    search,
+		SortBy:    sortBy,
 	})
 	if err != nil {
 		writeGRPCError(w, err)
@@ -150,23 +156,29 @@ func (h *BoardHandler) UpdateBoard(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// DeleteBoard DELETE /api/v1/boards/{id}
-func (h *BoardHandler) DeleteBoard(w http.ResponseWriter, r *http.Request) {
+// DeleteBoards POST /api/v1/boards/delete — удаление одной или нескольких досок
+func (h *BoardHandler) DeleteBoards(w http.ResponseWriter, r *http.Request) {
 	userID, ok := UserIDFromContext(r.Context())
 	if !ok {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	boardID := r.PathValue("id")
-	if boardID == "" {
-		writeError(w, http.StatusBadRequest, "board id is required")
+	var req struct {
+		BoardIDs []string `json:"board_ids"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if len(req.BoardIDs) == 0 {
+		writeError(w, http.StatusBadRequest, "board_ids is required")
 		return
 	}
 
 	_, err := h.client.DeleteBoard(r.Context(), &boardpb.DeleteBoardRequest{
-		BoardId: boardID,
-		UserId:  userID,
+		BoardIds: req.BoardIDs,
+		UserId:   userID,
 	})
 	if err != nil {
 		writeGRPCError(w, err)
@@ -581,34 +593,35 @@ func (h *BoardHandler) MoveCard(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// DeleteCard DELETE /api/v1/cards/{id}
-func (h *BoardHandler) DeleteCard(w http.ResponseWriter, r *http.Request) {
+// DeleteCards POST /api/v1/cards/delete — удаление одной или нескольких карточек
+func (h *BoardHandler) DeleteCards(w http.ResponseWriter, r *http.Request) {
 	userID, ok := UserIDFromContext(r.Context())
 	if !ok {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	cardID := r.PathValue("id")
-	if cardID == "" {
-		writeError(w, http.StatusBadRequest, "card id is required")
-		return
-	}
-
 	var req struct {
-		BoardID  string `json:"board_id"`
-		ColumnID string `json:"column_id"`
+		CardIDs []string `json:"card_ids"`
+		BoardID string   `json:"board_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
+	if len(req.CardIDs) == 0 {
+		writeError(w, http.StatusBadRequest, "card_ids is required")
+		return
+	}
+	if req.BoardID == "" {
+		writeError(w, http.StatusBadRequest, "board_id is required")
+		return
+	}
 
 	_, err := h.client.DeleteCard(r.Context(), &boardpb.DeleteCardRequest{
-		CardId:   cardID,
-		BoardId:  req.BoardID,
-		ColumnId: req.ColumnID,
-		UserId:   userID,
+		CardIds: req.CardIDs,
+		BoardId: req.BoardID,
+		UserId:  userID,
 	})
 	if err != nil {
 		writeGRPCError(w, err)
@@ -775,6 +788,7 @@ func mapCardFromProto(pb *boardpb.Card) cardResponse {
 		Description: pb.Description,
 		Position:    pb.Position,
 		AssigneeID:  pb.AssigneeId,
+		CreatorID:   pb.CreatorId,
 		Version:     pb.Version,
 		CreatedAt:   pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt:   pb.UpdatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),

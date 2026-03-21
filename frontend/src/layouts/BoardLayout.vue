@@ -23,6 +23,5 @@ import AppHeader from '@/components/layout/AppHeader.vue'
   flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: var(--space-lg);
 }
 </style>

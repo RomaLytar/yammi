@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 	"github.com/RomaLytar/yammi/services/board/internal/repository/postgres"
 )
@@ -28,7 +30,8 @@ func TestBoardRepository_Create(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, err := domain.NewBoard("Test Board", "Description", "owner-123")
+	ownerID := uuid.NewString()
+	board, err := domain.NewBoard("Test Board", "Description", ownerID)
 	if err != nil {
 		t.Fatalf("Failed to create domain board: %v", err)
 	}
@@ -61,7 +64,7 @@ func TestBoardRepository_Create(t *testing.T) {
 	}
 
 	// Verify owner is in board_members
-	isMember, role, err := memberRepo.IsMember(ctx, board.ID, "owner-123")
+	isMember, role, err := memberRepo.IsMember(ctx, board.ID, ownerID)
 	if err != nil {
 		t.Fatalf("Failed to check membership: %v", err)
 	}
@@ -90,7 +93,7 @@ func TestBoardRepository_GetByID_NotFound(t *testing.T) {
 	repo := postgres.NewBoardRepository(db)
 	ctx := context.Background()
 
-	_, err = repo.GetByID(ctx, "non-existent-id")
+	_, err = repo.GetByID(ctx, uuid.NewString())
 	if err != domain.ErrBoardNotFound {
 		t.Errorf("Expected ErrBoardNotFound, got %v", err)
 	}
@@ -112,7 +115,8 @@ func TestBoardRepository_Update(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Original Title", "Original Description", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Original Title", "Original Description", ownerID)
 	repo.Create(ctx, board)
 
 	// Update board
@@ -157,7 +161,8 @@ func TestBoardRepository_OptimisticLocking(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test", "Desc", ownerID)
 	repo.Create(ctx, board)
 
 	// Load board twice (simulate concurrent access)
@@ -200,7 +205,8 @@ func TestBoardRepository_Delete(t *testing.T) {
 	ctx := context.Background()
 
 	// Create board
-	board, _ := domain.NewBoard("Test", "Desc", "owner-123")
+	ownerID := uuid.NewString()
+	board, _ := domain.NewBoard("Test", "Desc", ownerID)
 	repo.Create(ctx, board)
 
 	// Delete board
@@ -238,18 +244,19 @@ func TestBoardRepository_CursorPagination(t *testing.T) {
 	memberRepo := postgres.NewMembershipRepository(db)
 	ctx := context.Background()
 
-	userID := "user-123"
+	ownerID := uuid.NewString()
+	userID := uuid.NewString()
 
 	// Create 25 boards
 	for i := 0; i < 25; i++ {
-		board, _ := domain.NewBoard(fmt.Sprintf("Board %d", i), "", "owner-123")
+		board, _ := domain.NewBoard(fmt.Sprintf("Board %d", i), "", ownerID)
 		repo.Create(ctx, board)
 		memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 		time.Sleep(1 * time.Millisecond) // Ensure different created_at
 	}
 
 	// Page 1 (limit 10)
-	boards, cursor, err := repo.ListByUserID(ctx, userID, 10, "")
+	boards, cursor, err := repo.ListByUserID(ctx, userID, 10, "", false, "", "updated_at")
 	if err != nil {
 		t.Fatalf("Failed to list boards: %v", err)
 	}
@@ -263,7 +270,7 @@ func TestBoardRepository_CursorPagination(t *testing.T) {
 	}
 
 	// Page 2 (using cursor)
-	boards2, cursor2, err := repo.ListByUserID(ctx, userID, 10, cursor)
+	boards2, cursor2, err := repo.ListByUserID(ctx, userID, 10, cursor, false, "", "updated_at")
 	if err != nil {
 		t.Fatalf("Failed to list boards (page 2): %v", err)
 	}
@@ -288,7 +295,7 @@ func TestBoardRepository_CursorPagination(t *testing.T) {
 	}
 
 	// Page 3 (last page, should have 5 boards)
-	boards3, cursor3, err := repo.ListByUserID(ctx, userID, 10, cursor2)
+	boards3, cursor3, err := repo.ListByUserID(ctx, userID, 10, cursor2, false, "", "updated_at")
 	if err != nil {
 		t.Fatalf("Failed to list boards (page 3): %v", err)
 	}
@@ -318,7 +325,8 @@ func TestBoardRepository_ListByUserID_EmptyResult(t *testing.T) {
 	ctx := context.Background()
 
 	// List boards for user without any boards
-	boards, cursor, err := repo.ListByUserID(ctx, "non-existent-user", 10, "")
+	nonExistentUserID := uuid.NewString()
+	boards, cursor, err := repo.ListByUserID(ctx, nonExistentUserID, 10, "", false, "", "updated_at")
 	if err != nil {
 		t.Fatalf("Failed to list boards: %v", err)
 	}

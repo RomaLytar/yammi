@@ -8,13 +8,15 @@ import (
 
 type ReorderColumnsUseCase struct {
 	columnRepo ColumnRepository
+	boardRepo  BoardRepository
 	memberRepo MembershipRepository
 	publisher  EventPublisher
 }
 
-func NewReorderColumnsUseCase(columnRepo ColumnRepository, memberRepo MembershipRepository, publisher EventPublisher) *ReorderColumnsUseCase {
+func NewReorderColumnsUseCase(columnRepo ColumnRepository, boardRepo BoardRepository, memberRepo MembershipRepository, publisher EventPublisher) *ReorderColumnsUseCase {
 	return &ReorderColumnsUseCase{
 		columnRepo: columnRepo,
+		boardRepo:  boardRepo,
 		memberRepo: memberRepo,
 		publisher:  publisher,
 	}
@@ -57,7 +59,10 @@ func (uc *ReorderColumnsUseCase) Execute(ctx context.Context, boardID, userID st
 		return nil, err
 	}
 
-	// 4. Публикуем событие
+	// 5. Обновляем updated_at доски
+	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
+
+	// 6. Публикуем событие
 	columnIDs := make([]string, len(columns))
 	for i, col := range columns {
 		columnIDs[i] = col.ID

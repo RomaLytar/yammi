@@ -17,6 +17,10 @@ RUN protoc --go_out=. --go_opt=paths=source_relative \
     --go-grpc_out=. --go-grpc_opt=paths=source_relative \
     api/proto/v1/user/user.proto
 
+RUN protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+    api/proto/v1/board/board.proto
+
 RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/api-gateway ./cmd/server
 

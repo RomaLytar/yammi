@@ -102,9 +102,10 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   async function deleteColumn(columnId: string): Promise<void> {
+    if (!boardId.value) return
     try {
       error.value = null
-      await boardsApi.deleteColumn(columnId)
+      await boardsApi.deleteColumn(columnId, boardId.value)
       columns.value = columns.value.filter((c) => c.id !== columnId)
     } catch (err) {
       error.value = err instanceof ApiError ? err.message : 'Ошибка удаления колонки'
@@ -140,9 +141,10 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   async function updateCard(cardId: string, title: string, description: string): Promise<void> {
+    if (!boardId.value) return
     try {
       error.value = null
-      const updated = await boardsApi.updateCard(cardId, { title, description })
+      const updated = await boardsApi.updateCard(cardId, { board_id: boardId.value, title, description })
 
       // Обновляем карточку в store
       for (const column of columns.value) {
@@ -158,17 +160,23 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  async function deleteCard(cardId: string): Promise<void> {
+  async function deleteCards(cardIds: string[]): Promise<void> {
+    if (!boardId.value || cardIds.length === 0) return
+
     try {
       error.value = null
-      await boardsApi.deleteCard(cardId)
 
-      // Удаляем из store
+      await boardsApi.deleteCards({
+        card_ids: cardIds,
+        board_id: boardId.value,
+      })
+
+      const idsSet = new Set(cardIds)
       for (const column of columns.value) {
-        column.cards = column.cards.filter((c) => c.id !== cardId)
+        column.cards = column.cards.filter((c) => !idsSet.has(c.id))
       }
     } catch (err) {
-      error.value = err instanceof ApiError ? err.message : 'Ошибка удаления карточки'
+      error.value = err instanceof ApiError ? err.message : 'Ошибка удаления карточек'
       throw err
     }
   }
@@ -249,14 +257,16 @@ export const useBoardStore = defineStore('board', () => {
         board_id: boardId.value,
         from_column_id: fromColumnId,
         to_column_id: toColumnId,
-        position: newIndex,
+        position: position,  // lexorank string, not index!
+        version: card.version,
       })
 
       await boardsApi.moveCard(cardId, {
         board_id: boardId.value,
         from_column_id: fromColumnId,
         to_column_id: toColumnId,
-        position: newIndex,
+        position: position,  // lexorank string, not index!
+        version: card.version,
       })
 
       console.log('[moveCard] ========== API SUCCESS ==========')
@@ -289,7 +299,7 @@ export const useBoardStore = defineStore('board', () => {
     deleteColumn,
     createCard,
     updateCard,
-    deleteCard,
+    deleteCards,
     moveCard,
     clear,
   }

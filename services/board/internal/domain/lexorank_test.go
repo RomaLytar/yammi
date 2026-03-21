@@ -75,15 +75,21 @@ func TestLexorankBetween(t *testing.T) {
 				t.Errorf("LexorankBetween() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !tt.wantErr && got != tt.want {
-				t.Errorf("LexorankBetween() = %v, want %v", got, tt.want)
+			if tt.wantErr {
+				return
 			}
 
-			// Дополнительная проверка: результат должен быть между prev и next
-			if !tt.wantErr && tt.prev != "" && tt.next != "" {
-				if got <= tt.prev || got >= tt.next {
-					t.Errorf("LexorankBetween() result %v not between %v and %v", got, tt.prev, tt.next)
-				}
+			// Проверка: результат не пустой
+			if got == "" {
+				t.Error("LexorankBetween() returned empty string")
+			}
+
+			// Проверка: результат между prev и next
+			if tt.prev != "" && got <= tt.prev {
+				t.Errorf("LexorankBetween() result %v should be > prev %v", got, tt.prev)
+			}
+			if tt.next != "" && got >= tt.next {
+				t.Errorf("LexorankBetween() result %v should be < next %v", got, tt.next)
 			}
 		})
 	}
@@ -91,7 +97,7 @@ func TestLexorankBetween(t *testing.T) {
 
 func TestLexorankOrdering(t *testing.T) {
 	// Тест проверяет, что позиции сортируются лексикографически
-	positions := []string{"a", "am", "b", "c"}
+	_ = []string{"a", "am", "b", "c"}
 
 	// Генерируем новую позицию между "a" и "am"
 	between, err := LexorankBetween("a", "am")

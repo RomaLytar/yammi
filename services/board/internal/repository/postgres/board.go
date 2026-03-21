@@ -74,39 +74,51 @@ func (r *BoardRepository) GetByID(ctx context.Context, boardID string) (*domain.
 	return &board, nil
 }
 
-// ListByUserID возвращает доски где user is member (cursor pagination)
-func (r *BoardRepository) ListByUserID(ctx context.Context, userID string, limit int, cursor string) ([]*domain.Board, string, error) {
-	// Cursor format: "created_at_RFC3339Nano|id"
-	var createdAt time.Time
-	var cursorID string
-
+// ListByUserID возвращает доски с фильтрацией, поиском и сортировкой (offset pagination)
+func (r *BoardRepository) ListByUserID(ctx context.Context, userID string, limit int, cursor string, ownerOnly bool, search string, sortBy string) ([]*domain.Board, string, error) {
+	offset := 0
 	if cursor != "" {
-		// Parse cursor: "2024-03-19T10:00:00.123456789Z|uuid"
-		var err error
-		_, err = fmt.Sscanf(cursor, "%s|%s", &createdAt, &cursorID)
-		if err != nil {
-			createdAt = time.Time{} // Invalid cursor — start from beginning
-			cursorID = ""
-		}
+		fmt.Sscanf(cursor, "%d", &offset)
 	}
 
-	// Если cursor пустой, используем максимальные значения для начала
-	if cursor == "" {
-		createdAt = time.Now().Add(24 * time.Hour) // будущее время
-		cursorID = "ffffffff-ffff-ffff-ffff-ffffffffffff"
+	// Build WHERE clause
+	args := []interface{}{userID}
+	where := "WHERE bm.user_id = $1"
+	argIdx := 2
+
+	if ownerOnly {
+		where += fmt.Sprintf(" AND b.owner_id = $%d", argIdx)
+		args = append(args, userID)
+		argIdx++
 	}
 
-	query := `
+	if search != "" {
+		where += fmt.Sprintf(" AND b.title ILIKE $%d", argIdx)
+		args = append(args, "%"+search+"%")
+		argIdx++
+	}
+
+	// ORDER BY
+	orderBy := "ORDER BY b.updated_at DESC, b.id DESC"
+	switch sortBy {
+	case "created_at":
+		orderBy = "ORDER BY b.created_at DESC, b.id DESC"
+	case "title":
+		orderBy = "ORDER BY b.title ASC, b.id ASC"
+	}
+
+	query := fmt.Sprintf(`
 		SELECT b.id, b.title, b.description, b.owner_id, b.version, b.created_at, b.updated_at
 		FROM boards b
 		INNER JOIN board_members bm ON b.id = bm.board_id
-		WHERE bm.user_id = $1
-		  AND (b.created_at, b.id) < ($2, $3)
-		ORDER BY b.created_at DESC, b.id DESC
-		LIMIT $4
-	`
+		%s
+		%s
+		LIMIT $%d OFFSET $%d
+	`, where, orderBy, argIdx, argIdx+1)
 
-	rows, err := r.db.QueryContext(ctx, query, userID, createdAt, cursorID, limit+1)
+	args = append(args, limit+1, offset)
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, "", fmt.Errorf("select boards: %w", err)
 	}
@@ -121,15 +133,61 @@ func (r *BoardRepository) ListByUserID(ctx context.Context, userID string, limit
 		boards = append(boards, &b)
 	}
 
-	// Generate next cursor
 	var nextCursor string
 	if len(boards) > limit {
-		last := boards[limit-1]
-		nextCursor = fmt.Sprintf("%s|%s", last.CreatedAt.Format(time.RFC3339Nano), last.ID)
 		boards = boards[:limit]
+		nextCursor = fmt.Sprintf("%d", offset+limit)
 	}
 
 	return boards, nextCursor, rows.Err()
+}
+
+// BatchDelete удаляет несколько досок в одной транзакции
+func (r *BoardRepository) BatchDelete(ctx context.Context, boardIDs []string) error {
+	if len(boardIDs) == 0 {
+		return nil
+	}
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Строим IN clause
+	placeholders := ""
+	args := make([]interface{}, len(boardIDs))
+	for i, id := range boardIDs {
+		if i > 0 {
+			placeholders += ", "
+		}
+		placeholders += fmt.Sprintf("$%d", i+1)
+		args[i] = id
+	}
+
+	// Удаляем cards (партиционированная таблица, нет FK CASCADE)
+	if _, err := tx.ExecContext(ctx, fmt.Sprintf(`DELETE FROM cards WHERE board_id IN (%s)`, placeholders), args...); err != nil {
+		return fmt.Errorf("delete cards: %w", err)
+	}
+
+	// Удаляем доски (columns и members удалятся по CASCADE)
+	result, err := tx.ExecContext(ctx, fmt.Sprintf(`DELETE FROM boards WHERE id IN (%s)`, placeholders), args...)
+	if err != nil {
+		return fmt.Errorf("delete boards: %w", err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return domain.ErrBoardNotFound
+	}
+
+	return tx.Commit()
+}
+
+// TouchUpdatedAt обновляет updated_at доски (вызывается при изменении карточек/колонок)
+func (r *BoardRepository) TouchUpdatedAt(ctx context.Context, boardID string) error {
+	_, err := r.db.ExecContext(ctx, `UPDATE boards SET updated_at = $1 WHERE id = $2`, time.Now(), boardID)
+	return err
 }
 
 // Update с optimistic locking
@@ -156,10 +214,21 @@ func (r *BoardRepository) Update(ctx context.Context, board *domain.Board) error
 	return nil
 }
 
-// Delete удаляет доску (каскадно удаляет members, columns, cards)
+// Delete удаляет доску (каскадно удаляет members, columns; cards удаляются явно т.к. партиционированная таблица без FK)
 func (r *BoardRepository) Delete(ctx context.Context, boardID string) error {
-	query := `DELETE FROM boards WHERE id = $1`
-	result, err := r.db.ExecContext(ctx, query, boardID)
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Удаляем cards явно (партиционированная таблица, нет FK CASCADE)
+	if _, err := tx.ExecContext(ctx, `DELETE FROM cards WHERE board_id = $1`, boardID); err != nil {
+		return fmt.Errorf("delete cards: %w", err)
+	}
+
+	// Удаляем доску (columns и members удалятся по CASCADE)
+	result, err := tx.ExecContext(ctx, `DELETE FROM boards WHERE id = $1`, boardID)
 	if err != nil {
 		return fmt.Errorf("delete board: %w", err)
 	}
@@ -169,5 +238,5 @@ func (r *BoardRepository) Delete(ctx context.Context, boardID string) error {
 		return domain.ErrBoardNotFound
 	}
 
-	return nil
+	return tx.Commit()
 }

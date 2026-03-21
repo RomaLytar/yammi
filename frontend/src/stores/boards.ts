@@ -11,6 +11,11 @@ export const useBoardsStore = defineStore('boards', () => {
   const nextCursor = ref<string | undefined>(undefined)
   const hasMore = ref(true)
 
+  // Filters
+  const ownerOnly = ref(false)
+  const search = ref('')
+  const sortBy = ref<'updated_at' | 'created_at' | 'title'>('updated_at')
+
   async function fetchBoards(reset = false): Promise<void> {
     if (loading.value) return
 
@@ -19,7 +24,7 @@ export const useBoardsStore = defineStore('boards', () => {
       error.value = null
 
       const cursor = reset ? undefined : nextCursor.value
-      const result = await boardsApi.getBoards(20, cursor)
+      const result = await boardsApi.getBoards(20, cursor, ownerOnly.value, search.value, sortBy.value)
 
       if (reset) {
         boards.value = result.boards
@@ -41,7 +46,7 @@ export const useBoardsStore = defineStore('boards', () => {
     try {
       error.value = null
       const board = await boardsApi.createBoard({ title, description })
-      boards.value.unshift(board) // Добавляем в начало списка
+      boards.value.unshift(board)
       return board
     } catch (err) {
       error.value = err instanceof ApiError ? err.message : 'Ошибка создания доски'
@@ -49,13 +54,14 @@ export const useBoardsStore = defineStore('boards', () => {
     }
   }
 
-  async function deleteBoard(boardId: string): Promise<void> {
+  async function deleteBoards(boardIds: string[]): Promise<void> {
     try {
       error.value = null
-      await boardsApi.deleteBoard(boardId)
-      boards.value = boards.value.filter((b) => b.id !== boardId)
+      await boardsApi.deleteBoards(boardIds)
+      const idsSet = new Set(boardIds)
+      boards.value = boards.value.filter((b) => !idsSet.has(b.id))
     } catch (err) {
-      error.value = err instanceof ApiError ? err.message : 'Ошибка удаления доски'
+      error.value = err instanceof ApiError ? err.message : 'Ошибка удаления досок'
       throw err
     }
   }
@@ -72,9 +78,12 @@ export const useBoardsStore = defineStore('boards', () => {
     loading,
     error,
     hasMore,
+    ownerOnly,
+    search,
+    sortBy,
     fetchBoards,
     createBoard,
-    deleteBoard,
+    deleteBoards,
     clear,
   }
 })

@@ -64,6 +64,29 @@ func (h *UserHandler) UpdateProfile(ctx context.Context, req *userpb.UpdateProfi
 	}, nil
 }
 
+func (h *UserHandler) SearchByEmail(ctx context.Context, req *userpb.SearchByEmailRequest) (*userpb.SearchByEmailResponse, error) {
+	if req.GetQuery() == "" {
+		return nil, status.Error(codes.InvalidArgument, "query is required")
+	}
+
+	users, err := h.uc.SearchByEmail(ctx, req.GetQuery(), int(req.GetLimit()))
+	if err != nil {
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	result := make([]*userpb.UserInfo, 0, len(users))
+	for _, u := range users {
+		result = append(result, &userpb.UserInfo{
+			Id:        u.ID,
+			Email:     u.Email,
+			Name:      u.Name,
+			AvatarUrl: u.AvatarURL,
+		})
+	}
+
+	return &userpb.SearchByEmailResponse{Users: result}, nil
+}
+
 func mapDomainError(err error) error {
 	switch {
 	case errors.Is(err, domain.ErrUserNotFound):

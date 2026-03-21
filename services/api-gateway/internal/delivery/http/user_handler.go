@@ -61,6 +61,44 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, statusResponse{Status: "deleted"})
 }
 
+func (h *UserHandler) SearchByEmail(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		writeError(w, http.StatusBadRequest, "q query parameter is required")
+		return
+	}
+
+	resp, err := h.client.SearchByEmail(r.Context(), &userpb.SearchByEmailRequest{
+		Query: query,
+		Limit: 5,
+	})
+	if err != nil {
+		writeGRPCError(w, err)
+		return
+	}
+
+	type userItem struct {
+		ID        string `json:"id"`
+		Email     string `json:"email"`
+		Name      string `json:"name"`
+		AvatarURL string `json:"avatar_url"`
+	}
+
+	users := make([]userItem, 0, len(resp.Users))
+	for _, u := range resp.Users {
+		users = append(users, userItem{
+			ID:        u.Id,
+			Email:     u.Email,
+			Name:      u.Name,
+			AvatarURL: u.AvatarUrl,
+		})
+	}
+
+	writeJSON(w, http.StatusOK, struct {
+		Users []userItem `json:"users"`
+	}{Users: users})
+}
+
 func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	userID := r.PathValue("id")
 	if userID == "" {

@@ -16,11 +16,20 @@ RUN protoc --go_out=. --go_opt=paths=source_relative \
     api/proto/v1/notification.proto
 
 RUN go mod tidy
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/notification ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/notification-api ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/notification-consumer ./cmd/consumer
 
-FROM alpine:3.19
+# --- API image ---
+FROM alpine:3.19 AS api
 RUN apk add --no-cache ca-certificates
-COPY --from=builder /app/notification /app/notification
+COPY --from=builder /app/notification-api /app/notification-api
 COPY --from=builder /build/services/notification/migrations /app/migrations
 EXPOSE 50055 2112
-CMD ["/app/notification"]
+CMD ["/app/notification-api"]
+
+# --- Consumer image ---
+FROM alpine:3.19 AS consumer
+RUN apk add --no-cache ca-certificates
+COPY --from=builder /app/notification-consumer /app/notification-consumer
+EXPOSE 2113
+CMD ["/app/notification-consumer"]

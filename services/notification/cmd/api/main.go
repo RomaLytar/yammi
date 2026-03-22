@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net"
 	"net/http"
@@ -29,6 +30,8 @@ import (
 )
 
 func main() {
+	log.SetPrefix("[notification-api] ")
+
 	port := os.Getenv("NOTIFICATION_GRPC_PORT")
 	if port == "" {
 		port = "50055"
@@ -49,7 +52,12 @@ func main() {
 		log.Fatal("NATS_URL is required")
 	}
 
-	// Goroutine count reporter
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL == "" {
+		log.Fatal("REDIS_URL is required")
+	}
+
+	// Goroutine reporter
 	go func() {
 		for {
 			metrics.Goroutines.Set(float64(runtime.NumGoroutine()))
@@ -57,10 +65,14 @@ func main() {
 		}
 	}()
 
-	// Metrics HTTP server
+	// Metrics + health
 	go func() {
 		mux := http.NewServeMux()
 		mux.Handle("/metrics", promhttp.Handler())
+		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		})
 		log.Printf("metrics server started on :%s", metricsPort)
 		if err := http.ListenAndServe(":"+metricsPort, mux); err != nil {
 			log.Fatalf("metrics server failed: %v", err)
@@ -74,83 +86,49 @@ func main() {
 	}
 	defer db.Close()
 
-	// Migrations (напрямую к PostgreSQL, не через PgBouncer)
-	migrationsDir := os.Getenv("MIGRATIONS_DIR")
-	if migrationsDir == "" {
-		migrationsDir = "/app/migrations"
-	}
-	migrationURL := os.Getenv("MIGRATION_DATABASE_URL")
-	if migrationURL == "" {
-		migrationURL = databaseURL
-	}
-	migrationDB, err := database.NewPostgresDB(migrationURL)
-	if err != nil {
-		log.Fatalf("failed to connect to migration database: %v", err)
-	}
-	if err := database.RunMigrations(migrationDB, migrationsDir); err != nil {
-		log.Fatalf("failed to run migrations: %v", err)
-	}
-	migrationDB.Close()
-
-	redisURL := os.Getenv("REDIS_URL")
-	if redisURL == "" {
-		log.Fatal("REDIS_URL is required")
+	// Migrations (guarded — only when RUN_MIGRATIONS=true or by default for API)
+	if os.Getenv("RUN_MIGRATIONS") != "false" {
+		migrationsDir := os.Getenv("MIGRATIONS_DIR")
+		if migrationsDir == "" {
+			migrationsDir = "/app/migrations"
+		}
+		migrationURL := os.Getenv("MIGRATION_DATABASE_URL")
+		if migrationURL == "" {
+			migrationURL = databaseURL
+		}
+		migrationDB, err := database.NewPostgresDB(migrationURL)
+		if err != nil {
+			log.Fatalf("failed to connect to migration database: %v", err)
+		}
+		if err := database.RunMigrations(migrationDB, migrationsDir); err != nil {
+			log.Fatalf("failed to run migrations: %v", err)
+		}
+		migrationDB.Close()
 	}
 
-	// Consumer DB (отдельный PgBouncer pool — не блокирует gRPC API)
-	consumerDBURL := os.Getenv("CONSUMER_DATABASE_URL")
-	if consumerDBURL == "" {
-		consumerDBURL = databaseURL // fallback на общий pool
-	}
-	consumerDB, err := database.NewPostgresDB(consumerDBURL)
-	if err != nil {
-		log.Fatalf("failed to connect to consumer database: %v", err)
-	}
-	defer consumerDB.Close()
-	log.Printf("consumer DB pool connected (separate from API)")
-
-	// Repositories (API — через основной pgbouncer)
+	// Repositories (all through API pgbouncer pool)
 	notificationRepo := postgres.NewNotificationRepo(db)
 	settingsRepo := postgres.NewSettingsRepo(db)
 	boardEventRepo := postgres.NewBoardEventRepo(db)
+	boardMemberRepo := postgres.NewBoardMemberRepo(db)
 
-	// Repositories (Consumer — через pgbouncer-consumer)
-	boardMemberRepo := postgres.NewBoardMemberRepo(consumerDB)
-	nameCacheRepo := postgres.NewNameCacheRepo(consumerDB)
-	consumerBoardEventRepo := postgres.NewBoardEventRepo(consumerDB)
-
-	// Redis unread counter
+	// Redis
 	unreadCounter, err := redispkg.NewUnreadCounter(redisURL)
 	if err != nil {
 		log.Fatalf("failed to create unread counter: %v", err)
 	}
 	defer unreadCounter.Close()
 
-	// Settings cache (decorator над settingsRepo)
+	// Settings cache
 	settingsCache := cache.NewSettingsCache(settingsRepo)
 
-	// In-memory name cache (decorator над nameCacheRepo — 0 DB queries на write path)
-	nameCache := cache.NewInMemoryNameCache(nameCacheRepo)
-
-	// NATS consumer (использует consumer DB pool — отдельный от gRPC API)
-	createUC := usecase.NewCreateNotificationUseCase(notificationRepo, settingsCache, nil, consumerBoardEventRepo, unreadCounter, boardMemberRepo)
-
-	consumer, err := natspkg.NewConsumer(natsURL, createUC, boardMemberRepo, nameCache, settingsCache)
+	// NATS (only for publishing settings.updated events)
+	natsConsumer, err := natspkg.NewConsumer(natsURL, nil, nil, nil, nil)
 	if err != nil {
-		log.Fatalf("failed to create nats consumer: %v", err)
+		log.Fatalf("failed to connect to nats: %v", err)
 	}
-	defer consumer.Close()
-
-	// Создаём publisher из JetStream context consumer-а
-	publisher := natspkg.NewPublisher(consumer.JetStream())
-
-	// Обновляем createUC с publisher (без пересоздания NATS-соединения)
-	createUC = usecase.NewCreateNotificationUseCase(notificationRepo, settingsCache, publisher, boardEventRepo, unreadCounter, boardMemberRepo)
-	consumer.SetCreateUC(createUC)
-
-	if err := consumer.Start(); err != nil {
-		log.Fatalf("failed to start nats consumer: %v", err)
-	}
+	defer natsConsumer.Close()
+	publisher := natspkg.NewPublisher(natsConsumer.JetStream())
 
 	// Usecases
 	listUC := usecase.NewListNotificationsUseCase(notificationRepo, boardEventRepo, boardMemberRepo)
@@ -175,7 +153,7 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("notification-service started on :%s", port)
+		log.Printf("gRPC server started on :%s", port)
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %v", err)
 		}
@@ -185,7 +163,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("notification-service shutting down...")
+	log.Println("shutting down...")
 	grpcServer.GracefulStop()
 }
 

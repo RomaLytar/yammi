@@ -175,23 +175,40 @@ services:
       nats:
         condition: service_healthy
 
-  notification:
+  notification-api:
     restart: unless-stopped
     build:
       context: .
       dockerfile: services/notification/Dockerfile
+      target: api
     environment:
       NOTIFICATION_GRPC_PORT: "50055"
       DATABASE_URL: "postgres://yammi:yammi@pgbouncer:6432/yammi_notification?sslmode=disable"
-      CONSUMER_DATABASE_URL: "postgres://yammi:yammi@pgbouncer-consumer:6432/yammi_notification?sslmode=disable"
       MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_notification?sslmode=disable"
       NATS_URL: "nats://nats:4222"
       REDIS_URL: "redis://redis:6379/1"
-    deploy:
-      replicas: 3
     depends_on:
       pgbouncer:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+
+  notification-consumer:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/notification/Dockerfile
+      target: consumer
+    environment:
+      DATABASE_URL: "postgres://yammi:yammi@pgbouncer-consumer:6432/yammi_notification?sslmode=disable"
+      NATS_URL: "nats://nats:4222"
+      REDIS_URL: "redis://redis:6379/1"
+      METRICS_PORT: "2113"
+    deploy:
+      replicas: 3
+    depends_on:
       pgbouncer-consumer:
         condition: service_healthy
       redis:
@@ -209,7 +226,7 @@ services:
       USER_GRPC_ADDR: "user:50052"
       BOARD_GRPC_ADDR: "board:50053"
       COMMENT_GRPC_ADDR: "comment:50054"
-      NOTIFICATION_GRPC_ADDR: "notification:50055"
+      NOTIFICATION_GRPC_ADDR: "notification-api:50055"
       RATE_LIMIT_REGISTER: "${RATE_LIMIT_REGISTER:-50}"
       RATE_LIMIT_LOGIN: "${RATE_LIMIT_LOGIN:-50}"
       RATE_LIMIT_REFRESH: "${RATE_LIMIT_REFRESH:-50}"
@@ -221,7 +238,7 @@ services:
       - user
       - board
       - comment
-      - notification
+      - notification-api
 
   gateway:
     build:

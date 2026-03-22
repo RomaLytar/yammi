@@ -702,3 +702,55 @@ Lazy cache лучше чистого SQL (87ms vs 121ms GET), но хуже Redi
 | Error rate at ceiling | **0%** |
 | Saturation indicator | move_card p95 > 5s |
 | Real bottleneck | PgBouncer pool (не CPU, не Redis) |
+
+---
+
+## Прогоны #17-#22: In-memory name cache + Redis board_seq + unpartition
+
+**Дата:** 2026-03-22
+
+### Оптимизации
+
+1. **In-memory name cache** — `InMemoryNameCache` обёртка: Get из памяти (0ms), Set async write-through в PostgreSQL. Убрали 2-3 DB queries с каждого NATS event handler.
+2. **Redis board_seq** — `SetBoardSeq` при INSERT (1 SET), `GetBoardSeqs` на read (MGET). Заменяет тяжёлый `MAX(event_seq)` SQL.
+3. **Убрали partitioning board_events** — 8 партиций добавляли ×8 overhead на correlated subqueries (MAX, JOIN). Одна таблица с индексом быстрее.
+4. **Убрали getMemberIDs** из write path (была только для метрики).
+5. **Lazy Redis cache с TTL 60s** для unread count.
+
+### Результаты
+
+| Метрика | #12 (baseline 20m) | #17 (in-mem cache) | #19 (Redis MGET) | #21 (1 instance) |
+|---------|--------------------|--------------------|-------------------|-------------------|
+| Create board p95 | 322ms | **125ms** | **79ms** | **82ms** |
+| Add member p95 | 843ms | 270ms | 122ms | **152ms** |
+| Create column p95 | 502ms | 161ms | 75ms | **89ms** |
+| Create card p95 | 678ms | 212ms | 115ms | **127ms** |
+| Move card p95 | 1007ms | 343ms | 171ms | **201ms** |
+| Notifications GET p95 | **47ms** | 15000ms | 229000ms | **15016ms** |
+| Duration p95 | 796ms | 1076ms | 1062ms | **299ms** |
+| Error rate | 0% | 3.5% | 2.8% | 2.3% |
+
+### Анализ
+
+**API latency: ×4-×5 ускорение** (322ms → 82ms create board, 1007ms → 201ms move card). In-memory name cache убрал DB queries с write path → PgBouncer connections освободились.
+
+**Notification GET — деградация.** Причины:
+1. **Partitioned board_events** (8 партиций) — correlated subquery `MAX(event_seq)` сканирует все 8 партиций для каждой доски = 160 index lookups для 20 досок. Одна таблица = 20 lookups.
+2. **Cache cold start** — 1000 users одновременно делают первый GET → 1000 SQL queries → PgBouncer saturation.
+3. **NATS consumer + gRPC server** делят один PgBouncer pool → конкуренция за connections.
+
+### Ключевые уроки
+
+| Урок | Детали |
+|------|--------|
+| In-memory cache = ×5 API speedup | 0 DB queries на write path critical |
+| Partitioning ≠ всегда быстрее | Correlated subqueries × N partitions = N× overhead |
+| Redis MGET board_seq | Правильная архитектура: write O(1) SET, read O(B) MGET |
+| Shared PgBouncer = bottleneck | NATS consumer + gRPC нужны разные pools |
+| Cache cold start = thundering herd | 1000 concurrent cache misses → SQL saturation |
+
+### Следующие шаги
+
+- **Разделить NATS consumer и gRPC server** — разные PgBouncer pools или разные инстансы
+- **Pre-warm Redis cache** при старте теста
+- **PgBouncer pool_size 20 → 50** — увеличить для notification DB

@@ -64,7 +64,6 @@ export const options = {
     'latency_notif_delivery_ms':    ['p(95)<5000'],
     'error_rate':                   ['rate<0.05'],
   },
-  teardownTimeout: '120s',
 };
 
 // ─── Setup: регистрация всех пользователей ──────────────────────────────
@@ -104,51 +103,11 @@ export function setup() {
   return { users };
 }
 
-// ─── Teardown: очистка всех данных после теста ──────────────────────────
+// ─── Teardown ───────────────────────────────────────────────────────────
+// После теста запустите очистку: ./tests/load/cleanup.sh
 
 export function teardown(data) {
-  console.log('Teardown: очистка всех данных...');
-
-  // PostgreSQL: truncate all tables через HTTP endpoint не получится,
-  // поэтому делаем через прямой SQL через PgBouncer.
-  // k6 не может exec SQL, но мы можем вызвать специальный endpoint если есть,
-  // или просто логируем что нужно почистить вручную.
-
-  // Чистим через HTTP — удаляем доски каждого пользователя (cascade удалит cards, columns, members)
-  const users = data.users || [];
-  let cleaned = 0;
-
-  for (const u of users) {
-    if (!u || !u.token) continue;
-    const h = { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${u.token}` } };
-
-    // Получаем доски пользователя
-    const listRes = http.get(`${BASE_URL}/api/v1/boards?limit=100&owner_only=true`, h);
-    if (listRes.status === 200) {
-      const boards = listRes.json().boards || [];
-      if (boards.length > 0) {
-        const boardIds = boards.map(b => b.id);
-        // Batch delete
-        const delRes = http.post(
-          `${BASE_URL}/api/v1/boards/delete`,
-          JSON.stringify({ board_ids: boardIds }),
-          h
-        );
-        if (delRes.status >= 200 && delRes.status < 300) {
-          cleaned += boardIds.length;
-        }
-      }
-    }
-
-    // Mark all notifications as read
-    http.post(`${BASE_URL}/api/v1/notifications/read-all`, null, h);
-
-    if (cleaned % 100 === 0 && cleaned > 0) {
-      console.log(`  ...очищено ${cleaned} досок`);
-    }
-  }
-
-  console.log(`Teardown завершён: очищено ${cleaned} досок`);
+  console.log('Тест завершён. Для очистки БД/Redis запустите: ./tests/load/cleanup.sh');
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────

@@ -10,10 +10,11 @@ import (
 type MarkReadUseCase struct {
 	repo           NotificationRepository
 	boardEventRepo BoardEventRepository
+	cache          UnreadCounter
 }
 
-func NewMarkReadUseCase(repo NotificationRepository, boardEventRepo BoardEventRepository) *MarkReadUseCase {
-	return &MarkReadUseCase{repo: repo, boardEventRepo: boardEventRepo}
+func NewMarkReadUseCase(repo NotificationRepository, boardEventRepo BoardEventRepository, cache UnreadCounter) *MarkReadUseCase {
+	return &MarkReadUseCase{repo: repo, boardEventRepo: boardEventRepo, cache: cache}
 }
 
 func (uc *MarkReadUseCase) Execute(ctx context.Context, userID string, ids []string) error {
@@ -42,6 +43,11 @@ func (uc *MarkReadUseCase) Execute(ctx context.Context, userID string, ids []str
 		}
 	}
 
+	// Инвалидируем Redis cache — следующий GetUnreadCount пересчитает из SQL
+	if uc.cache != nil {
+		_ = uc.cache.Invalidate(ctx, userID)
+	}
+
 	return nil
 }
 
@@ -49,10 +55,11 @@ type MarkAllReadUseCase struct {
 	repo           NotificationRepository
 	boardEventRepo BoardEventRepository
 	memberRepo     BoardMemberRepository
+	cache          UnreadCounter
 }
 
-func NewMarkAllReadUseCase(repo NotificationRepository, boardEventRepo BoardEventRepository, memberRepo BoardMemberRepository) *MarkAllReadUseCase {
-	return &MarkAllReadUseCase{repo: repo, boardEventRepo: boardEventRepo, memberRepo: memberRepo}
+func NewMarkAllReadUseCase(repo NotificationRepository, boardEventRepo BoardEventRepository, memberRepo BoardMemberRepository, cache UnreadCounter) *MarkAllReadUseCase {
+	return &MarkAllReadUseCase{repo: repo, boardEventRepo: boardEventRepo, memberRepo: memberRepo, cache: cache}
 }
 
 func (uc *MarkAllReadUseCase) Execute(ctx context.Context, userID string) error {
@@ -71,5 +78,14 @@ func (uc *MarkAllReadUseCase) Execute(ctx context.Context, userID string) error 
 		}
 	}
 
-	return uc.repo.MarkAllAsRead(ctx, userID)
+	if err := uc.repo.MarkAllAsRead(ctx, userID); err != nil {
+		return err
+	}
+
+	// Инвалидируем Redis cache
+	if uc.cache != nil {
+		_ = uc.cache.Invalidate(ctx, userID)
+	}
+
+	return nil
 }

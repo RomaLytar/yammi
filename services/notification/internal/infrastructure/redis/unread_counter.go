@@ -9,8 +9,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// UnreadCounter управляет счётчиками непрочитанных уведомлений в Redis.
-// O(1) операции вместо SQL COUNT(*).
+// UnreadCounter — lazy read cache для unread count.
+// НЕ обновляется на write (0 fan-out). Заполняется на read, инвалидируется на mark-read.
 type UnreadCounter struct {
 	client *redis.Client
 }
@@ -37,54 +37,28 @@ func (u *UnreadCounter) unreadKey(userID string) string {
 	return "unread:" + userID
 }
 
-// Increment увеличивает счётчик непрочитанных для пользователя.
-func (u *UnreadCounter) Increment(ctx context.Context, userID string) error {
-	return u.client.Incr(ctx, u.unreadKey(userID)).Err()
-}
-
-// IncrementMany увеличивает счётчики для списка пользователей (pipeline).
-func (u *UnreadCounter) IncrementMany(ctx context.Context, userIDs []string) error {
-	if len(userIDs) == 0 {
-		return nil
-	}
-
-	pipe := u.client.Pipeline()
-	for _, uid := range userIDs {
-		pipe.Incr(ctx, u.unreadKey(uid))
-	}
-	_, err := pipe.Exec(ctx)
-	return err
-}
-
-// Get возвращает количество непрочитанных.
+// Get возвращает кэшированный unread count. Возвращает -1 при cache miss.
 func (u *UnreadCounter) Get(ctx context.Context, userID string) (int, error) {
 	val, err := u.client.Get(ctx, u.unreadKey(userID)).Result()
 	if err == redis.Nil {
-		return 0, nil
+		return -1, nil // cache miss
 	}
 	if err != nil {
-		return 0, err
+		return -1, err
 	}
 	count, _ := strconv.Atoi(val)
 	return count, nil
 }
 
-// Reset обнуляет счётчик (mark all as read).
-func (u *UnreadCounter) Reset(ctx context.Context, userID string) error {
-	return u.client.Set(ctx, u.unreadKey(userID), 0, 0).Err()
+// Set кэширует вычисленный unread count (без TTL — инвалидируется через Invalidate).
+func (u *UnreadCounter) Set(ctx context.Context, userID string, count int) error {
+	return u.client.Set(ctx, u.unreadKey(userID), count, 0).Err()
 }
 
-// Decrement уменьшает счётчик на 1 (mark single as read).
-func (u *UnreadCounter) Decrement(ctx context.Context, userID string) error {
-	result := u.client.Decr(ctx, u.unreadKey(userID))
-	if result.Err() != nil {
-		return result.Err()
-	}
-	// Не допускаем отрицательных значений
-	if result.Val() < 0 {
-		return u.client.Set(ctx, u.unreadKey(userID), 0, 0).Err()
-	}
-	return nil
+// Invalidate удаляет кэш (вызывается при mark read / mark all read).
+// Следующий Get вернёт -1, usecase пересчитает из SQL и закэширует.
+func (u *UnreadCounter) Invalidate(ctx context.Context, userID string) error {
+	return u.client.Del(ctx, u.unreadKey(userID)).Err()
 }
 
 func (u *UnreadCounter) Close() error {

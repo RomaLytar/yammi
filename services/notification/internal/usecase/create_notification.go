@@ -55,11 +55,9 @@ func (uc *CreateNotificationUseCase) Execute(ctx context.Context, userID string,
 		return err
 	}
 
-	// Инкрементируем Redis-счётчик непрочитанных
+	// Инвалидируем Redis cache — следующий GetUnreadCount пересчитает
 	if uc.unreadCounter != nil {
-		if err := uc.unreadCounter.Increment(ctx, userID); err != nil {
-			log.Printf("failed to increment unread counter for user %s: %v", userID, err)
-		}
+		_ = uc.unreadCounter.Invalidate(ctx, userID)
 	}
 
 	// Публикуем событие для WebSocket доставки (счётчик + toast)

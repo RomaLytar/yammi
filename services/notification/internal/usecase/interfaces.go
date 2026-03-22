@@ -44,12 +44,12 @@ type BoardEventRepository interface {
 }
 
 // UnreadCounter — счётчик непрочитанных уведомлений в Redis (O(1) вместо SQL COUNT).
+// UnreadCounter — Redis lazy cache для unread count.
+// НЕ источник истины. Вычисляется из SQL seq diff при cache miss.
 type UnreadCounter interface {
-	Increment(ctx context.Context, userID string) error
-	IncrementMany(ctx context.Context, userIDs []string) error
-	Get(ctx context.Context, userID string) (int, error)
-	Reset(ctx context.Context, userID string) error
-	Decrement(ctx context.Context, userID string) error
+	Get(ctx context.Context, userID string) (int, error)    // -1 при cache miss
+	Set(ctx context.Context, userID string, count int) error // кэшировать вычисленное значение
+	Invalidate(ctx context.Context, userID string) error     // удалить кэш (при mark read)
 }
 
 // EventPublisher — публикация событий для WebSocket доставки.

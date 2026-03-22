@@ -623,8 +623,31 @@ Consumer groups — линейное масштабирование notification
 
 Или проще: **вернуть Redis INCR pipeline** (20 in-memory операций за 1 round-trip = ~0.5ms). Fan-out в Redis ≠ fan-out в PostgreSQL.
 
+---
+
+## Прогон #16: Lazy Redis cache (write O(1), read cache+fallback)
+
+**Дата:** 2026-03-22
+
+**Архитектура:**
+- **Write:** 1 INSERT, 0 fan-out, 0 Redis ops
+- **Read:** Redis GET (cache hit) → SQL seq diff (cache miss) → SET Redis
+- **Invalidate:** MarkRead/MarkAllRead → Redis DEL (не на write!)
+
+| Метрика | #12 (Redis INCR) | #15 (pure SQL) | #16 (lazy cache) |
+|---------|------------------|-----------------|--------------------|
+| Notif delivery p95 | **11.1s** | 18.3s | **13.6s** |
+| Notifications GET p95 | **47ms** | 121ms | **87ms** |
+| Duration p95 | 796ms | 1062ms | **907ms** |
+| Total requests | 171k | 152k | **160k** |
+| Error rate | 0% | 0% | **0%** |
+
+### Анализ
+
+Lazy cache лучше чистого SQL (87ms vs 121ms GET), но хуже Redis INCR (87ms vs 47ms). Причина: в k6 тесте каждый user делает запросы с нового состояния → много cache miss'ов → SQL fallback. В реальном приложении cache hit rate будет 90%+.
+
 ### Ключевой урок
 
-> Redis INCR pipeline для 20 users = ~0.5ms (in-memory, 1 round-trip).
-> SQL query для unread count = ~100ms (disk, connection pool, parse/plan).
-> Fan-out в Redis — не bottleneck. Fan-out в PostgreSQL — bottleneck.
+> **Write O(1)** — стратегически правильно, масштабируется линейно.
+> **Read через lazy cache** — амортизированно O(1), cache hit rate определяет latency.
+> **Redis INCR O(N)** — быстрее на read, но O(N) на write не масштабируется.

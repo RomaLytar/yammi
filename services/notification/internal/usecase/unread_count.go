@@ -11,24 +11,38 @@ type GetUnreadCountUseCase struct {
 	boardEventRepo BoardEventRepository
 	memberRepo     BoardMemberRepository
 	repo           NotificationRepository
+	cache          UnreadCounter // Redis — lazy cache, НЕ источник истины
 }
 
-func NewGetUnreadCountUseCase(boardEventRepo BoardEventRepository, memberRepo BoardMemberRepository, repo NotificationRepository) *GetUnreadCountUseCase {
+func NewGetUnreadCountUseCase(
+	boardEventRepo BoardEventRepository,
+	memberRepo BoardMemberRepository,
+	repo NotificationRepository,
+	cache UnreadCounter,
+) *GetUnreadCountUseCase {
 	return &GetUnreadCountUseCase{
 		boardEventRepo: boardEventRepo,
 		memberRepo:     memberRepo,
 		repo:           repo,
+		cache:          cache,
 	}
 }
 
-// Execute возвращает unread count через event_seq diff: O(1) на каждую доску.
-// unread = sum(max_seq - last_seen_seq) по всем доскам пользователя + direct notifications.
+// Execute: Redis GET (cache hit) → SQL seq diff (cache miss) → SET в Redis.
+// Write path НЕ обновляет Redis. Инвалидация — через MarkRead/MarkAllRead.
 func (uc *GetUnreadCountUseCase) Execute(ctx context.Context, userID string) (int, error) {
 	if userID == "" {
 		return 0, domain.ErrEmptyUserID
 	}
 
-	// 1. Board events: seq diff per board
+	// 1. Попробовать Redis cache
+	if uc.cache != nil {
+		if cached, err := uc.cache.Get(ctx, userID); err == nil && cached >= 0 {
+			return cached, nil
+		}
+	}
+
+	// 2. Cache miss → вычисляем из SQL
 	boardIDs, err := uc.memberRepo.ListBoardIDsByUser(ctx, userID)
 	if err != nil {
 		log.Printf("failed to list boards for user %s: %v", userID, err)
@@ -37,19 +51,18 @@ func (uc *GetUnreadCountUseCase) Execute(ctx context.Context, userID string) (in
 
 	boardUnread := 0
 	if len(boardIDs) > 0 {
-		count, err := uc.boardEventRepo.GetUnreadCountBySeq(ctx, userID, boardIDs)
-		if err != nil {
-			log.Printf("failed to get board unread count for user %s: %v", userID, err)
-		} else {
+		if count, err := uc.boardEventRepo.GetUnreadCountBySeq(ctx, userID, boardIDs); err == nil {
 			boardUnread = count
 		}
 	}
 
-	// 2. Direct notifications (welcome, member_added) — simple SQL COUNT
-	directUnread, err := uc.repo.GetUnreadCount(ctx, userID)
-	if err != nil {
-		log.Printf("failed to get direct unread count for user %s: %v", userID, err)
+	directUnread, _ := uc.repo.GetUnreadCount(ctx, userID)
+	total := boardUnread + directUnread
+
+	// 3. Кэшируем в Redis (без TTL — инвалидируется через MarkRead)
+	if uc.cache != nil {
+		_ = uc.cache.Set(ctx, userID, total)
 	}
 
-	return boardUnread + directUnread, nil
+	return total, nil
 }

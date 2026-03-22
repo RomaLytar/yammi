@@ -843,5 +843,44 @@ Read path (unread count):
   singleflight: 1 query per user, не 1000
 
 Teardown:
-  k6 удаляет все доски + mark all read после теста
+  ./tests/load/cleanup.sh — truncate all DBs + flush Redis
 ```
+
+---
+
+## Прогон #26: 3 instances + Split PgBouncer + Clean DB (BEST RESULT)
+
+**Дата:** 2026-03-22
+
+**Конфигурация:**
+- Чистая БД (truncated + vacuum analyze)
+- 3 notification instances (QueueSubscribe consumer groups)
+- Split PgBouncer: API pool (30) + Consumer pool (30)
+- In-memory name cache, Redis lazy cache + board_seq MGET
+- Singleflight на unread count
+- O(1) write path: 1 INSERT + 1 Redis SET + 1 NATS
+- 20 members/board
+
+| Метрика | Значение |
+|---------|----------|
+| Create board p95 | **238ms** |
+| Add member p95 | **664ms** |
+| Create card p95 | **553ms** |
+| Move card p95 | **817ms** |
+| Notifications GET p95 | **66ms** |
+| **Notif delivery p95** | **8583ms** |
+| Duration p95 | **626ms** |
+| Total requests | **193,754** |
+| Error rate | **0.0%** |
+
+### Путь от baseline к лучшему результату (20 members/board)
+
+| Метрика | #11 (baseline) | #12 (consumers) | #25 (split pgb) | **#26 (best)** |
+|---------|---------------|-----------------|-----------------|----------------|
+| Notif delivery | 20.8s | 11.1s | 9.7s | **8.6s** |
+| Notif GET | 47ms | 47ms | 67ms | **66ms** |
+| Duration p95 | 557ms | 796ms | 708ms | **626ms** |
+| Requests | 198k | 171k | 185k | **194k** |
+| Errors | 0% | 0% | 0% | **0.0%** |
+
+**Notification delivery: -59%** (20.8s → 8.6s) при 0% ошибок.

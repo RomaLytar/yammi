@@ -35,12 +35,13 @@ type BoardMemberRepository interface {
 
 // BoardEventRepository — хранилище board events (event-sourcing вместо fan-out).
 type BoardEventRepository interface {
-	Create(ctx context.Context, event *domain.BoardEvent) error
+	Create(ctx context.Context, event *domain.BoardEvent) (int64, error) // returns event_seq
 	ListForUser(ctx context.Context, userID string, boardIDs []string, limit int, cursor, typeFilter, search string) ([]*domain.Notification, string, error)
 	MarkBoardRead(ctx context.Context, userID, boardID string) error
 	MarkAllBoardsRead(ctx context.Context, userID string, boardIDs []string) error
 	GetBoardIDByEventID(ctx context.Context, eventID string) (string, error)
 	GetUnreadCountBySeq(ctx context.Context, userID string, boardIDs []string) (int, error)
+	GetUserCursors(ctx context.Context, userID string, boardIDs []string) (map[string]int64, error)
 }
 
 // UnreadCounter — счётчик непрочитанных уведомлений в Redis (O(1) вместо SQL COUNT).
@@ -50,6 +51,8 @@ type UnreadCounter interface {
 	Get(ctx context.Context, userID string) (int, error)    // -1 при cache miss
 	Set(ctx context.Context, userID string, count int) error // кэшировать вычисленное значение
 	Invalidate(ctx context.Context, userID string) error     // удалить кэш (при mark read)
+	SetBoardSeq(ctx context.Context, boardID string, seq int64) error         // max event_seq per board
+	GetBoardSeqs(ctx context.Context, boardIDs []string) (map[string]int64, error) // MGET board seqs
 }
 
 // EventPublisher — публикация событий для WebSocket доставки.

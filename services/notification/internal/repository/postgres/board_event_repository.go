@@ -19,19 +19,21 @@ func NewBoardEventRepo(db *sql.DB) *BoardEventRepo {
 }
 
 // Create сохраняет 1 board event (заменяет N INSERT в notifications).
-func (r *BoardEventRepo) Create(ctx context.Context, event *domain.BoardEvent) error {
+func (r *BoardEventRepo) Create(ctx context.Context, event *domain.BoardEvent) (int64, error) {
 	query := `
 		INSERT INTO board_events (id, board_id, actor_id, event_type, title, message, metadata, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING event_seq
 	`
-	_, err := r.db.ExecContext(ctx, query,
+	var seq int64
+	err := r.db.QueryRowContext(ctx, query,
 		event.ID, event.BoardID, event.ActorID, event.EventType,
 		event.Title, event.Message, event.MetadataJSON(), event.CreatedAt,
-	)
+	).Scan(&seq)
 	if err != nil {
-		return fmt.Errorf("insert board_event: %w", err)
+		return 0, fmt.Errorf("insert board_event: %w", err)
 	}
-	return nil
+	return seq, nil
 }
 
 // ListForUser возвращает board events для пользователя (по его доскам) с cursor-based pagination.
@@ -152,6 +154,43 @@ func (r *BoardEventRepo) GetBoardIDByEventID(ctx context.Context, eventID string
 		return "", nil // not a board event
 	}
 	return boardID, err
+}
+
+// GetUserCursors возвращает last_seen_seq для каждой доски пользователя (1 SQL query).
+func (r *BoardEventRepo) GetUserCursors(ctx context.Context, userID string, boardIDs []string) (map[string]int64, error) {
+	if len(boardIDs) == 0 {
+		return nil, nil
+	}
+
+	placeholders := make([]string, len(boardIDs))
+	args := make([]interface{}, 0, len(boardIDs)+1)
+	args = append(args, userID)
+	for i, bid := range boardIDs {
+		placeholders[i] = fmt.Sprintf("$%d", i+2)
+		args = append(args, bid)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT board_id, last_seen_seq FROM user_board_cursors
+		WHERE user_id = $1 AND board_id IN (%s)
+	`, strings.Join(placeholders, ","))
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("get user cursors: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[string]int64)
+	for rows.Next() {
+		var boardID string
+		var seq int64
+		if err := rows.Scan(&boardID, &seq); err != nil {
+			return nil, err
+		}
+		result[boardID] = seq
+	}
+	return result, rows.Err()
 }
 
 // GetUnreadCountBySeq возвращает unread count через event_seq diff.

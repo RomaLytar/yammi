@@ -114,10 +114,13 @@ func main() {
 	// Settings cache (decorator над settingsRepo)
 	settingsCache := cache.NewSettingsCache(settingsRepo)
 
+	// In-memory name cache (decorator над nameCacheRepo — 0 DB queries на write path)
+	nameCache := cache.NewInMemoryNameCache(nameCacheRepo)
+
 	// NATS consumer (создаём до publisher, чтобы получить JetStream context)
 	createUC := usecase.NewCreateNotificationUseCase(notificationRepo, settingsCache, nil, boardEventRepo, unreadCounter, boardMemberRepo)
 
-	consumer, err := natspkg.NewConsumer(natsURL, createUC, boardMemberRepo, nameCacheRepo, settingsCache)
+	consumer, err := natspkg.NewConsumer(natsURL, createUC, boardMemberRepo, nameCache, settingsCache)
 	if err != nil {
 		log.Fatalf("failed to create nats consumer: %v", err)
 	}

@@ -154,8 +154,14 @@ func (uc *CreateNotificationUseCase) BatchExecute(ctx context.Context, requests 
 func (uc *CreateNotificationUseCase) CreateBoardEvent(ctx context.Context, boardID, actorID string, eventType domain.NotificationType, title, message string, metadata map[string]string) error {
 	event := domain.NewBoardEvent(boardID, actorID, eventType, title, message, metadata)
 
-	if err := uc.boardEventRepo.Create(ctx, event); err != nil {
+	seq, err := uc.boardEventRepo.Create(ctx, event)
+	if err != nil {
 		return err
+	}
+
+	// Redis: обновляем max_seq для доски (1 SET, не fan-out)
+	if uc.unreadCounter != nil {
+		_ = uc.unreadCounter.SetBoardSeq(ctx, boardID, seq)
 	}
 
 	// WebSocket push — 1 NATS сообщение, gateway broadcast подписчикам board

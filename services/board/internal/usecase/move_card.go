@@ -2,24 +2,26 @@ package usecase
 
 import (
 	"context"
+	"log"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
-	
 )
 
 type MoveCardUseCase struct {
-	cardRepo   CardRepository
-	boardRepo  BoardRepository
-	memberRepo MembershipRepository
-	publisher  EventPublisher
+	cardRepo     CardRepository
+	boardRepo    BoardRepository
+	memberRepo   MembershipRepository
+	activityRepo ActivityRepository
+	publisher    EventPublisher
 }
 
-func NewMoveCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, publisher EventPublisher) *MoveCardUseCase {
+func NewMoveCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, activityRepo ActivityRepository, publisher EventPublisher) *MoveCardUseCase {
 	return &MoveCardUseCase{
-		cardRepo:   cardRepo,
-		boardRepo:  boardRepo,
-		memberRepo: memberRepo,
-		publisher:  publisher,
+		cardRepo:     cardRepo,
+		boardRepo:    boardRepo,
+		memberRepo:   memberRepo,
+		activityRepo: activityRepo,
+		publisher:    publisher,
 	}
 }
 
@@ -54,19 +56,32 @@ func (uc *MoveCardUseCase) Execute(ctx context.Context, cardID, boardID, fromCol
 		return nil, err
 	}
 
-	// 6. Обновляем updated_at доски + публикуем событие (async, non-blocking)
+	// 6. Записываем активность (синхронно)
+	changes := map[string]string{
+		"from_column_id": fromColumnID,
+		"to_column_id":   toColumnID,
+	}
+	activity, actErr := domain.NewActivity(card.ID, boardID, userID, domain.ActivityCardMoved,
+		"Карточка перемещена", changes)
+	if actErr == nil {
+		if writeErr := uc.activityRepo.Create(ctx, activity); writeErr != nil {
+			log.Printf("failed to write activity log: %v", writeErr)
+		}
+	}
+
+	// 7. Обновляем updated_at доски + публикуем событие (async, non-blocking)
 	go func() {
 		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
 		_ = uc.publisher.PublishCardMoved(context.Background(), CardMoved{
-			EventID:        generateEventID(),
-			EventVersion:   1,
-			OccurredAt:     card.UpdatedAt,
-			CardID:         cardID,
-			BoardID:        boardID,
-			ActorID:        userID,
-			FromColumnID:   fromColumnID,
-			ToColumnID:     toColumnID,
-			NewPosition:    newPosition,
+			EventID:      generateEventID(),
+			EventVersion: 1,
+			OccurredAt:   card.UpdatedAt,
+			CardID:       cardID,
+			BoardID:      boardID,
+			ActorID:      userID,
+			FromColumnID: fromColumnID,
+			ToColumnID:   toColumnID,
+			NewPosition:  newPosition,
 		})
 	}()
 

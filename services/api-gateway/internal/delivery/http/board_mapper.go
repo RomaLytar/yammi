@@ -88,6 +88,28 @@ func mapMembersFromProto(pbs []*boardpb.BoardMember) []memberResponse {
 	return members
 }
 
+func mapAttachmentFromProto(pb *boardpb.Attachment) attachmentResponse {
+	return attachmentResponse{
+		ID:         pb.Id,
+		CardID:     pb.CardId,
+		BoardID:    pb.BoardId,
+		FileName:   pb.FileName,
+		FileSize:   pb.FileSize,
+		MimeType:   pb.MimeType,
+		StorageKey: pb.StorageKey,
+		UploaderID: pb.UploaderId,
+		CreatedAt:  pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+func mapAttachmentsFromProto(pbs []*boardpb.Attachment) []attachmentResponse {
+	attachments := make([]attachmentResponse, len(pbs))
+	for i, pb := range pbs {
+		attachments[i] = mapAttachmentFromProto(pb)
+	}
+	return attachments
+}
+
 func parseIntQueryParam(r *http.Request, key string, defaultValue int) int {
 	val := r.URL.Query().Get(key)
 	if val == "" {

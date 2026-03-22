@@ -66,3 +66,19 @@ func (p *EventPublisher) PublishMemberAdded(ctx context.Context, event usecase.M
 func (p *EventPublisher) PublishMemberRemoved(ctx context.Context, event usecase.MemberRemoved) error {
 	return p.publisher.Publish(ctx, "member.removed", event)
 }
+
+func (p *EventPublisher) PublishCardAssigned(ctx context.Context, event usecase.CardAssigned) error {
+	return p.publisher.Publish(ctx, "card.assigned", event)
+}
+
+func (p *EventPublisher) PublishCardUnassigned(ctx context.Context, event usecase.CardUnassigned) error {
+	return p.publisher.Publish(ctx, "card.unassigned", event)
+}
+
+func (p *EventPublisher) PublishAttachmentUploaded(ctx context.Context, event usecase.AttachmentUploaded) error {
+	return p.publisher.Publish(ctx, "attachment.uploaded", event)
+}
+
+func (p *EventPublisher) PublishAttachmentDeleted(ctx context.Context, event usecase.AttachmentDeleted) error {
+	return p.publisher.Publish(ctx, "attachment.deleted", event)
+}

@@ -75,19 +75,10 @@ func (c *Consumer) subscribeCardUpdated() error {
 
 		c.handleWithRetry(msg, events.SubjectCardUpdated, consumerCardUpdated, func() error {
 			ctx := context.Background()
+			// Обновляем кеш имени карточки (для других нотификаций)
 			_ = c.nameCache.SetCardName(ctx, event.CardID, event.Title)
-			boardName := c.nameCache.GetBoardName(ctx, event.BoardID)
-
-			title := c.buildTitle(ctx, fmt.Sprintf("Карточка \"%s\" обновлена", event.Title), event.BoardID)
-			c.notifyBoardMembers(ctx, event.BoardID, event.ActorID, domain.TypeCardUpdated,
-				title, "",
-				map[string]string{
-					"board_id":    event.BoardID,
-					"board_title": boardName,
-					"card_id":     event.CardID,
-					"card_title":  event.Title,
-					"column_id":   event.ColumnID,
-				})
+			// Не создаём нотификацию "обновлена" — это шум.
+			// Значимые изменения (assign, move, delete) имеют свои события.
 			return nil
 		})
 	},
@@ -147,6 +138,212 @@ func (c *Consumer) subscribeCardMoved() error {
 		return fmt.Errorf("subscribe to %s: %w", events.SubjectCardMoved, err)
 	}
 	log.Printf("consumer started: %s", consumerCardMoved)
+	return nil
+}
+
+func (c *Consumer) subscribeCardAssigned() error {
+	_, err := c.js.QueueSubscribe(events.SubjectCardAssigned, "notification-workers", func(msg *nats.Msg) {
+		var event events.CardAssigned
+		if err := json.Unmarshal(msg.Data, &event); err != nil {
+			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardAssigned, err)
+			c.sendToDLQ(msg, events.SubjectCardAssigned, consumerCardAssigned, err.Error())
+			return
+		}
+
+		c.handleWithRetry(msg, events.SubjectCardAssigned, consumerCardAssigned, func() error {
+			ctx := context.Background()
+			boardName := c.nameCache.GetBoardName(ctx, event.BoardID)
+			cardTitle := event.CardTitle
+			if cardTitle == "" {
+				cardTitle = c.nameCache.GetCardName(ctx, event.CardID)
+			}
+			if cardTitle == "" {
+				cardTitle = "карточка"
+			}
+
+			// Только персональное уведомление назначенному (не спамим всю доску)
+			if event.AssigneeID != event.ActorID {
+				actorName := c.nameCache.GetUserName(ctx, event.ActorID)
+				if actorName == "" {
+					actorName = "Участник"
+				}
+				assigneeTitle := fmt.Sprintf("Вам назначили задачу \"%s\"", cardTitle)
+				if boardName != "" {
+					assigneeTitle = fmt.Sprintf("%s в доске \"%s\"", assigneeTitle, boardName)
+				}
+				_ = c.createNotification(ctx, event.AssigneeID, domain.TypeCardAssigned,
+					assigneeTitle, "",
+					map[string]string{
+						"board_id":    event.BoardID,
+						"board_title": boardName,
+						"card_id":     event.CardID,
+						"card_title":  cardTitle,
+						"actor_id":    event.ActorID,
+						"actor_name":  actorName,
+					})
+			}
+			return nil
+		})
+	},
+		nats.Durable(consumerCardAssigned),
+		nats.ManualAck(),
+		nats.DeliverNew(),
+		nats.MaxDeliver(maxDeliveries),
+		nats.MaxAckPending(maxAckPending),
+		nats.AckWait(ackWait),
+	)
+	if err != nil {
+		return fmt.Errorf("subscribe to %s: %w", events.SubjectCardAssigned, err)
+	}
+	log.Printf("consumer started: %s", consumerCardAssigned)
+	return nil
+}
+
+func (c *Consumer) subscribeCardUnassigned() error {
+	_, err := c.js.QueueSubscribe(events.SubjectCardUnassigned, "notification-workers", func(msg *nats.Msg) {
+		var event events.CardUnassigned
+		if err := json.Unmarshal(msg.Data, &event); err != nil {
+			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardUnassigned, err)
+			c.sendToDLQ(msg, events.SubjectCardUnassigned, consumerCardUnassigned, err.Error())
+			return
+		}
+
+		c.handleWithRetry(msg, events.SubjectCardUnassigned, consumerCardUnassigned, func() error {
+			ctx := context.Background()
+			boardName := c.nameCache.GetBoardName(ctx, event.BoardID)
+			cardTitle := event.CardTitle
+			if cardTitle == "" {
+				cardTitle = c.nameCache.GetCardName(ctx, event.CardID)
+			}
+			if cardTitle == "" {
+				cardTitle = "карточка"
+			}
+
+			// Только персональное уведомление тому, с кого сняли (не спамим доску)
+			if event.PrevAssignee != event.ActorID {
+				prevTitle := fmt.Sprintf("С вас сняли задачу \"%s\"", cardTitle)
+				if boardName != "" {
+					prevTitle = fmt.Sprintf("%s в доске \"%s\"", prevTitle, boardName)
+				}
+				_ = c.createNotification(ctx, event.PrevAssignee, domain.TypeCardUnassigned,
+					prevTitle, "",
+					map[string]string{
+						"board_id":    event.BoardID,
+						"board_title": boardName,
+						"card_id":     event.CardID,
+						"card_title":  cardTitle,
+					})
+			}
+			return nil
+		})
+	},
+		nats.Durable(consumerCardUnassigned),
+		nats.ManualAck(),
+		nats.DeliverNew(),
+		nats.MaxDeliver(maxDeliveries),
+		nats.MaxAckPending(maxAckPending),
+		nats.AckWait(ackWait),
+	)
+	if err != nil {
+		return fmt.Errorf("subscribe to %s: %w", events.SubjectCardUnassigned, err)
+	}
+	log.Printf("consumer started: %s", consumerCardUnassigned)
+	return nil
+}
+
+func (c *Consumer) subscribeAttachmentUploaded() error {
+	_, err := c.js.QueueSubscribe(events.SubjectAttachmentUploaded, "notification-workers", func(msg *nats.Msg) {
+		var event events.AttachmentUploaded
+		if err := json.Unmarshal(msg.Data, &event); err != nil {
+			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectAttachmentUploaded, err)
+			c.sendToDLQ(msg, events.SubjectAttachmentUploaded, consumerAttachmentUploaded, err.Error())
+			return
+		}
+
+		c.handleWithRetry(msg, events.SubjectAttachmentUploaded, consumerAttachmentUploaded, func() error {
+			ctx := context.Background()
+			boardName := c.nameCache.GetBoardName(ctx, event.BoardID)
+			cardName := c.nameCache.GetCardName(ctx, event.CardID)
+			if cardName == "" {
+				cardName = "карточка"
+			}
+
+			title := fmt.Sprintf("Файл \"%s\" прикреплён к \"%s\"", event.FileName, cardName)
+			if boardName != "" {
+				title = fmt.Sprintf("%s в доске \"%s\"", title, boardName)
+			}
+			c.notifyBoardMembers(ctx, event.BoardID, event.ActorID, domain.TypeAttachmentUploaded,
+				title, "",
+				map[string]string{
+					"board_id":      event.BoardID,
+					"board_title":   boardName,
+					"card_id":       event.CardID,
+					"card_title":    cardName,
+					"attachment_id": event.AttachmentID,
+					"file_name":     event.FileName,
+				})
+			return nil
+		})
+	},
+		nats.Durable(consumerAttachmentUploaded),
+		nats.ManualAck(),
+		nats.DeliverNew(),
+		nats.MaxDeliver(maxDeliveries),
+		nats.MaxAckPending(maxAckPending),
+		nats.AckWait(ackWait),
+	)
+	if err != nil {
+		return fmt.Errorf("subscribe to %s: %w", events.SubjectAttachmentUploaded, err)
+	}
+	log.Printf("consumer started: %s", consumerAttachmentUploaded)
+	return nil
+}
+
+func (c *Consumer) subscribeAttachmentDeleted() error {
+	_, err := c.js.QueueSubscribe(events.SubjectAttachmentDeleted, "notification-workers", func(msg *nats.Msg) {
+		var event events.AttachmentDeleted
+		if err := json.Unmarshal(msg.Data, &event); err != nil {
+			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectAttachmentDeleted, err)
+			c.sendToDLQ(msg, events.SubjectAttachmentDeleted, consumerAttachmentDeleted, err.Error())
+			return
+		}
+
+		c.handleWithRetry(msg, events.SubjectAttachmentDeleted, consumerAttachmentDeleted, func() error {
+			ctx := context.Background()
+			boardName := c.nameCache.GetBoardName(ctx, event.BoardID)
+			cardName := c.nameCache.GetCardName(ctx, event.CardID)
+			if cardName == "" {
+				cardName = "карточка"
+			}
+
+			title := fmt.Sprintf("Файл \"%s\" удалён из \"%s\"", event.FileName, cardName)
+			if boardName != "" {
+				title = fmt.Sprintf("%s в доске \"%s\"", title, boardName)
+			}
+			c.notifyBoardMembers(ctx, event.BoardID, event.ActorID, domain.TypeAttachmentDeleted,
+				title, "",
+				map[string]string{
+					"board_id":      event.BoardID,
+					"board_title":   boardName,
+					"card_id":       event.CardID,
+					"card_title":    cardName,
+					"attachment_id": event.AttachmentID,
+					"file_name":     event.FileName,
+				})
+			return nil
+		})
+	},
+		nats.Durable(consumerAttachmentDeleted),
+		nats.ManualAck(),
+		nats.DeliverNew(),
+		nats.MaxDeliver(maxDeliveries),
+		nats.MaxAckPending(maxAckPending),
+		nats.AckWait(ackWait),
+	)
+	if err != nil {
+		return fmt.Errorf("subscribe to %s: %w", events.SubjectAttachmentDeleted, err)
+	}
+	log.Printf("consumer started: %s", consumerAttachmentDeleted)
 	return nil
 }
 

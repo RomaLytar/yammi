@@ -20,6 +20,7 @@ import (
 	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/database"
 	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/metrics"
 	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/nats"
+	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/storage"
 	"github.com/RomaLytar/yammi/services/board/internal/repository/postgres"
 	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
@@ -43,6 +44,19 @@ func main() {
 	natsURL := os.Getenv("NATS_URL")
 	if natsURL == "" {
 		log.Fatal("NATS_URL is required")
+	}
+
+	minioURL := os.Getenv("MINIO_URL")
+	if minioURL == "" {
+		minioURL = "minio:9000"
+	}
+	minioAccessKey := os.Getenv("MINIO_ACCESS_KEY")
+	if minioAccessKey == "" {
+		minioAccessKey = "yammi"
+	}
+	minioSecretKey := os.Getenv("MINIO_SECRET_KEY")
+	if minioSecretKey == "" {
+		minioSecretKey = "yammipass"
 	}
 
 	// Metrics HTTP server
@@ -90,11 +104,23 @@ func main() {
 	// Event publisher (wraps NATS publisher)
 	publisher := nats.NewEventPublisher(natsPublisher)
 
+	// MinIO storage
+	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")
+	if minioPublicURL == "" {
+		minioPublicURL = "localhost:9000"
+	}
+	fileStorage, err := storage.NewMinIOStorage(minioURL, minioPublicURL, minioAccessKey, minioSecretKey, false)
+	if err != nil {
+		log.Fatalf("failed to create minio storage: %v", err)
+	}
+
 	// Repositories
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
 	cardRepo := postgres.NewCardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
+	attachmentRepo := postgres.NewAttachmentRepository(db)
+	activityRepo := postgres.NewActivityRepository(db)
 
 	// Use Cases
 	createBoardUC := usecase.NewCreateBoardUseCase(boardRepo, memberRepo, publisher)
@@ -109,16 +135,26 @@ func main() {
 	deleteColumnUC := usecase.NewDeleteColumnUseCase(columnRepo, boardRepo, memberRepo, publisher)
 	reorderColumnsUC := usecase.NewReorderColumnsUseCase(columnRepo, boardRepo, memberRepo, publisher)
 
-	createCardUC := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+	createCardUC := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 	getCardUC := usecase.NewGetCardUseCase(cardRepo, memberRepo)
 	getCardsUC := usecase.NewGetCardsUseCase(cardRepo, memberRepo)
-	updateCardUC := usecase.NewUpdateCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
-	moveCardUC := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+	updateCardUC := usecase.NewUpdateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+	moveCardUC := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 	deleteCardUC := usecase.NewDeleteCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
 
+	assignCardUC := usecase.NewAssignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+	unassignCardUC := usecase.NewUnassignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+	listCardActivityUC := usecase.NewListCardActivityUseCase(activityRepo, memberRepo)
+
 	addMemberUC := usecase.NewAddMemberUseCase(boardRepo, memberRepo, publisher)
-	removeMemberUC := usecase.NewRemoveMemberUseCase(boardRepo, memberRepo, publisher)
+	removeMemberUC := usecase.NewRemoveMemberUseCase(boardRepo, cardRepo, memberRepo, publisher)
 	listMembersUC := usecase.NewListMembersUseCase(boardRepo, memberRepo)
+
+	uploadAttachmentUC := usecase.NewUploadAttachmentUseCase(attachmentRepo, activityRepo, memberRepo, fileStorage, publisher)
+	confirmUploadUC := usecase.NewConfirmUploadUseCase(attachmentRepo, memberRepo, fileStorage)
+	getDownloadURLUC := usecase.NewGetDownloadURLUseCase(attachmentRepo, memberRepo, fileStorage)
+	listAttachmentsUC := usecase.NewListAttachmentsUseCase(attachmentRepo, memberRepo)
+	deleteAttachmentUC := usecase.NewDeleteAttachmentUseCase(attachmentRepo, activityRepo, memberRepo, fileStorage, publisher)
 
 	// gRPC server
 	handler := delivery.NewBoardServiceServer(
@@ -138,9 +174,17 @@ func main() {
 		updateCardUC,
 		moveCardUC,
 		deleteCardUC,
+		assignCardUC,
+		unassignCardUC,
+		listCardActivityUC,
 		addMemberUC,
 		removeMemberUC,
 		listMembersUC,
+		uploadAttachmentUC,
+		confirmUploadUC,
+		getDownloadURLUC,
+		listAttachmentsUC,
+		deleteAttachmentUC,
 	)
 
 	grpcServer := grpc.NewServer(

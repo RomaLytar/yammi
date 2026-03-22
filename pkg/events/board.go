@@ -14,9 +14,13 @@ const (
 	SubjectCardUpdated      = "card.updated"
 	SubjectCardMoved        = "card.moved"
 	SubjectCardDeleted      = "card.deleted"
-	SubjectMemberAdded      = "member.added"
-	SubjectMemberRemoved    = "member.removed"
-	StreamBoards            = "BOARDS"
+	SubjectCardAssigned     = "card.assigned"
+	SubjectCardUnassigned   = "card.unassigned"
+	SubjectMemberAdded          = "member.added"
+	SubjectMemberRemoved        = "member.removed"
+	SubjectAttachmentUploaded   = "attachment.uploaded"
+	SubjectAttachmentDeleted    = "attachment.deleted"
+	StreamBoards                = "BOARDS"
 )
 
 // BoardCreated событие создания доски
@@ -146,6 +150,33 @@ type CardDeleted struct {
 	ActorID      string    `json:"actor_id"`
 }
 
+// CardAssigned событие назначения карточки
+type CardAssigned struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	ColumnID     string    `json:"column_id"`
+	ActorID      string    `json:"actor_id"`
+	AssigneeID   string    `json:"assignee_id"`
+	PrevAssignee *string   `json:"prev_assignee,omitempty"`
+	CardTitle    string    `json:"card_title"`
+}
+
+// CardUnassigned событие снятия назначения с карточки
+type CardUnassigned struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	ColumnID     string    `json:"column_id"`
+	ActorID      string    `json:"actor_id"`
+	PrevAssignee string    `json:"prev_assignee"`
+	CardTitle    string    `json:"card_title"`
+}
+
 // MemberAdded событие добавления участника
 type MemberAdded struct {
 	EventID      string    `json:"event_id"`
@@ -167,4 +198,29 @@ type MemberRemoved struct {
 	UserID       string    `json:"user_id"`
 	ActorID      string    `json:"actor_id"`
 	BoardTitle   string    `json:"board_title"`
+}
+
+// AttachmentUploaded событие загрузки вложения
+type AttachmentUploaded struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	AttachmentID string    `json:"attachment_id"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	FileName     string    `json:"file_name"`
+	FileSize     int64     `json:"file_size"`
+}
+
+// AttachmentDeleted событие удаления вложения
+type AttachmentDeleted struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	AttachmentID string    `json:"attachment_id"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	FileName     string    `json:"file_name"`
 }

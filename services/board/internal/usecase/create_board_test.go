@@ -155,6 +155,26 @@ func (m *MockEventPublisher) PublishMemberRemoved(ctx context.Context, event Mem
 	return args.Error(0)
 }
 
+func (m *MockEventPublisher) PublishCardAssigned(ctx context.Context, event CardAssigned) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishCardUnassigned(ctx context.Context, event CardUnassigned) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishAttachmentUploaded(ctx context.Context, event AttachmentUploaded) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishAttachmentDeleted(ctx context.Context, event AttachmentDeleted) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
 func TestCreateBoardUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name        string

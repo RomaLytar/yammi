@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package comment.v1;
+option go_package = "github.com/RomaLytar/yammi/services/comment/api/proto/v1;commentpb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service CommentService {
+  rpc CreateComment(CreateCommentRequest) returns (CreateCommentResponse);
+  rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse);
+  rpc UpdateComment(UpdateCommentRequest) returns (UpdateCommentResponse);
+  rpc DeleteComment(DeleteCommentRequest) returns (google.protobuf.Empty);
+  rpc GetCommentCount(GetCommentCountRequest) returns (GetCommentCountResponse);
+}
+
+// ============================================================================
+// Request / Response Messages
+// ============================================================================
+
+message CreateCommentRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string content = 4;
+  string parent_id = 5; // опциональный — для ответов на комментарии
+}
+
+message CreateCommentResponse {
+  Comment comment = 1;
+}
+
+message ListCommentsRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  int32 limit = 4;
+  string cursor = 5; // cursor для пагинации (created_at ISO + id)
+}
+
+message ListCommentsResponse {
+  repeated Comment comments = 1;
+  string next_cursor = 2;
+}
+
+message UpdateCommentRequest {
+  string comment_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string content = 4;
+}
+
+message UpdateCommentResponse {
+  Comment comment = 1;
+}
+
+message DeleteCommentRequest {
+  string comment_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetCommentCountRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetCommentCountResponse {
+  int32 count = 1;
+}
+
+// ============================================================================
+// Domain Model
+// ============================================================================
+
+message Comment {
+  string id = 1;
+  string card_id = 2;
+  string board_id = 3;
+  string author_id = 4;
+  string parent_id = 5;
+  string content = 6;
+  int32 reply_count = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}

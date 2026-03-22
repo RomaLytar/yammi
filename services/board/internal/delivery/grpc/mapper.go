@@ -101,6 +101,49 @@ func mapMembersToProto(members []*domain.Member) []*boardpb.BoardMember {
 	return result
 }
 
+func mapAttachmentToProto(a *domain.Attachment) *boardpb.Attachment {
+	return &boardpb.Attachment{
+		Id:         a.ID,
+		CardId:     a.CardID,
+		BoardId:    a.BoardID,
+		FileName:   a.FileName,
+		FileSize:   a.FileSize,
+		MimeType:   a.MimeType,
+		StorageKey: a.StorageKey,
+		UploaderId: a.UploaderID,
+		CreatedAt:  timestamppb.New(a.CreatedAt),
+	}
+}
+
+func mapAttachmentsToProto(attachments []*domain.Attachment) []*boardpb.Attachment {
+	result := make([]*boardpb.Attachment, len(attachments))
+	for i, a := range attachments {
+		result[i] = mapAttachmentToProto(a)
+	}
+	return result
+}
+
+func mapActivityToProto(a *domain.Activity) *boardpb.ActivityEntry {
+	return &boardpb.ActivityEntry{
+		Id:           a.ID,
+		CardId:       a.CardID,
+		BoardId:      a.BoardID,
+		ActorId:      a.ActorID,
+		ActivityType: string(a.Type),
+		Description:  a.Description,
+		Changes:      a.Changes,
+		CreatedAt:    timestamppb.New(a.CreatedAt),
+	}
+}
+
+func mapActivitiesToProto(activities []*domain.Activity) []*boardpb.ActivityEntry {
+	result := make([]*boardpb.ActivityEntry, len(activities))
+	for i, a := range activities {
+		result[i] = mapActivityToProto(a)
+	}
+	return result
+}
+
 // ============================================================================
 // Error Mapping (domain errors → gRPC codes)
 // ============================================================================
@@ -110,7 +153,8 @@ func mapDomainError(err error) error {
 	if errors.Is(err, domain.ErrBoardNotFound) ||
 		errors.Is(err, domain.ErrColumnNotFound) ||
 		errors.Is(err, domain.ErrCardNotFound) ||
-		errors.Is(err, domain.ErrMemberNotFound) {
+		errors.Is(err, domain.ErrMemberNotFound) ||
+		errors.Is(err, domain.ErrAttachmentNotFound) {
 		return status.Error(codes.NotFound, err.Error())
 	}
 
@@ -128,8 +172,16 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrInvalidLexorank) ||
 		errors.Is(err, domain.ErrInvalidRole) ||
 		errors.Is(err, domain.ErrInvalidPosition) ||
-		errors.Is(err, domain.ErrCardNotInColumn) {
+		errors.Is(err, domain.ErrCardNotInColumn) ||
+		errors.Is(err, domain.ErrAssigneeNotMember) ||
+		errors.Is(err, domain.ErrFileTooLarge) ||
+		errors.Is(err, domain.ErrEmptyFileName) {
 		return status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// ResourceExhausted errors
+	if errors.Is(err, domain.ErrMaxAttachmentsReached) {
+		return status.Error(codes.ResourceExhausted, err.Error())
 	}
 
 	// AlreadyExists errors

@@ -25,10 +25,14 @@ const (
 	consumerCardCreated    = "notification-service-card-created-v3"
 	consumerCardUpdated    = "notification-service-card-updated-v3"
 	consumerCardMoved      = "notification-service-card-moved-v3"
-	consumerCardDeleted    = "notification-service-card-deleted-v3"
-	consumerMemberAdded    = "notification-service-member-added-v3"
+	consumerCardDeleted      = "notification-service-card-deleted-v3"
+	consumerCardAssigned     = "notification-service-card-assigned-v1"
+	consumerCardUnassigned   = "notification-service-card-unassigned-v1"
+	consumerMemberAdded      = "notification-service-member-added-v3"
 	consumerMemberRemoved    = "notification-service-member-removed-v3"
-	consumerSettingsUpdated  = "notification-service-settings-updated-v2"
+	consumerSettingsUpdated       = "notification-service-settings-updated-v2"
+	consumerAttachmentUploaded   = "notification-service-attachment-uploaded-v1"
+	consumerAttachmentDeleted    = "notification-service-attachment-deleted-v1"
 
 	maxDeliveries = 7
 	maxAckPending = 500
@@ -121,8 +125,12 @@ func (c *Consumer) Start() error {
 		c.subscribeCardUpdated,
 		c.subscribeCardMoved,
 		c.subscribeCardDeleted,
+		c.subscribeCardAssigned,
+		c.subscribeCardUnassigned,
 		c.subscribeMemberAdded,
 		c.subscribeMemberRemoved,
+		c.subscribeAttachmentUploaded,
+		c.subscribeAttachmentDeleted,
 		c.subscribeSettingsUpdated,
 	}
 

@@ -20,6 +20,12 @@ export default defineConfig({
         target: 'ws://localhost:8081',
         ws: true,
       },
+      // MinIO proxy — presigned URLs через /storage/
+      '/storage': {
+        target: 'http://localhost:9000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/storage/, ''),
+      },
     },
   },
 })

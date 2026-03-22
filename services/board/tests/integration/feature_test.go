@@ -290,10 +290,10 @@ func TestFeature_UpdateBoard_OnlyOwner(t *testing.T) {
 		t.Errorf("Expected title 'Updated Title', got %s", updated.Title)
 	}
 
-	// Member updates board → success (UpdateBoard checks IsMember, not owner)
+	// Member updates board → ErrNotOwner (только owner может обновлять доску)
 	_, err = uc.Execute(ctx, board.ID, memberID, "Member Updated", "Member Desc", updated.Version)
-	if err != nil {
-		t.Fatalf("Member should be able to update board (code only checks IsMember): %v", err)
+	if err != domain.ErrNotOwner {
+		t.Errorf("Expected ErrNotOwner for member, got %v", err)
 	}
 
 	// Non-member tries to update → ErrAccessDenied
@@ -451,16 +451,16 @@ func TestFeature_DeleteColumn_OnlyOwnerCanDelete(t *testing.T) {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
 
-	// Member can delete column (delete_column.go checks IsMember, not owner)
+	// Member cannot delete column → ErrNotOwner (только owner может удалять колонки)
 	err = uc.Execute(ctx, col1.ID, board.ID, memberID)
-	if err != nil {
-		t.Fatalf("Member should be able to delete column (code checks IsMember): %v", err)
+	if err != domain.ErrNotOwner {
+		t.Errorf("Expected ErrNotOwner for member deleting column, got %v", err)
 	}
 
-	// Verify col1 is deleted
+	// Verify col1 is NOT deleted (member couldn't delete it)
 	_, err = columnRepo.GetByID(ctx, col1.ID)
-	if err != domain.ErrColumnNotFound {
-		t.Errorf("Expected ErrColumnNotFound after delete, got %v", err)
+	if err != nil {
+		t.Errorf("Column should still exist after member delete attempt, got %v", err)
 	}
 
 	// Owner deletes column → success
@@ -492,6 +492,7 @@ func TestFeature_CreateCard_SetsCreatorID(t *testing.T) {
 	memberRepo := postgres.NewMembershipRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
 	cardRepo := postgres.NewCardRepository(db)
+	activityRepo := postgres.NewActivityRepository(db)
 	publisher := &mockPublisher{}
 	ctx := context.Background()
 	ownerID := uuid.NewString()
@@ -503,7 +504,7 @@ func TestFeature_CreateCard_SetsCreatorID(t *testing.T) {
 	columnRepo.Create(ctx, column)
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
-	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Member creates card
 	card, err := uc.Execute(ctx, column.ID, board.ID, memberID, "My Task", "Description", "", nil)
@@ -535,6 +536,7 @@ func TestFeature_CreateCard_NonMemberDenied(t *testing.T) {
 	memberRepo := postgres.NewMembershipRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
 	cardRepo := postgres.NewCardRepository(db)
+	activityRepo := postgres.NewActivityRepository(db)
 	publisher := &mockPublisher{}
 	ctx := context.Background()
 	ownerID := uuid.NewString()
@@ -545,7 +547,7 @@ func TestFeature_CreateCard_NonMemberDenied(t *testing.T) {
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
-	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Non-member tries to create card → ErrAccessDenied
 	_, err = uc.Execute(ctx, column.ID, board.ID, nonMemberID, "Hacked Card", "Desc", "", nil)
@@ -568,6 +570,7 @@ func TestFeature_MoveCard_MemberCanMove(t *testing.T) {
 	memberRepo := postgres.NewMembershipRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
 	cardRepo := postgres.NewCardRepository(db)
+	activityRepo := postgres.NewActivityRepository(db)
 	publisher := &mockPublisher{}
 	ctx := context.Background()
 	ownerID := uuid.NewString()
@@ -586,7 +589,7 @@ func TestFeature_MoveCard_MemberCanMove(t *testing.T) {
 
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
-	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Member moves card from col1 to col2
 	moved, err := uc.Execute(ctx, card.ID, board.ID, col1.ID, col2.ID, memberID, "m")
@@ -625,6 +628,7 @@ func TestFeature_MoveCard_NonMemberDenied(t *testing.T) {
 	memberRepo := postgres.NewMembershipRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
 	cardRepo := postgres.NewCardRepository(db)
+	activityRepo := postgres.NewActivityRepository(db)
 	publisher := &mockPublisher{}
 	ctx := context.Background()
 	ownerID := uuid.NewString()
@@ -641,7 +645,7 @@ func TestFeature_MoveCard_NonMemberDenied(t *testing.T) {
 	card, _ := domain.NewCard(col1.ID, "Task", "Desc", "n", nil, ownerID)
 	cardRepo.Create(ctx, card)
 
-	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Non-member tries to move card → ErrAccessDenied
 	_, err = uc.Execute(ctx, card.ID, board.ID, col1.ID, col2.ID, nonMemberID, "m")
@@ -673,6 +677,7 @@ func TestFeature_UpdateCard_MemberCanUpdate(t *testing.T) {
 	memberRepo := postgres.NewMembershipRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
 	cardRepo := postgres.NewCardRepository(db)
+	activityRepo := postgres.NewActivityRepository(db)
 	publisher := &mockPublisher{}
 	ctx := context.Background()
 	ownerID := uuid.NewString()
@@ -687,10 +692,10 @@ func TestFeature_UpdateCard_MemberCanUpdate(t *testing.T) {
 	card, _ := domain.NewCard(column.ID, "Original", "Desc", "n", nil, ownerID)
 	cardRepo.Create(ctx, card)
 
-	uc := usecase.NewUpdateCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+	uc := usecase.NewUpdateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
-	// Member updates card → success
-	assignee := uuid.NewString()
+	// Member updates card → success (assignee must be a board member)
+	assignee := memberID
 	updated, err := uc.Execute(ctx, card.ID, board.ID, memberID, "Updated Title", "Updated Desc", &assignee, 0)
 	if err != nil {
 		t.Fatalf("Member should be able to update card: %v", err)
@@ -803,7 +808,8 @@ func TestFeature_RemoveMember_OnlyOwnerCanRemove(t *testing.T) {
 	memberRepo.AddMember(ctx, board.ID, memberA, domain.RoleMember)
 	memberRepo.AddMember(ctx, board.ID, memberB, domain.RoleMember)
 
-	uc := usecase.NewRemoveMemberUseCase(boardRepo, memberRepo, publisher)
+	cardRepo := postgres.NewCardRepository(db)
+	uc := usecase.NewRemoveMemberUseCase(boardRepo, cardRepo, memberRepo, publisher)
 
 	// Member A tries to remove member B → ErrAccessDenied
 	err = uc.Execute(ctx, board.ID, memberA, memberB)
@@ -849,7 +855,8 @@ func TestFeature_RemoveMember_CannotRemoveOwner(t *testing.T) {
 	board, _ := domain.NewBoard("Board", "Desc", ownerID)
 	boardRepo.Create(ctx, board)
 
-	uc := usecase.NewRemoveMemberUseCase(boardRepo, memberRepo, publisher)
+	cardRepo := postgres.NewCardRepository(db)
+	uc := usecase.NewRemoveMemberUseCase(boardRepo, cardRepo, memberRepo, publisher)
 
 	// Owner tries to remove themselves → ErrCannotRemoveOwner
 	err = uc.Execute(ctx, board.ID, ownerID, ownerID)
@@ -879,6 +886,7 @@ func TestFeature_AfterRemoval_NoAccess(t *testing.T) {
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
+	cardRepo := postgres.NewCardRepository(db)
 	publisher := &mockPublisher{}
 	ctx := context.Background()
 	ownerID := uuid.NewString()
@@ -898,7 +906,7 @@ func TestFeature_AfterRemoval_NoAccess(t *testing.T) {
 	}
 
 	// Remove member
-	removeUC := usecase.NewRemoveMemberUseCase(boardRepo, memberRepo, publisher)
+	removeUC := usecase.NewRemoveMemberUseCase(boardRepo, cardRepo, memberRepo, publisher)
 	err = removeUC.Execute(ctx, board.ID, ownerID, memberID)
 	if err != nil {
 		t.Fatalf("Failed to remove member: %v", err)
@@ -908,5 +916,335 @@ func TestFeature_AfterRemoval_NoAccess(t *testing.T) {
 	_, err = getBoardUC.Execute(ctx, board.ID, memberID)
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied after removal, got %v", err)
+	}
+}
+
+// ==================== Assignment tests ====================
+
+func TestFeature_AssignCard_MemberCanAssign(t *testing.T) {
+	dsn, cleanup := setupPostgresContainer(t)
+	defer cleanup()
+	db, err := waitForDB(dsn, 10)
+	if err != nil {
+		t.Fatalf("Failed to connect: %v", err)
+	}
+	defer db.Close()
+	runMigrations(t, db)
+
+	boardRepo := postgres.NewBoardRepository(db)
+	memberRepo := postgres.NewMembershipRepository(db)
+	columnRepo := postgres.NewColumnRepository(db)
+	cardRepo := postgres.NewCardRepository(db)
+	activityRepo := postgres.NewActivityRepository(db)
+	publisher := &mockPublisher{}
+	ctx := context.Background()
+	ownerID := uuid.NewString()
+	memberA := uuid.NewString()
+	memberB := uuid.NewString()
+
+	board, _ := domain.NewBoard("Board", "Desc", ownerID)
+	boardRepo.Create(ctx, board)
+	column, _ := domain.NewColumn(board.ID, "To Do", 0)
+	columnRepo.Create(ctx, column)
+	memberRepo.AddMember(ctx, board.ID, memberA, domain.RoleMember)
+	memberRepo.AddMember(ctx, board.ID, memberB, domain.RoleMember)
+
+	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", nil, ownerID)
+	cardRepo.Create(ctx, card)
+
+	uc := usecase.NewAssignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+
+	// Member A assigns card to member B
+	assigned, err := uc.Execute(ctx, card.ID, board.ID, memberA, memberB)
+	if err != nil {
+		t.Fatalf("Member should be able to assign card: %v", err)
+	}
+	if assigned.AssigneeID == nil || *assigned.AssigneeID != memberB {
+		t.Errorf("Expected assignee %s, got %v", memberB, assigned.AssigneeID)
+	}
+
+	// Verify in DB
+	loaded, err := cardRepo.GetByID(ctx, card.ID, board.ID)
+	if err != nil {
+		t.Fatalf("Failed to load card: %v", err)
+	}
+	if loaded.AssigneeID == nil || *loaded.AssigneeID != memberB {
+		t.Errorf("DB: Expected assignee %s, got %v", memberB, loaded.AssigneeID)
+	}
+}
+
+func TestFeature_AssignCard_NonMemberAssigneeDenied(t *testing.T) {
+	dsn, cleanup := setupPostgresContainer(t)
+	defer cleanup()
+	db, err := waitForDB(dsn, 10)
+	if err != nil {
+		t.Fatalf("Failed to connect: %v", err)
+	}
+	defer db.Close()
+	runMigrations(t, db)
+
+	boardRepo := postgres.NewBoardRepository(db)
+	memberRepo := postgres.NewMembershipRepository(db)
+	columnRepo := postgres.NewColumnRepository(db)
+	cardRepo := postgres.NewCardRepository(db)
+	activityRepo := postgres.NewActivityRepository(db)
+	publisher := &mockPublisher{}
+	ctx := context.Background()
+	ownerID := uuid.NewString()
+	nonMemberID := uuid.NewString()
+
+	board, _ := domain.NewBoard("Board", "Desc", ownerID)
+	boardRepo.Create(ctx, board)
+	column, _ := domain.NewColumn(board.ID, "To Do", 0)
+	columnRepo.Create(ctx, column)
+
+	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", nil, ownerID)
+	cardRepo.Create(ctx, card)
+
+	uc := usecase.NewAssignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+
+	// Owner tries to assign card to non-member
+	_, err = uc.Execute(ctx, card.ID, board.ID, ownerID, nonMemberID)
+	if err != domain.ErrAssigneeNotMember {
+		t.Errorf("Expected ErrAssigneeNotMember, got %v", err)
+	}
+
+	// Verify card was not assigned
+	loaded, err := cardRepo.GetByID(ctx, card.ID, board.ID)
+	if err != nil {
+		t.Fatalf("Failed to load card: %v", err)
+	}
+	if loaded.AssigneeID != nil {
+		t.Errorf("Card should not be assigned, got %v", loaded.AssigneeID)
+	}
+}
+
+func TestFeature_UnassignCard(t *testing.T) {
+	dsn, cleanup := setupPostgresContainer(t)
+	defer cleanup()
+	db, err := waitForDB(dsn, 10)
+	if err != nil {
+		t.Fatalf("Failed to connect: %v", err)
+	}
+	defer db.Close()
+	runMigrations(t, db)
+
+	boardRepo := postgres.NewBoardRepository(db)
+	memberRepo := postgres.NewMembershipRepository(db)
+	columnRepo := postgres.NewColumnRepository(db)
+	cardRepo := postgres.NewCardRepository(db)
+	activityRepo := postgres.NewActivityRepository(db)
+	publisher := &mockPublisher{}
+	ctx := context.Background()
+	ownerID := uuid.NewString()
+	memberID := uuid.NewString()
+
+	board, _ := domain.NewBoard("Board", "Desc", ownerID)
+	boardRepo.Create(ctx, board)
+	column, _ := domain.NewColumn(board.ID, "To Do", 0)
+	columnRepo.Create(ctx, column)
+	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
+
+	// Create card with assignee
+	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", &memberID, ownerID)
+	cardRepo.Create(ctx, card)
+
+	// Verify assignee is set
+	loaded, err := cardRepo.GetByID(ctx, card.ID, board.ID)
+	if err != nil {
+		t.Fatalf("Failed to load card: %v", err)
+	}
+	if loaded.AssigneeID == nil || *loaded.AssigneeID != memberID {
+		t.Fatalf("Card should be assigned to %s before unassign, got %v", memberID, loaded.AssigneeID)
+	}
+
+	uc := usecase.NewUnassignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+
+	// Unassign card
+	unassigned, err := uc.Execute(ctx, card.ID, board.ID, ownerID)
+	if err != nil {
+		t.Fatalf("Failed to unassign card: %v", err)
+	}
+	if unassigned.AssigneeID != nil {
+		t.Errorf("Expected nil assignee after unassign, got %v", unassigned.AssigneeID)
+	}
+
+	// Verify in DB
+	loaded, err = cardRepo.GetByID(ctx, card.ID, board.ID)
+	if err != nil {
+		t.Fatalf("Failed to load card: %v", err)
+	}
+	if loaded.AssigneeID != nil {
+		t.Errorf("DB: Expected nil assignee after unassign, got %v", loaded.AssigneeID)
+	}
+}
+
+func TestFeature_RemoveMember_UnassignsCards(t *testing.T) {
+	dsn, cleanup := setupPostgresContainer(t)
+	defer cleanup()
+	db, err := waitForDB(dsn, 10)
+	if err != nil {
+		t.Fatalf("Failed to connect: %v", err)
+	}
+	defer db.Close()
+	runMigrations(t, db)
+
+	boardRepo := postgres.NewBoardRepository(db)
+	memberRepo := postgres.NewMembershipRepository(db)
+	columnRepo := postgres.NewColumnRepository(db)
+	cardRepo := postgres.NewCardRepository(db)
+	publisher := &mockPublisher{}
+	ctx := context.Background()
+	ownerID := uuid.NewString()
+	memberID := uuid.NewString()
+
+	board, _ := domain.NewBoard("Board", "Desc", ownerID)
+	boardRepo.Create(ctx, board)
+	column, _ := domain.NewColumn(board.ID, "To Do", 0)
+	columnRepo.Create(ctx, column)
+	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
+
+	// Create two cards assigned to the member
+	card1, _ := domain.NewCard(column.ID, "Task 1", "Desc", "a", &memberID, ownerID)
+	cardRepo.Create(ctx, card1)
+	card2, _ := domain.NewCard(column.ID, "Task 2", "Desc", "b", &memberID, ownerID)
+	cardRepo.Create(ctx, card2)
+
+	// Remove member
+	removeUC := usecase.NewRemoveMemberUseCase(boardRepo, cardRepo, memberRepo, publisher)
+	err = removeUC.Execute(ctx, board.ID, ownerID, memberID)
+	if err != nil {
+		t.Fatalf("Failed to remove member: %v", err)
+	}
+
+	// Verify both cards are unassigned
+	loaded1, err := cardRepo.GetByID(ctx, card1.ID, board.ID)
+	if err != nil {
+		t.Fatalf("Failed to load card1: %v", err)
+	}
+	if loaded1.AssigneeID != nil {
+		t.Errorf("Card1 should be unassigned after member removal, got %v", loaded1.AssigneeID)
+	}
+
+	loaded2, err := cardRepo.GetByID(ctx, card2.ID, board.ID)
+	if err != nil {
+		t.Fatalf("Failed to load card2: %v", err)
+	}
+	if loaded2.AssigneeID != nil {
+		t.Errorf("Card2 should be unassigned after member removal, got %v", loaded2.AssigneeID)
+	}
+}
+
+// ==================== Activity tests ====================
+
+func TestFeature_CardActivity_CreateCard(t *testing.T) {
+	dsn, cleanup := setupPostgresContainer(t)
+	defer cleanup()
+	db, err := waitForDB(dsn, 10)
+	if err != nil {
+		t.Fatalf("Failed to connect: %v", err)
+	}
+	defer db.Close()
+	runMigrations(t, db)
+
+	boardRepo := postgres.NewBoardRepository(db)
+	memberRepo := postgres.NewMembershipRepository(db)
+	columnRepo := postgres.NewColumnRepository(db)
+	cardRepo := postgres.NewCardRepository(db)
+	activityRepo := postgres.NewActivityRepository(db)
+	publisher := &mockPublisher{}
+	ctx := context.Background()
+	ownerID := uuid.NewString()
+
+	board, _ := domain.NewBoard("Board", "Desc", ownerID)
+	boardRepo.Create(ctx, board)
+	column, _ := domain.NewColumn(board.ID, "To Do", 0)
+	columnRepo.Create(ctx, column)
+
+	createUC := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+
+	// Create card
+	card, err := createUC.Execute(ctx, column.ID, board.ID, ownerID, "My Task", "Description", "", nil)
+	if err != nil {
+		t.Fatalf("Failed to create card: %v", err)
+	}
+
+	// Verify activity was created
+	listUC := usecase.NewListCardActivityUseCase(activityRepo, memberRepo)
+	activities, _, err := listUC.Execute(ctx, card.ID, board.ID, ownerID, 20, "")
+	if err != nil {
+		t.Fatalf("Failed to list activities: %v", err)
+	}
+	if len(activities) != 1 {
+		t.Fatalf("Expected 1 activity entry, got %d", len(activities))
+	}
+	if activities[0].Type != domain.ActivityCardCreated {
+		t.Errorf("Expected activity type %s, got %s", domain.ActivityCardCreated, activities[0].Type)
+	}
+	if activities[0].ActorID != ownerID {
+		t.Errorf("Expected actor ID %s, got %s", ownerID, activities[0].ActorID)
+	}
+}
+
+func TestFeature_CardActivity_MoveCard(t *testing.T) {
+	dsn, cleanup := setupPostgresContainer(t)
+	defer cleanup()
+	db, err := waitForDB(dsn, 10)
+	if err != nil {
+		t.Fatalf("Failed to connect: %v", err)
+	}
+	defer db.Close()
+	runMigrations(t, db)
+
+	boardRepo := postgres.NewBoardRepository(db)
+	memberRepo := postgres.NewMembershipRepository(db)
+	columnRepo := postgres.NewColumnRepository(db)
+	cardRepo := postgres.NewCardRepository(db)
+	activityRepo := postgres.NewActivityRepository(db)
+	publisher := &mockPublisher{}
+	ctx := context.Background()
+	ownerID := uuid.NewString()
+
+	board, _ := domain.NewBoard("Board", "Desc", ownerID)
+	boardRepo.Create(ctx, board)
+	col1, _ := domain.NewColumn(board.ID, "To Do", 0)
+	columnRepo.Create(ctx, col1)
+	col2, _ := domain.NewColumn(board.ID, "In Progress", 1)
+	columnRepo.Create(ctx, col2)
+
+	card, _ := domain.NewCard(col1.ID, "Task", "Desc", "n", nil, ownerID)
+	cardRepo.Create(ctx, card)
+
+	moveUC := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+
+	// Move card from col1 to col2
+	_, err = moveUC.Execute(ctx, card.ID, board.ID, col1.ID, col2.ID, ownerID, "m")
+	if err != nil {
+		t.Fatalf("Failed to move card: %v", err)
+	}
+
+	// Verify activity was created
+	listUC := usecase.NewListCardActivityUseCase(activityRepo, memberRepo)
+	activities, _, err := listUC.Execute(ctx, card.ID, board.ID, ownerID, 20, "")
+	if err != nil {
+		t.Fatalf("Failed to list activities: %v", err)
+	}
+	if len(activities) < 1 {
+		t.Fatalf("Expected at least 1 activity entry for move, got %d", len(activities))
+	}
+
+	// Find the move activity
+	var moveActivity *domain.Activity
+	for _, a := range activities {
+		if a.Type == domain.ActivityCardMoved {
+			moveActivity = a
+			break
+		}
+	}
+	if moveActivity == nil {
+		t.Fatal("Expected to find card_moved activity")
+	}
+	if moveActivity.ActorID != ownerID {
+		t.Errorf("Expected actor ID %s, got %s", ownerID, moveActivity.ActorID)
 	}
 }

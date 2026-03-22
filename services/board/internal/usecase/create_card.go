@@ -2,24 +2,27 @@ package usecase
 
 import (
 	"context"
+	"fmt"
+	"log"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
-	
 )
 
 type CreateCardUseCase struct {
-	cardRepo   CardRepository
-	boardRepo  BoardRepository
-	memberRepo MembershipRepository
-	publisher  EventPublisher
+	cardRepo     CardRepository
+	boardRepo    BoardRepository
+	memberRepo   MembershipRepository
+	activityRepo ActivityRepository
+	publisher    EventPublisher
 }
 
-func NewCreateCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, publisher EventPublisher) *CreateCardUseCase {
+func NewCreateCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, activityRepo ActivityRepository, publisher EventPublisher) *CreateCardUseCase {
 	return &CreateCardUseCase{
-		cardRepo:   cardRepo,
-		boardRepo:  boardRepo,
-		memberRepo: memberRepo,
-		publisher:  publisher,
+		cardRepo:     cardRepo,
+		boardRepo:    boardRepo,
+		memberRepo:   memberRepo,
+		activityRepo: activityRepo,
+		publisher:    publisher,
 	}
 }
 
@@ -33,7 +36,18 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 		return nil, domain.ErrAccessDenied
 	}
 
-	// 2. Если position пустой — генерируем (в конец колонки)
+	// 2. Валидация assignee — должен быть участником доски
+	if assigneeID != nil && *assigneeID != "" {
+		isAssigneeMember, _, err := uc.memberRepo.IsMember(ctx, boardID, *assigneeID)
+		if err != nil {
+			return nil, err
+		}
+		if !isAssigneeMember {
+			return nil, domain.ErrAssigneeNotMember
+		}
+	}
+
+	// 3. Если position пустой — генерируем (в конец колонки)
 	if position == "" {
 		lastCard, err := uc.cardRepo.GetLastInColumn(ctx, columnID)
 		if err != nil && err != domain.ErrCardNotFound {
@@ -46,18 +60,27 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 		}
 	}
 
-	// 3. Создаем карточку (валидация lexorank внутри)
+	// 4. Создаем карточку (валидация lexorank внутри)
 	card, err := domain.NewCard(columnID, title, description, position, assigneeID, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 4. Сохраняем
+	// 5. Сохраняем
 	if err := uc.cardRepo.Create(ctx, card); err != nil {
 		return nil, err
 	}
 
-	// 5. Обновляем updated_at доски + публикуем событие (async, non-blocking)
+	// 6. Записываем активность (синхронно)
+	activity, err := domain.NewActivity(card.ID, boardID, userID, domain.ActivityCardCreated,
+		fmt.Sprintf("Карточка \"%s\" создана", card.Title), nil)
+	if err == nil {
+		if actErr := uc.activityRepo.Create(ctx, activity); actErr != nil {
+			log.Printf("failed to write activity log: %v", actErr)
+		}
+	}
+
+	// 7. Обновляем updated_at доски + публикуем события (async, non-blocking)
 	go func() {
 		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
 		_ = uc.publisher.PublishCardCreated(context.Background(), CardCreated{
@@ -73,6 +96,21 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 			Position:     card.Position,
 			AssigneeID:   card.AssigneeID,
 		})
+
+		// Если карточка создана сразу с assignee — отправляем событие
+		if card.AssigneeID != nil && *card.AssigneeID != "" {
+			_ = uc.publisher.PublishCardAssigned(context.Background(), CardAssigned{
+				EventID:      generateEventID(),
+				EventVersion: 1,
+				OccurredAt:   card.CreatedAt,
+				CardID:       card.ID,
+				BoardID:      boardID,
+				ColumnID:     card.ColumnID,
+				ActorID:      userID,
+				AssigneeID:   *card.AssigneeID,
+				CardTitle:    card.Title,
+			})
+		}
 	}()
 
 	return card, nil

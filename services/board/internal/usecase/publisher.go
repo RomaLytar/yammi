@@ -17,4 +17,8 @@ type EventPublisher interface {
 	PublishCardDeleted(ctx context.Context, event CardDeleted) error
 	PublishMemberAdded(ctx context.Context, event MemberAdded) error
 	PublishMemberRemoved(ctx context.Context, event MemberRemoved) error
+	PublishCardAssigned(ctx context.Context, event CardAssigned) error
+	PublishCardUnassigned(ctx context.Context, event CardUnassigned) error
+	PublishAttachmentUploaded(ctx context.Context, event AttachmentUploaded) error
+	PublishAttachmentDeleted(ctx context.Context, event AttachmentDeleted) error
 }

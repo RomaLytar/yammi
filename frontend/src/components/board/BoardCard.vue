@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Card } from '@/types/domain'
+import { useBoardStore } from '@/stores/board'
 
 interface Props {
   card: Card
@@ -17,6 +18,8 @@ interface Emits {
 
 defineProps<Props>()
 defineEmits<Emits>()
+
+const boardStore = useBoardStore()
 </script>
 
 <template>
@@ -49,10 +52,25 @@ defineEmits<Emits>()
       <p v-if="card.description" class="board-card__description">
         {{ card.description }}
       </p>
-      <div v-if="card.assigneeId" class="board-card__footer">
-        <div class="board-card__assignee">
-          <span>👤</span>
-        </div>
+    </div>
+    <!-- Assignee avatar (right side) -->
+    <div class="board-card__avatar-wrap">
+      <div
+        v-if="card.assigneeId"
+        class="board-card__avatar board-card__avatar--assigned"
+        :title="boardStore.getMemberName(card.assigneeId)"
+      >
+        {{ boardStore.getMemberName(card.assigneeId).charAt(0).toUpperCase() }}
+      </div>
+      <div
+        v-else
+        class="board-card__avatar board-card__avatar--empty"
+        title="Не назначен"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
       </div>
     </div>
   </div>
@@ -72,6 +90,7 @@ defineEmits<Emits>()
   overflow: hidden;
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .board-card--selected {
@@ -101,10 +120,6 @@ defineEmits<Emits>()
 
 .board-card:not(.board-card--select-mode):hover::before {
   opacity: 1;
-}
-
-.board-card:active:not(.board-card--select-mode) {
-  transform: translateY(0);
 }
 
 .board-card__checkbox {
@@ -139,7 +154,6 @@ defineEmits<Emits>()
   justify-content: space-between;
   align-items: flex-start;
   gap: 10px;
-  margin-bottom: 6px;
 }
 
 .board-card__title {
@@ -178,7 +192,6 @@ defineEmits<Emits>()
 .board-card__delete:hover {
   background: var(--color-danger-light, #fee2e2);
   color: var(--color-danger, #dc2626);
-  transform: scale(1.1);
 }
 
 .board-card__description {
@@ -187,28 +200,38 @@ defineEmits<Emits>()
   margin: 6px 0 0 0;
   line-height: 1.5;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.board-card__footer {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--color-border, #e5e7eb);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* Assignee avatar */
+.board-card__avatar-wrap {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
-.board-card__assignee {
-  display: inline-flex;
+.board-card__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   font-size: 12px;
-  color: var(--color-text-tertiary, #6b7280);
-  background: var(--color-surface-alt, #f3f4f6);
-  padding: 4px 10px;
-  border-radius: 12px;
+  font-weight: 700;
+  cursor: default;
+}
+
+.board-card__avatar--assigned {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+}
+
+.board-card__avatar--empty {
+  background: var(--color-input-bg, #f3f4f6);
+  color: var(--color-text-tertiary, #9ca3af);
+  border: 1.5px dashed var(--color-border, #d1d5db);
 }
 </style>

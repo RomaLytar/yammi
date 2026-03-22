@@ -25,6 +25,7 @@ var (
 	ErrEmptyCardTitle    = errors.New("card title cannot be empty")
 	ErrInvalidLexorank   = errors.New("invalid lexorank position")
 	ErrCardNotInColumn   = errors.New("card does not belong to this column")
+	ErrAssigneeNotMember = errors.New("assignee is not a board member")
 )
 
 // Member errors
@@ -33,4 +34,18 @@ var (
 	ErrMemberExists      = errors.New("member already exists")
 	ErrCannotRemoveOwner = errors.New("cannot remove owner from board")
 	ErrInvalidRole       = errors.New("invalid role")
+)
+
+// Attachment errors
+var (
+	ErrAttachmentNotFound    = errors.New("attachment not found")
+	ErrFileTooLarge          = errors.New("file size exceeds maximum allowed (50 MB)")
+	ErrMaxAttachmentsReached = errors.New("maximum number of attachments per card reached")
+	ErrEmptyFileName         = errors.New("file name cannot be empty")
+)
+
+// Activity errors
+var (
+	ErrEmptyActorID      = errors.New("actor ID cannot be empty")
+	ErrInvalidActivityType = errors.New("invalid activity type")
 )

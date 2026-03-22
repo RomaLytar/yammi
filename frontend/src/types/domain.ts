@@ -42,8 +42,34 @@ export interface Card {
 export interface Comment {
   id: string
   cardId: string
+  boardId: string
   authorId: string
-  text: string
+  parentId?: string
+  content: string
+  replyCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Attachment {
+  id: string
+  cardId: string
+  boardId: string
+  fileName: string
+  fileSize: number
+  mimeType: string
+  uploaderId: string
+  createdAt: string
+}
+
+export interface ActivityEntry {
+  id: string
+  cardId: string
+  boardId: string
+  actorId: string
+  activityType: string
+  description: string
+  changes: Record<string, string>
   createdAt: string
 }
 

@@ -38,7 +38,7 @@ func (c *Consumer) ensureStreams() error {
 
 	if err := c.ensureStream(&nats.StreamConfig{
 		Name:     events.StreamBoards,
-		Subjects: []string{"board.>", "column.>", "card.>", "member.>"},
+		Subjects: []string{"board.>", "column.>", "card.>", "member.>", "attachment.>"},
 		MaxAge:   30 * 24 * time.Hour,
 	}); err != nil {
 		return err

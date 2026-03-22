@@ -81,6 +81,26 @@ func (m *mockPublisher) PublishMemberRemoved(ctx context.Context, event usecase.
 	return nil
 }
 
+func (m *mockPublisher) PublishCardAssigned(ctx context.Context, event usecase.CardAssigned) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCardUnassigned(ctx context.Context, event usecase.CardUnassigned) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishAttachmentUploaded(ctx context.Context, event usecase.AttachmentUploaded) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishAttachmentDeleted(ctx context.Context, event usecase.AttachmentDeleted) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
 func TestCreateBoardUseCase_Integration(t *testing.T) {
 	dsn, cleanup := setupPostgresContainer(t)
 	defer cleanup()
@@ -287,10 +307,11 @@ func TestCreateCardUseCase_Integration(t *testing.T) {
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
 	// Create use case
-	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+	activityRepo := postgres.NewActivityRepository(db)
+	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
-	// Execute as member
-	assignee := uuid.NewString()
+	// Execute as member (assignee must be a board member)
+	assignee := memberID
 	card, err := uc.Execute(ctx, column.ID, board.ID, memberID, "Task 1", "Description", "", &assignee)
 	if err != nil {
 		t.Fatalf("Failed to create card: %v", err)
@@ -362,7 +383,8 @@ func TestMoveCardUseCase_Integration(t *testing.T) {
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
 	// Create use case
-	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+	activityRepo := postgres.NewActivityRepository(db)
+	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Execute as member (move to column2)
 	_, err = uc.Execute(ctx, card.ID, board.ID, column1.ID, column2.ID, memberID, "m")

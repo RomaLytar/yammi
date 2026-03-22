@@ -24,17 +24,27 @@ type BoardServiceServer struct {
 	reorderColumns *usecase.ReorderColumnsUseCase
 
 	// Card Use Cases
-	createCard *usecase.CreateCardUseCase
-	getCard    *usecase.GetCardUseCase
-	getCards   *usecase.GetCardsUseCase
-	updateCard *usecase.UpdateCardUseCase
-	moveCard   *usecase.MoveCardUseCase
-	deleteCard *usecase.DeleteCardUseCase
+	createCard   *usecase.CreateCardUseCase
+	getCard      *usecase.GetCardUseCase
+	getCards     *usecase.GetCardsUseCase
+	updateCard   *usecase.UpdateCardUseCase
+	moveCard     *usecase.MoveCardUseCase
+	deleteCard   *usecase.DeleteCardUseCase
+	assignCard       *usecase.AssignCardUseCase
+	unassignCard     *usecase.UnassignCardUseCase
+	listCardActivity *usecase.ListCardActivityUseCase
 
 	// Member Use Cases
 	addMember    *usecase.AddMemberUseCase
 	removeMember *usecase.RemoveMemberUseCase
 	listMembers  *usecase.ListMembersUseCase
+
+	// Attachment Use Cases
+	uploadAttachment *usecase.UploadAttachmentUseCase
+	confirmUpload    *usecase.ConfirmUploadUseCase
+	getDownloadURL   *usecase.GetDownloadURLUseCase
+	listAttachments  *usecase.ListAttachmentsUseCase
+	deleteAttachment *usecase.DeleteAttachmentUseCase
 }
 
 // NewBoardServiceServer создает новый gRPC сервер с внедренными use cases
@@ -55,30 +65,46 @@ func NewBoardServiceServer(
 	updateCard *usecase.UpdateCardUseCase,
 	moveCard *usecase.MoveCardUseCase,
 	deleteCard *usecase.DeleteCardUseCase,
+	assignCard *usecase.AssignCardUseCase,
+	unassignCard *usecase.UnassignCardUseCase,
+	listCardActivity *usecase.ListCardActivityUseCase,
 	addMember *usecase.AddMemberUseCase,
 	removeMember *usecase.RemoveMemberUseCase,
 	listMembers *usecase.ListMembersUseCase,
+	uploadAttachment *usecase.UploadAttachmentUseCase,
+	confirmUpload *usecase.ConfirmUploadUseCase,
+	getDownloadURL *usecase.GetDownloadURLUseCase,
+	listAttachments *usecase.ListAttachmentsUseCase,
+	deleteAttachment *usecase.DeleteAttachmentUseCase,
 ) *BoardServiceServer {
 	return &BoardServiceServer{
-		createBoard:    createBoard,
-		getBoard:       getBoard,
-		listBoards:     listBoards,
-		updateBoard:    updateBoard,
-		deleteBoard:    deleteBoard,
-		addColumn:      addColumn,
-		getColumns:     getColumns,
-		updateColumn:   updateColumn,
-		deleteColumn:   deleteColumn,
-		reorderColumns: reorderColumns,
-		createCard:     createCard,
-		getCard:        getCard,
-		getCards:       getCards,
-		updateCard:     updateCard,
-		moveCard:       moveCard,
-		deleteCard:     deleteCard,
-		addMember:      addMember,
-		removeMember:   removeMember,
-		listMembers:    listMembers,
+		createBoard:      createBoard,
+		getBoard:         getBoard,
+		listBoards:       listBoards,
+		updateBoard:      updateBoard,
+		deleteBoard:      deleteBoard,
+		addColumn:        addColumn,
+		getColumns:       getColumns,
+		updateColumn:     updateColumn,
+		deleteColumn:     deleteColumn,
+		reorderColumns:   reorderColumns,
+		createCard:       createCard,
+		getCard:          getCard,
+		getCards:         getCards,
+		updateCard:       updateCard,
+		moveCard:         moveCard,
+		deleteCard:       deleteCard,
+		assignCard:       assignCard,
+		unassignCard:     unassignCard,
+		listCardActivity: listCardActivity,
+		addMember:        addMember,
+		removeMember:     removeMember,
+		listMembers:      listMembers,
+		uploadAttachment: uploadAttachment,
+		confirmUpload:    confirmUpload,
+		getDownloadURL:   getDownloadURL,
+		listAttachments:  listAttachments,
+		deleteAttachment: deleteAttachment,
 	}
 }
 

@@ -70,6 +70,9 @@ type CardRepository interface {
 
 	// BatchDelete удаляет несколько карточек по ID в рамках одной доски
 	BatchDelete(ctx context.Context, boardID string, cardIDs []string) error
+
+	// UnassignByUser снимает assignee со всех карточек удалённого участника
+	UnassignByUser(ctx context.Context, boardID, userID string) (int, error)
 }
 
 // MembershipRepository определяет интерфейс для работы с членством в досках
@@ -85,4 +88,46 @@ type MembershipRepository interface {
 
 	// ListMembers возвращает список членов доски с пагинацией
 	ListMembers(ctx context.Context, boardID string, limit, offset int) ([]*domain.Member, error)
+}
+
+// ActivityRepository определяет интерфейс для работы с журналом активности
+type ActivityRepository interface {
+	// Create создает запись активности
+	Create(ctx context.Context, activity *domain.Activity) error
+
+	// ListByCardID возвращает записи активности карточки с пагинацией
+	ListByCardID(ctx context.Context, cardID, boardID string, limit int, cursor string) ([]*domain.Activity, string, error)
+}
+
+// AttachmentRepository определяет интерфейс для работы с вложениями
+type AttachmentRepository interface {
+	// Create создает запись о вложении
+	Create(ctx context.Context, attachment *domain.Attachment) error
+
+	// GetByID возвращает вложение по ID (фильтруется по boardID для защиты от IDOR)
+	GetByID(ctx context.Context, attachmentID, boardID string) (*domain.Attachment, error)
+
+	// ListByCardID возвращает все вложения карточки
+	ListByCardID(ctx context.Context, cardID, boardID string) ([]*domain.Attachment, error)
+
+	// Delete удаляет вложение по ID
+	Delete(ctx context.Context, attachmentID, boardID string) error
+
+	// CountByCardID возвращает количество вложений карточки
+	CountByCardID(ctx context.Context, cardID, boardID string) (int, error)
+}
+
+// FileStorage определяет интерфейс для работы с файловым хранилищем
+type FileStorage interface {
+	// GenerateUploadURL генерирует pre-signed URL для загрузки файла
+	GenerateUploadURL(ctx context.Context, key, contentType string, size int64) (string, error)
+
+	// GenerateDownloadURL генерирует pre-signed URL для скачивания файла
+	GenerateDownloadURL(ctx context.Context, key string) (string, error)
+
+	// Delete удаляет файл из хранилища
+	Delete(ctx context.Context, key string) error
+
+	// Exists проверяет существование файла в хранилище
+	Exists(ctx context.Context, key string) (bool, error)
 }

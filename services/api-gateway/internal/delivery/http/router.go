@@ -74,11 +74,29 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("PUT /api/v1/cards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateCard))))
 	mux.Handle("PUT /api/v1/cards/{id}/move", rateLimit(requireAuth(http.HandlerFunc(board.MoveCard))))
 	mux.Handle("POST /api/v1/cards/delete", rateLimit(requireAuth(http.HandlerFunc(board.DeleteCards))))
+	mux.Handle("PUT /api/v1/cards/{id}/assign", rateLimit(requireAuth(http.HandlerFunc(board.AssignCard))))
+	mux.Handle("DELETE /api/v1/cards/{id}/assign", rateLimit(requireAuth(http.HandlerFunc(board.UnassignCard))))
+	mux.Handle("GET /api/v1/cards/{id}/activity", rateLimit(requireAuth(http.HandlerFunc(board.GetCardActivity))))
 
 	// Member routes
 	mux.Handle("POST /api/v1/boards/{id}/members", rateLimit(requireAuth(http.HandlerFunc(board.AddMember))))
 	mux.Handle("DELETE /api/v1/boards/{boardId}/members/{userId}", rateLimit(requireAuth(http.HandlerFunc(board.RemoveMember))))
 	mux.Handle("GET /api/v1/boards/{id}/members", rateLimit(requireAuth(http.HandlerFunc(board.ListMembers))))
+
+	// Attachment routes
+	mux.Handle("POST /api/v1/cards/{id}/attachments/upload-url", rateLimit(requireAuth(http.HandlerFunc(board.CreateUploadURL))))
+	mux.Handle("POST /api/v1/attachments/{id}/confirm", rateLimit(requireAuth(http.HandlerFunc(board.ConfirmUpload))))
+	mux.Handle("GET /api/v1/attachments/{id}/download-url", rateLimit(requireAuth(http.HandlerFunc(board.GetDownloadURL))))
+	mux.Handle("GET /api/v1/cards/{id}/attachments", rateLimit(requireAuth(http.HandlerFunc(board.ListAttachments))))
+	mux.Handle("DELETE /api/v1/attachments/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteAttachment))))
+
+	// Comment routes
+	comment := NewCommentHandler(clients.CommentClient)
+	mux.Handle("POST /api/v1/cards/{id}/comments", rateLimit(requireAuth(http.HandlerFunc(comment.CreateComment))))
+	mux.Handle("GET /api/v1/cards/{id}/comments", rateLimit(requireAuth(http.HandlerFunc(comment.ListComments))))
+	mux.Handle("PUT /api/v1/comments/{id}", rateLimit(requireAuth(http.HandlerFunc(comment.UpdateComment))))
+	mux.Handle("DELETE /api/v1/comments/{id}", rateLimit(requireAuth(http.HandlerFunc(comment.DeleteComment))))
+	mux.Handle("GET /api/v1/cards/{id}/comments/count", rateLimit(requireAuth(http.HandlerFunc(comment.GetCommentCount))))
 
 	// Notification routes
 	notification := NewNotificationHandler(clients.NotificationClient)

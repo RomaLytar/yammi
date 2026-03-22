@@ -61,6 +61,28 @@ func (m *MockCardRepository) BatchDelete(ctx context.Context, boardID string, ca
 	return args.Error(0)
 }
 
+func (m *MockCardRepository) UnassignByUser(ctx context.Context, boardID, userID string) (int, error) {
+	args := m.Called(ctx, boardID, userID)
+	return args.Int(0), args.Error(1)
+}
+
+type MockActivityRepository struct {
+	mock.Mock
+}
+
+func (m *MockActivityRepository) Create(ctx context.Context, activity *domain.Activity) error {
+	args := m.Called(ctx, activity)
+	return args.Error(0)
+}
+
+func (m *MockActivityRepository) ListByCardID(ctx context.Context, cardID, boardID string, limit int, cursor string) ([]*domain.Activity, string, error) {
+	args := m.Called(ctx, cardID, boardID, limit, cursor)
+	if args.Get(0) == nil {
+		return nil, args.String(1), args.Error(2)
+	}
+	return args.Get(0).([]*domain.Activity), args.String(1), args.Error(2)
+}
+
 func TestCreateCardUseCase_Execute(t *testing.T) {
 	assigneeID := "user-789"
 
@@ -103,6 +125,7 @@ func TestCreateCardUseCase_Execute(t *testing.T) {
 			assigneeID:  &assigneeID,
 			setupMocks: func(cardRepo *MockCardRepository, memberRepo *MockMembershipRepository, publisher *MockEventPublisher) {
 				memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").Return(true, domain.RoleOwner, nil)
+				memberRepo.On("IsMember", mock.Anything, "board-123", "user-789").Return(true, domain.RoleMember, nil)
 				cardRepo.On("GetLastInColumn", mock.Anything, "column-123").Return(nil, domain.ErrCardNotFound)
 				cardRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Card")).Return(nil)
 			},
@@ -206,8 +229,12 @@ func TestCreateCardUseCase_Execute(t *testing.T) {
 			tt.setupMocks(cardRepo, memberRepo, publisher)
 			boardRepo.On("TouchUpdatedAt", mock.Anything, mock.Anything).Return(nil).Maybe()
 			publisher.On("PublishCardCreated", mock.Anything, mock.Anything).Return(nil).Maybe()
+			publisher.On("PublishCardAssigned", mock.Anything, mock.Anything).Return(nil).Maybe()
 
-			useCase := NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+			activityRepo := new(MockActivityRepository)
+			activityRepo.On("Create", mock.Anything, mock.Anything).Return(nil).Maybe()
+
+			useCase := NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 			card, err := useCase.Execute(context.Background(), tt.columnID, tt.boardID, tt.userID, tt.title, tt.description, tt.position, tt.assigneeID)
 
 			if tt.wantErr {

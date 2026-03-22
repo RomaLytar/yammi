@@ -18,9 +18,13 @@ const (
 	TypeCardCreated   NotificationType = "card_created"
 	TypeCardUpdated   NotificationType = "card_updated"
 	TypeCardMoved     NotificationType = "card_moved"
-	TypeCardDeleted   NotificationType = "card_deleted"
-	TypeMemberAdded   NotificationType = "member_added"
-	TypeMemberRemoved NotificationType = "member_removed"
+	TypeCardDeleted    NotificationType = "card_deleted"
+	TypeCardAssigned   NotificationType = "card_assigned"
+	TypeCardUnassigned NotificationType = "card_unassigned"
+	TypeMemberAdded          NotificationType = "member_added"
+	TypeMemberRemoved        NotificationType = "member_removed"
+	TypeAttachmentUploaded   NotificationType = "attachment_uploaded"
+	TypeAttachmentDeleted    NotificationType = "attachment_deleted"
 )
 
 type Notification struct {

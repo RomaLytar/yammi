@@ -141,7 +141,10 @@ func TestMoveCardUseCase_Execute(t *testing.T) {
 			boardRepo.On("TouchUpdatedAt", mock.Anything, mock.Anything).Return(nil).Maybe()
 			publisher.On("PublishCardMoved", mock.Anything, mock.Anything).Return(nil).Maybe()
 
-			useCase := NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+			activityRepo := new(MockActivityRepository)
+			activityRepo.On("Create", mock.Anything, mock.Anything).Return(nil).Maybe()
+
+			useCase := NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 			card, err := useCase.Execute(context.Background(), tt.cardID, tt.boardID, tt.fromColumnID, tt.toColumnID, tt.userID, tt.targetPosition)
 
 			if tt.wantErr {

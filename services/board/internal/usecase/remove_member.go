@@ -8,13 +8,15 @@ import (
 
 type RemoveMemberUseCase struct {
 	boardRepo  BoardRepository
+	cardRepo   CardRepository
 	memberRepo MembershipRepository
 	publisher  EventPublisher
 }
 
-func NewRemoveMemberUseCase(boardRepo BoardRepository, memberRepo MembershipRepository, publisher EventPublisher) *RemoveMemberUseCase {
+func NewRemoveMemberUseCase(boardRepo BoardRepository, cardRepo CardRepository, memberRepo MembershipRepository, publisher EventPublisher) *RemoveMemberUseCase {
 	return &RemoveMemberUseCase{
 		boardRepo:  boardRepo,
+		cardRepo:   cardRepo,
 		memberRepo: memberRepo,
 		publisher:  publisher,
 	}
@@ -41,7 +43,10 @@ func (uc *RemoveMemberUseCase) Execute(ctx context.Context, boardID, userID, mem
 		return err
 	}
 
-	// 4. Публикуем событие
+	// 4. Снимаем assignee со всех карточек удалённого участника
+	_, _ = uc.cardRepo.UnassignByUser(ctx, boardID, memberUserID)
+
+	// 5. Публикуем событие
 	go func() {
 		_ = uc.publisher.PublishMemberRemoved(context.Background(), MemberRemoved{
 			EventID:      generateEventID(),

@@ -40,6 +40,32 @@ services:
       timeout: 3s
       retries: 5
 
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: yammi
+      MINIO_ROOT_PASSWORD: yammipass
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio-proxy:
+    image: nginx:alpine
+    volumes:
+      - ./deployments/nginx/minio-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "9002:9090"
+    depends_on:
+      minio:
+        condition: service_healthy
+
   pgbouncer:
     image: edoburu/pgbouncer:latest
     volumes:
@@ -150,6 +176,10 @@ services:
       DATABASE_URL: "postgres://yammi:yammi@pgbouncer:6432/yammi_board?sslmode=disable"
       MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_board?sslmode=disable"
       NATS_URL: "nats://nats:4222"
+      MINIO_URL: "minio:9000"
+      MINIO_PUBLIC_URL: "localhost:9002"
+      MINIO_ACCESS_KEY: "yammi"
+      MINIO_SECRET_KEY: "yammipass"
     ports:
       - "50053:50053"
     depends_on:
@@ -157,16 +187,19 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+      minio:
+        condition: service_healthy
 
   comment:
     build:
-      context: ./services/comment
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/comment/Dockerfile
     environment:
       COMMENT_GRPC_PORT: "50054"
       DATABASE_URL: "postgres://yammi:yammi@pgbouncer:6432/yammi_comment?sslmode=disable"
       MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_comment?sslmode=disable"
       NATS_URL: "nats://nats:4222"
+      BOARD_GRPC_ADDR: "board:50053"
     ports:
       - "50054:50054"
     depends_on:
@@ -281,3 +314,4 @@ services:
 
 volumes:
   postgres_data:
+  minio_data:

@@ -26,6 +26,7 @@ func (h *BoardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
 		Title       string `json:"title"`
 		Description string `json:"description"`
 		Position    string `json:"position"`
+		AssigneeID  string `json:"assignee_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -39,6 +40,7 @@ func (h *BoardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
 		Title:       req.Title,
 		Description: req.Description,
 		Position:    req.Position,
+		AssigneeId:  req.AssigneeID,
 	})
 	if err != nil {
 		writeGRPCError(w, err)
@@ -247,4 +249,144 @@ func (h *BoardHandler) DeleteCards(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, statusResponse{Status: "deleted"})
+}
+
+// AssignCard PUT /api/v1/cards/{id}/assign
+func (h *BoardHandler) AssignCard(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	cardID := r.PathValue("id")
+	if cardID == "" {
+		writeError(w, http.StatusBadRequest, "card id is required")
+		return
+	}
+
+	var req struct {
+		BoardID    string `json:"board_id"`
+		AssigneeID string `json:"assignee_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if req.BoardID == "" {
+		writeError(w, http.StatusBadRequest, "board_id is required")
+		return
+	}
+	if req.AssigneeID == "" {
+		writeError(w, http.StatusBadRequest, "assignee_id is required")
+		return
+	}
+
+	resp, err := h.client.AssignCard(r.Context(), &boardpb.AssignCardRequest{
+		CardId:     cardID,
+		BoardId:    req.BoardID,
+		UserId:     userID,
+		AssigneeId: req.AssigneeID,
+	})
+	if err != nil {
+		writeGRPCError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"card": mapCardFromProto(resp.Card),
+	})
+}
+
+// GetCardActivity GET /api/v1/cards/{id}/activity
+func (h *BoardHandler) GetCardActivity(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	cardID := r.PathValue("id")
+	if cardID == "" {
+		writeError(w, http.StatusBadRequest, "card id is required")
+		return
+	}
+
+	boardID := r.URL.Query().Get("board_id")
+	if boardID == "" {
+		writeError(w, http.StatusBadRequest, "board_id query parameter is required")
+		return
+	}
+
+	limit := int32(parseIntQueryParam(r, "limit", 20))
+	cursor := r.URL.Query().Get("cursor")
+
+	resp, err := h.client.GetCardActivity(r.Context(), &boardpb.GetCardActivityRequest{
+		CardId:  cardID,
+		BoardId: boardID,
+		UserId:  userID,
+		Limit:   limit,
+		Cursor:  cursor,
+	})
+	if err != nil {
+		writeGRPCError(w, err)
+		return
+	}
+
+	entries := make([]map[string]interface{}, len(resp.Entries))
+	for i, e := range resp.Entries {
+		entry := map[string]interface{}{
+			"id":            e.Id,
+			"card_id":       e.CardId,
+			"board_id":      e.BoardId,
+			"actor_id":      e.ActorId,
+			"activity_type": e.ActivityType,
+			"description":   e.Description,
+			"changes":       e.Changes,
+		}
+		if e.CreatedAt != nil {
+			entry["created_at"] = e.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00")
+		}
+		entries[i] = entry
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"entries":     entries,
+		"next_cursor": resp.NextCursor,
+	})
+}
+
+// UnassignCard DELETE /api/v1/cards/{id}/assign
+func (h *BoardHandler) UnassignCard(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	cardID := r.PathValue("id")
+	if cardID == "" {
+		writeError(w, http.StatusBadRequest, "card id is required")
+		return
+	}
+
+	boardID := r.URL.Query().Get("board_id")
+	if boardID == "" {
+		writeError(w, http.StatusBadRequest, "board_id query parameter is required")
+		return
+	}
+
+	resp, err := h.client.UnassignCard(r.Context(), &boardpb.UnassignCardRequest{
+		CardId:  cardID,
+		BoardId: boardID,
+		UserId:  userID,
+	})
+	if err != nil {
+		writeGRPCError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"card": mapCardFromProto(resp.Card),
+	})
 }

@@ -190,6 +190,17 @@ func (r *CardRepository) Delete(ctx context.Context, cardID string) error {
 	return nil
 }
 
+// UnassignByUser снимает assignee со всех карточек удалённого участника
+func (r *CardRepository) UnassignByUser(ctx context.Context, boardID, userID string) (int, error) {
+	query := `UPDATE cards SET assignee_id = NULL, updated_at = NOW() WHERE board_id = $1 AND assignee_id = $2`
+	result, err := r.db.ExecContext(ctx, query, boardID, userID)
+	if err != nil {
+		return 0, fmt.Errorf("unassign by user: %w", err)
+	}
+	rows, _ := result.RowsAffected()
+	return int(rows), nil
+}
+
 // BatchDelete удаляет несколько карточек по ID в рамках одной доски (partition key)
 func (r *CardRepository) BatchDelete(ctx context.Context, boardID string, cardIDs []string) error {
 	if len(cardIDs) == 0 {

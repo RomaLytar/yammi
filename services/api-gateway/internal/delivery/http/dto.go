@@ -73,6 +73,20 @@ type memberResponse struct {
 	JoinedAt string `json:"joined_at"`
 }
 
+// --- Attachment responses ---
+
+type attachmentResponse struct {
+	ID         string `json:"id"`
+	CardID     string `json:"card_id"`
+	BoardID    string `json:"board_id"`
+	FileName   string `json:"file_name"`
+	FileSize   int64  `json:"file_size"`
+	MimeType   string `json:"mime_type"`
+	StorageKey string `json:"storage_key"`
+	UploaderID string `json:"uploader_id"`
+	CreatedAt  string `json:"created_at"`
+}
+
 // --- Notification responses ---
 
 type notificationResponse struct {
@@ -88,6 +102,20 @@ type notificationResponse struct {
 type settingsResponse struct {
 	Enabled         bool `json:"enabled"`
 	RealtimeEnabled bool `json:"realtime_enabled"`
+}
+
+// --- Comment responses ---
+
+type commentResponse struct {
+	ID         string `json:"id"`
+	CardID     string `json:"card_id"`
+	BoardID    string `json:"board_id"`
+	AuthorID   string `json:"author_id"`
+	ParentID   string `json:"parent_id,omitempty"`
+	Content    string `json:"content"`
+	ReplyCount int32  `json:"reply_count"`
+	CreatedAt  string `json:"created_at"`
+	UpdatedAt  string `json:"updated_at"`
 }
 
 // --- Generic responses ---

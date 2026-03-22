@@ -190,6 +190,46 @@ export interface NotificationSettingsResponse {
   realtime_enabled: boolean
 }
 
+// --- Comments ---
+
+export interface CommentResponse {
+  id: string
+  card_id: string
+  board_id: string
+  author_id: string
+  parent_id?: string
+  content: string
+  reply_count: number
+  created_at: string
+  updated_at: string
+}
+
+// --- Attachments ---
+
+export interface AttachmentResponse {
+  id: string
+  card_id: string
+  board_id: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  uploader_id: string
+  created_at: string
+}
+
+// --- Activity ---
+
+export interface ActivityEntryResponse {
+  id: string
+  card_id: string
+  board_id: string
+  actor_id: string
+  activity_type: string
+  description: string
+  changes: Record<string, string>
+  created_at: string
+}
+
 // --- Errors ---
 
 export interface ErrorResponse {

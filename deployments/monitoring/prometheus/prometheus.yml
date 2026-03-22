@@ -17,3 +17,7 @@ scrape_configs:
   - job_name: 'board-service'
     static_configs:
       - targets: ['board:2112']
+
+  - job_name: 'comment-service'
+    static_configs:
+      - targets: ['comment:2112']

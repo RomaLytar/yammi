@@ -100,6 +100,13 @@ func (c *Consumer) Start() error {
 		"card.updated",
 		"card.moved",
 		"card.deleted",
+		"card.assigned",
+		"card.unassigned",
+		"attachment.uploaded",
+		"attachment.deleted",
+		"comment.created",
+		"comment.updated",
+		"comment.deleted",
 	}
 
 	for _, subj := range boardSubjects {

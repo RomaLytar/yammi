@@ -1,13 +1,24 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Board, Column, Card } from '@/types/domain'
+import type { Board, Column, Card, UserProfile } from '@/types/domain'
+import type { MemberResponse } from '@/types/api'
 import * as boardsApi from '@/api/boards'
+import * as usersApi from '@/api/users'
 import { ApiError } from '@/api/client'
 import { generatePosition } from '@/utils/lexorank'
+
+export interface MemberWithProfile {
+  userId: string
+  role: 'owner' | 'member'
+  name: string
+  email: string
+}
 
 export const useBoardStore = defineStore('board', () => {
   const board = ref<Board | null>(null)
   const columns = ref<Column[]>([])
+  const members = ref<MemberResponse[]>([])
+  const memberProfiles = ref<Map<string, MemberWithProfile>>(new Map())
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -21,6 +32,10 @@ export const useBoardStore = defineStore('board', () => {
       const result = await boardsApi.getBoard(id)
       board.value = result.board
       columns.value = result.columns
+
+      // Загружаем участников доски и их профили
+      members.value = await boardsApi.getMembers(id)
+      await fetchMemberProfiles()
 
       // Загружаем карточки для каждой колонки
       await Promise.all(
@@ -127,7 +142,18 @@ export const useBoardStore = defineStore('board', () => {
     if (!boardId.value) return
     try {
       error.value = null
-      const updated = await boardsApi.updateCard(cardId, { board_id: boardId.value, title, description })
+      // Сохраняем текущий assignee_id чтобы не обнулить его при обновлении title/description
+      let currentAssignee: string | undefined
+      for (const col of columns.value) {
+        const card = col.cards.find(c => c.id === cardId)
+        if (card) { currentAssignee = card.assigneeId; break }
+      }
+      const updated = await boardsApi.updateCard(cardId, {
+        board_id: boardId.value,
+        title,
+        description,
+        assignee_id: currentAssignee,
+      })
 
       // Обновляем карточку в store
       for (const column of columns.value) {
@@ -214,15 +240,91 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+  async function assignCard(cardId: string, assigneeId: string): Promise<void> {
+    if (!boardId.value) return
+    try {
+      error.value = null
+      const updated = await boardsApi.assignCard(cardId, boardId.value, assigneeId)
+      updateCardInStore(cardId, updated)
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка назначения карточки'
+      throw err
+    }
+  }
+
+  async function unassignCard(cardId: string): Promise<void> {
+    if (!boardId.value) return
+    try {
+      error.value = null
+      const updated = await boardsApi.unassignCard(cardId, boardId.value)
+      updateCardInStore(cardId, updated)
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка снятия назначения'
+      throw err
+    }
+  }
+
+  function updateCardInStore(cardId: string, updated: Card): void {
+    for (const column of columns.value) {
+      const idx = column.cards.findIndex((c) => c.id === cardId)
+      if (idx !== -1) {
+        column.cards[idx] = updated
+        break
+      }
+    }
+  }
+
+  // Загружаем профили всех участников доски (имя, email)
+  async function fetchMemberProfiles(): Promise<void> {
+    const profiles = new Map<string, MemberWithProfile>()
+    await Promise.all(
+      members.value.map(async (m) => {
+        try {
+          const profile = await usersApi.getProfile(m.user_id)
+          profiles.set(m.user_id, {
+            userId: m.user_id,
+            role: m.role,
+            name: profile.name || profile.email,
+            email: profile.email,
+          })
+        } catch {
+          // Профиль не найден — показываем ID
+          profiles.set(m.user_id, {
+            userId: m.user_id,
+            role: m.role,
+            name: m.user_id.slice(0, 8),
+            email: '',
+          })
+        }
+      }),
+    )
+    memberProfiles.value = profiles
+  }
+
+  // Получить имя пользователя по ID (из кеша профилей)
+  function getMemberName(userId: string): string {
+    const profile = memberProfiles.value.get(userId)
+    return profile?.name || userId.slice(0, 8)
+  }
+
+  function getMemberEmail(userId: string): string {
+    const profile = memberProfiles.value.get(userId)
+    return profile?.email || ''
+  }
+
   function clear(): void {
     board.value = null
     columns.value = []
+    members.value = []
+    memberProfiles.value = new Map()
     error.value = null
   }
 
   return {
     board,
     columns,
+    members,
+    memberProfiles,
     loading,
     error,
     boardId,
@@ -231,10 +333,14 @@ export const useBoardStore = defineStore('board', () => {
     createColumn,
     updateColumn,
     deleteColumn,
+    getMemberName,
+    getMemberEmail,
     createCard,
     updateCard,
     deleteCards,
     moveCard,
+    assignCard,
+    unassignCard,
     clear,
   }
 })

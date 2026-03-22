@@ -153,9 +153,14 @@ func TestBoardRepository_Delete(t *testing.T) {
 
 	boardID := "board-123"
 
+	mock.ExpectBegin()
+	mock.ExpectExec("DELETE FROM cards WHERE board_id").
+		WithArgs(boardID).
+		WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectExec("DELETE FROM boards WHERE id").
 		WithArgs(boardID).
 		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
 
 	err = repo.Delete(context.Background(), boardID)
 	assert.NoError(t, err)
@@ -169,9 +174,14 @@ func TestBoardRepository_Delete_NotFound(t *testing.T) {
 
 	repo := NewBoardRepository(db)
 
+	mock.ExpectBegin()
+	mock.ExpectExec("DELETE FROM cards WHERE board_id").
+		WithArgs("non-existent").
+		WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectExec("DELETE FROM boards WHERE id").
 		WithArgs("non-existent").
 		WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectRollback()
 
 	err = repo.Delete(context.Background(), "non-existent")
 	assert.Error(t, err)

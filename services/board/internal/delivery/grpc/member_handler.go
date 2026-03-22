@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -96,5 +97,45 @@ func (s *BoardServiceServer) ListMembers(ctx context.Context, req *boardpb.ListM
 
 	return &boardpb.ListMembersResponse{
 		Members: mapMembersToProto(members),
+	}, nil
+}
+
+// IsMember проверяет, является ли пользователь участником доски
+func (s *BoardServiceServer) IsMember(ctx context.Context, req *boardpb.IsMemberRequest) (*boardpb.IsMemberResponse, error) {
+	if req.GetBoardId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "board_id is required")
+	}
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	// Используем listMembers usecase (у него есть проверка доступа), но для IsMember
+	// нам нужен прямой вызов репозитория. Вызываем через memberRepo напрямую — это
+	// delivery-level utility для cross-service запросов.
+	// Для этого используем listMembers и ищем user_id в результате.
+	members, err := s.listMembers.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	if err != nil {
+		// Если access denied — значит не участник
+		if errors.Is(err, domain.ErrAccessDenied) {
+			return &boardpb.IsMemberResponse{
+				IsMember: false,
+				Role:     "",
+			}, nil
+		}
+		return nil, mapDomainError(err)
+	}
+
+	for _, m := range members {
+		if m.UserID == req.GetUserId() {
+			return &boardpb.IsMemberResponse{
+				IsMember: true,
+				Role:     m.Role.String(),
+			}, nil
+		}
+	}
+
+	return &boardpb.IsMemberResponse{
+		IsMember: false,
+		Role:     "",
 	}, nil
 }

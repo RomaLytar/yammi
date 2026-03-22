@@ -59,10 +59,10 @@ defineProps<{
 }
 .base-button--primary:hover:not(:disabled) {
   box-shadow: 0 6px 20px -2px rgba(99, 102, 241, 0.4);
-  transform: translateY(-1px);
+  /* no transform to prevent layout shift */
 }
 .base-button--primary:active:not(:disabled) {
-  transform: translateY(0);
+  /* no transform */
   box-shadow: var(--shadow-sm);
 }
 
@@ -84,7 +84,7 @@ defineProps<{
 }
 .base-button--danger:hover:not(:disabled) {
   background: var(--color-danger-hover);
-  transform: translateY(-1px);
+  /* no transform to prevent layout shift */
 }
 
 .base-button--ghost {

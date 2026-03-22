@@ -30,11 +30,22 @@ service BoardService {
   rpc UpdateCard(UpdateCardRequest) returns (UpdateCardResponse);
   rpc MoveCard(MoveCardRequest) returns (MoveCardResponse);
   rpc DeleteCard(DeleteCardRequest) returns (google.protobuf.Empty);
+  rpc AssignCard(AssignCardRequest) returns (AssignCardResponse);
+  rpc UnassignCard(UnassignCardRequest) returns (UnassignCardResponse);
+  rpc GetCardActivity(GetCardActivityRequest) returns (GetCardActivityResponse);
 
   // Member operations
   rpc AddMember(AddMemberRequest) returns (AddMemberResponse);
   rpc RemoveMember(RemoveMemberRequest) returns (google.protobuf.Empty);
   rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
+  rpc IsMember(IsMemberRequest) returns (IsMemberResponse);
+
+  // Attachment operations
+  rpc CreateUploadURL(CreateUploadURLRequest) returns (CreateUploadURLResponse);
+  rpc ConfirmUpload(ConfirmUploadRequest) returns (ConfirmUploadResponse);
+  rpc GetDownloadURL(GetDownloadURLRequest) returns (GetDownloadURLResponse);
+  rpc ListAttachments(ListAttachmentsRequest) returns (ListAttachmentsResponse);
+  rpc DeleteAttachment(DeleteAttachmentRequest) returns (google.protobuf.Empty);
 }
 
 // ============================================================================
@@ -162,6 +173,7 @@ message CreateCardRequest {
   string title = 4;
   string description = 5;
   string position = 6;  // lexorank position (string, не int!)
+  string assignee_id = 7;  // optional: назначить при создании
 }
 
 message CreateCardResponse {
@@ -223,6 +235,51 @@ message DeleteCardRequest {
   string user_id = 3;
 }
 
+message AssignCardRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;       // actor (from JWT)
+  string assignee_id = 4;   // who to assign
+}
+
+message AssignCardResponse {
+  Card card = 1;
+}
+
+message UnassignCardRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;       // actor
+}
+
+message UnassignCardResponse {
+  Card card = 1;
+}
+
+message GetCardActivityRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  int32 limit = 4;
+  string cursor = 5;
+}
+
+message GetCardActivityResponse {
+  repeated ActivityEntry entries = 1;
+  string next_cursor = 2;
+}
+
+message ActivityEntry {
+  string id = 1;
+  string card_id = 2;
+  string board_id = 3;
+  string actor_id = 4;
+  string activity_type = 5;
+  string description = 6;
+  map<string, string> changes = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
 // ============================================================================
 // Member Messages
 // ============================================================================
@@ -251,6 +308,70 @@ message ListMembersRequest {
 
 message ListMembersResponse {
   repeated BoardMember members = 1;
+}
+
+message IsMemberRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message IsMemberResponse {
+  bool is_member = 1;
+  string role = 2;  // "owner" or "member", empty if not a member
+}
+
+// ============================================================================
+// Attachment Messages
+// ============================================================================
+
+message CreateUploadURLRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string file_name = 4;
+  string content_type = 5;
+  int64 file_size = 6;
+}
+
+message CreateUploadURLResponse {
+  Attachment attachment = 1;
+  string upload_url = 2;
+}
+
+message ConfirmUploadRequest {
+  string attachment_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message ConfirmUploadResponse {
+  Attachment attachment = 1;
+}
+
+message GetDownloadURLRequest {
+  string attachment_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetDownloadURLResponse {
+  string download_url = 1;
+}
+
+message ListAttachmentsRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message ListAttachmentsResponse {
+  repeated Attachment attachments = 1;
+}
+
+message DeleteAttachmentRequest {
+  string attachment_id = 1;
+  string board_id = 2;
+  string user_id = 3;
 }
 
 // ============================================================================
@@ -296,4 +417,16 @@ message BoardMember {
   string role = 2;
   int32 version = 3;
   google.protobuf.Timestamp joined_at = 4;
+}
+
+message Attachment {
+  string id = 1;
+  string card_id = 2;
+  string board_id = 3;
+  string file_name = 4;
+  int64 file_size = 5;
+  string mime_type = 6;
+  string storage_key = 7;
+  string uploader_id = 8;
+  google.protobuf.Timestamp created_at = 9;
 }

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 
-defineProps<{ title?: string }>()
+defineProps<{
+  title?: string
+  size?: 'default' | 'large' | 'fullscreen'
+}>()
 const emit = defineEmits<{ close: [] }>()
 
 function onKeydown(e: KeyboardEvent): void {
@@ -16,7 +19,12 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   <Teleport to="body">
     <Transition name="modal">
       <div class="modal-overlay" @click.self="$emit('close')">
-        <div class="modal" role="dialog" aria-modal="true">
+        <div
+          class="modal"
+          :class="[size ? `modal--${size}` : '']"
+          role="dialog"
+          aria-modal="true"
+        >
           <div v-if="title || $slots.header" class="modal__header">
             <slot name="header">
               <h2 class="modal__title">{{ title }}</h2>
@@ -49,6 +57,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   align-items: center;
   justify-content: center;
   z-index: 10100;
+  padding: 24px;
 }
 
 .modal {
@@ -60,6 +69,21 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   max-height: 90vh;
   overflow-y: auto;
   border: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal--large {
+  max-width: 1340px;
+  width: 90vw;
+  height: 88vh;
+  max-height: 88vh;
+  overflow: hidden;
+}
+
+.modal--fullscreen {
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 48px);
 }
 
 .modal__header {
@@ -67,6 +91,11 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   align-items: center;
   justify-content: space-between;
   padding: var(--space-lg) var(--space-lg) var(--space-md);
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+  z-index: 1;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .modal__title {
@@ -91,7 +120,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   background: var(--color-primary-soft);
 }
 
-.modal__body { padding: 0 var(--space-lg) var(--space-lg); }
+.modal__body { padding: var(--space-lg); flex: 1; overflow-y: auto; }
 
 .modal__footer {
   padding: var(--space-md) var(--space-lg);

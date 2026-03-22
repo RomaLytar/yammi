@@ -50,6 +50,21 @@
 			"key": "other_user_id",
 			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "member_user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "comment_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "attachment_id",
+			"value": "",
+			"type": "string"
 		}
 	],
 	"item": [
@@ -1448,6 +1463,145 @@
 								"description": "Удаление одной или нескольких карточек. Только создатель или owner доски может удалять. Batch в одной транзакции."
 							},
 							"response": []
+						},
+						{
+							"name": "Assign Card",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"assignee_id\": \"{{member_user_id}}\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:cardId/assign",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										":cardId",
+										"assign"
+									],
+									"variable": [
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Назначить исполнителя на карточку."
+							},
+							"response": []
+						},
+						{
+							"name": "Unassign Card",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:cardId/assign?board_id={{board_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										":cardId",
+										"assign"
+									],
+									"query": [
+										{
+											"key": "board_id",
+											"value": "{{board_id}}"
+										}
+									],
+									"variable": [
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Снять исполнителя с карточки."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Card Activity",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:cardId/activity?board_id={{board_id}}&limit=50",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										":cardId",
+										"activity"
+									],
+									"query": [
+										{
+											"key": "board_id",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "limit",
+											"value": "50"
+										}
+									],
+									"variable": [
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Получить историю активности карточки."
+							},
+							"response": []
 						}
 					],
 					"description": "Управление карточками."
@@ -1655,6 +1809,473 @@
 						}
 					],
 					"description": "Управление участниками доски."
+				},
+				{
+					"name": "Comments",
+					"item": [
+						{
+							"name": "Create Comment",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"content\": \"Test comment\",\n  \"parent_id\": \"\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:cardId/comments",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										":cardId",
+										"comments"
+									],
+									"variable": [
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Создать комментарий к карточке."
+							},
+							"response": []
+						},
+						{
+							"name": "List Comments",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:cardId/comments?board_id={{board_id}}&limit=50",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										":cardId",
+										"comments"
+									],
+									"query": [
+										{
+											"key": "board_id",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "limit",
+											"value": "50"
+										}
+									],
+									"variable": [
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Получить список комментариев к карточке."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Comment",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"content\": \"Updated comment\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/comments/:commentId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"comments",
+										":commentId"
+									],
+									"variable": [
+										{
+											"key": "commentId",
+											"value": "{{comment_id}}"
+										}
+									]
+								},
+								"description": "Обновить комментарий."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Comment",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/comments/:commentId?board_id={{board_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"comments",
+										":commentId"
+									],
+									"query": [
+										{
+											"key": "board_id",
+											"value": "{{board_id}}"
+										}
+									],
+									"variable": [
+										{
+											"key": "commentId",
+											"value": "{{comment_id}}"
+										}
+									]
+								},
+								"description": "Удалить комментарий."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Comment Count",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:cardId/comments/count?board_id={{board_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										":cardId",
+										"comments",
+										"count"
+									],
+									"query": [
+										{
+											"key": "board_id",
+											"value": "{{board_id}}"
+										}
+									],
+									"variable": [
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Получить количество комментариев к карточке."
+							},
+							"response": []
+						}
+					],
+					"description": "Управление комментариями к карточкам."
+				},
+				{
+					"name": "Attachments",
+					"item": [
+						{
+							"name": "Create Upload URL",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"file_name\": \"test.png\",\n  \"content_type\": \"image/png\",\n  \"file_size\": 1024\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:cardId/attachments/upload-url",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										":cardId",
+										"attachments",
+										"upload-url"
+									],
+									"variable": [
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Создать presigned URL для загрузки файла."
+							},
+							"response": []
+						},
+						{
+							"name": "Confirm Upload",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"board_id\": \"{{board_id}}\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/attachments/:attachmentId/confirm",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"attachments",
+										":attachmentId",
+										"confirm"
+									],
+									"variable": [
+										{
+											"key": "attachmentId",
+											"value": "{{attachment_id}}"
+										}
+									]
+								},
+								"description": "Подтвердить загрузку файла."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Download URL",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/attachments/:attachmentId/download-url?board_id={{board_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"attachments",
+										":attachmentId",
+										"download-url"
+									],
+									"query": [
+										{
+											"key": "board_id",
+											"value": "{{board_id}}"
+										}
+									],
+									"variable": [
+										{
+											"key": "attachmentId",
+											"value": "{{attachment_id}}"
+										}
+									]
+								},
+								"description": "Получить presigned URL для скачивания файла."
+							},
+							"response": []
+						},
+						{
+							"name": "List Attachments",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/cards/:cardId/attachments?board_id={{board_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"cards",
+										":cardId",
+										"attachments"
+									],
+									"query": [
+										{
+											"key": "board_id",
+											"value": "{{board_id}}"
+										}
+									],
+									"variable": [
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Получить список вложений карточки."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Attachment",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/attachments/:attachmentId?board_id={{board_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"attachments",
+										":attachmentId"
+									],
+									"query": [
+										{
+											"key": "board_id",
+											"value": "{{board_id}}"
+										}
+									],
+									"variable": [
+										{
+											"key": "attachmentId",
+											"value": "{{attachment_id}}"
+										}
+									]
+								},
+								"description": "Удалить вложение."
+							},
+							"response": []
+						}
+					],
+					"description": "Управление вложениями к карточкам."
 				}
 			],
 			"description": "Эндпоинты Board Service для управления досками, колонками, карточками и участниками.",

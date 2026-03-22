@@ -28,8 +28,13 @@ func (s *BoardServiceServer) CreateCard(ctx context.Context, req *boardpb.Create
 		return nil, status.Error(codes.InvalidArgument, "position (lexorank) is required")
 	}
 
-	// CreateCardRequest не имеет assignee_id в proto (line 153-160), передаем nil
-	card, err := s.createCard.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), req.GetPosition(), nil)
+	// Преобразуем assignee_id в *string
+	var assigneeID *string
+	if req.GetAssigneeId() != "" {
+		assigneeID = stringPtr(req.GetAssigneeId())
+	}
+
+	card, err := s.createCard.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), req.GetPosition(), assigneeID)
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -171,4 +176,51 @@ func (s *BoardServiceServer) DeleteCard(ctx context.Context, req *boardpb.Delete
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+// AssignCard назначает карточку на участника доски
+func (s *BoardServiceServer) AssignCard(ctx context.Context, req *boardpb.AssignCardRequest) (*boardpb.AssignCardResponse, error) {
+	if req.GetCardId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "card_id is required")
+	}
+	if req.GetBoardId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "board_id is required")
+	}
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	if req.GetAssigneeId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "assignee_id is required")
+	}
+
+	card, err := s.assignCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId(), req.GetAssigneeId())
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	return &boardpb.AssignCardResponse{
+		Card: mapCardToProto(card, req.GetBoardId()),
+	}, nil
+}
+
+// UnassignCard снимает назначение с карточки
+func (s *BoardServiceServer) UnassignCard(ctx context.Context, req *boardpb.UnassignCardRequest) (*boardpb.UnassignCardResponse, error) {
+	if req.GetCardId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "card_id is required")
+	}
+	if req.GetBoardId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "board_id is required")
+	}
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	card, err := s.unassignCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	return &boardpb.UnassignCardResponse{
+		Card: mapCardToProto(card, req.GetBoardId()),
+	}, nil
 }

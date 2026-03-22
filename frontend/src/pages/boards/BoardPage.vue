@@ -34,8 +34,18 @@ const showEditCardModal = ref(false)
 const showConfirmDeleteColumn = ref(false)
 const showBulkDeleteCards = ref(false)
 const activeColumnId = ref<string | null>(null)
-const activeCard = ref<Card | null>(null)
+const activeCardId = ref<string | null>(null)
 const pendingDeleteColumnId = ref<string | null>(null)
+
+// Reactive card from store — always up to date after assign/update
+const activeCard = computed<Card | null>(() => {
+  if (!activeCardId.value) return null
+  for (const col of boardStore.columns) {
+    const card = col.cards.find(c => c.id === activeCardId.value)
+    if (card) return card
+  }
+  return null
+})
 
 // Bulk card select
 const cardSelectMode = ref(false)
@@ -288,24 +298,42 @@ async function handleCreateCard(data: { title: string; description: string }) {
 }
 
 function handleCardClick(card: Card) {
-  activeCard.value = card
+  activeCardId.value = card.id
   showEditCardModal.value = true
 }
 
-async function handleUpdateCard(data: { title: string; description: string }) {
+async function handleUpdateCard(data: { title: string; description: string; assigneeId?: string }) {
   if (!activeCard.value) return
 
   try {
-    await boardStore.updateCard(activeCard.value.id, data.title, data.description)
+    const oldAssignee = activeCard.value.assigneeId || ''
+    const newAssignee = data.assigneeId || ''
+    const titleChanged = data.title !== activeCard.value.title
+    const descChanged = data.description !== activeCard.value.description
+
+    // 1. Assign/unassign если изменился
+    if (oldAssignee !== newAssignee) {
+      if (newAssignee) {
+        await boardStore.assignCard(activeCard.value.id, newAssignee)
+      } else {
+        await boardStore.unassignCard(activeCard.value.id)
+      }
+    }
+
+    // 2. Update title/description только если изменились
+    if (titleChanged || descChanged) {
+      await boardStore.updateCard(activeCard.value.id, data.title, data.description)
+    }
+
     showEditCardModal.value = false
-    activeCard.value = null
+    activeCardId.value = null
   } catch (error) {
     console.error('Failed to update card:', error)
   }
 }
 
 async function handleDeleteCard(cardId?: string) {
-  const id = cardId || activeCard.value?.id
+  const id = cardId || activeCardId.value
   if (!id) return
 
   try {
@@ -313,7 +341,7 @@ async function handleDeleteCard(cardId?: string) {
 
     if (showEditCardModal.value) {
       showEditCardModal.value = false
-      activeCard.value = null
+      activeCardId.value = null
     }
   } catch (error) {
     console.error('Failed to delete card:', error)
@@ -335,7 +363,7 @@ function closeCreateCardModal() {
 
 function closeEditCardModal() {
   showEditCardModal.value = false
-  activeCard.value = null
+  activeCardId.value = null
 }
 </script>
 
@@ -431,7 +459,7 @@ function closeEditCardModal() {
     <EditCardModal
       v-if="showEditCardModal && activeCard"
       :card="activeCard"
-      :can-delete="isOwner || activeCard.creatorId === currentUserId"
+      :can-delete="isOwner || activeCard?.creatorId === currentUserId"
       @close="closeEditCardModal"
       @update="handleUpdateCard"
       @delete="handleDeleteCard()"

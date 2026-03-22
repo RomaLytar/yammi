@@ -144,6 +144,54 @@ type MemberRemoved struct {
 	BoardTitle   string    `json:"board_title"`
 }
 
+type CardAssigned struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	ColumnID     string    `json:"column_id"`
+	ActorID      string    `json:"actor_id"`
+	AssigneeID   string    `json:"assignee_id"`
+	PrevAssignee *string   `json:"prev_assignee,omitempty"`
+	CardTitle    string    `json:"card_title"`
+}
+
+type CardUnassigned struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	ColumnID     string    `json:"column_id"`
+	ActorID      string    `json:"actor_id"`
+	PrevAssignee string    `json:"prev_assignee"`
+	CardTitle    string    `json:"card_title"`
+}
+
+type AttachmentUploaded struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	AttachmentID string    `json:"attachment_id"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	FileName     string    `json:"file_name"`
+	FileSize     int64     `json:"file_size"`
+}
+
+type AttachmentDeleted struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	AttachmentID string    `json:"attachment_id"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	FileName     string    `json:"file_name"`
+}
+
 func generateEventID() string {
 	return uuid.New().String()
 }

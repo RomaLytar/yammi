@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/metrics"
 	"github.com/nats-io/nats.go"
 )
 
@@ -28,9 +29,11 @@ func (p *Publisher) Publish(ctx context.Context, subject string, event interface
 	}
 
 	if err := p.conn.Publish(subject, data); err != nil {
+		metrics.EventPublishErrors.WithLabelValues(subject).Inc()
 		return fmt.Errorf("publish event: %w", err)
 	}
 
+	metrics.EventsPublished.WithLabelValues(subject).Inc()
 	return nil
 }
 

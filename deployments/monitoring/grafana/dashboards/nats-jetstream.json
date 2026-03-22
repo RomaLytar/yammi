@@ -7,27 +7,27 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 100,
-      "title": "NATS Server",
+      "title": "NATS Сервер",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 10 }] }
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 20 }] }
         }
       },
-      "gridPos": { "h": 4, "w": 3, "x": 0, "y": 1 },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
       "id": 1,
       "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Connections",
-      "description": "3 auth replicas + user consumer + dlq monitor = 5",
+      "title": "Подключения",
+      "description": "Активные TCP-подключения к NATS (сервисы: auth x5, board, notification, gateway, user, comment...)",
       "type": "stat",
       "targets": [{ "expr": "gnatsd_varz_connections", "legendFormat": "" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -35,15 +35,16 @@
           "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 104857600 }] }
         }
       },
-      "gridPos": { "h": 4, "w": 3, "x": 3, "y": 1 },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
       "id": 2,
       "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Memory",
+      "title": "Память",
+      "description": "RAM используемая NATS сервером",
       "type": "stat",
       "targets": [{ "expr": "gnatsd_varz_mem", "legendFormat": "" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -51,7 +52,7 @@
           "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 80 }] }
         }
       },
-      "gridPos": { "h": 4, "w": 3, "x": 6, "y": 1 },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
       "id": 3,
       "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "title": "CPU",
@@ -59,29 +60,17 @@
       "targets": [{ "expr": "gnatsd_varz_cpu", "legendFormat": "" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
-      "gridPos": { "h": 4, "w": 7, "x": 9, "y": 1 },
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 1 },
       "id": 4,
       "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
-      "title": "Message Rate (all publishers)",
+      "title": "Поток сообщений (msg/sec)",
+      "description": "Входящие — от сервисов в NATS. Исходящие — из NATS к consumers",
       "type": "timeseries",
       "targets": [
-        { "expr": "rate(gnatsd_varz_in_msgs[30s])", "legendFormat": "in/s (auth → NATS)" },
-        { "expr": "rate(gnatsd_varz_out_msgs[30s])", "legendFormat": "out/s (NATS → consumers)" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "Bps" } },
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 1 },
-      "id": 5,
-      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
-      "title": "Throughput",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "rate(gnatsd_varz_in_bytes[30s])", "legendFormat": "in bytes/s" },
-        { "expr": "rate(gnatsd_varz_out_bytes[30s])", "legendFormat": "out bytes/s" }
+        { "expr": "rate(gnatsd_varz_in_msgs[1m])", "legendFormat": "Входящие (от сервисов)" },
+        { "expr": "rate(gnatsd_varz_out_msgs[1m])", "legendFormat": "Исходящие (к consumers)" }
       ]
     },
 
@@ -89,228 +78,231 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
       "id": 101,
-      "title": "JetStream",
+      "title": "Потоки (Streams)",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": null }] } } },
-      "gridPos": { "h": 3, "w": 4, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 6 },
       "id": 10,
       "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Streams",
+      "title": "USERS",
+      "description": "Сообщений в потоке USERS (user.created и др.)",
       "type": "stat",
-      "targets": [{ "expr": "jetstream_server_total_streams", "legendFormat": "" }]
+      "targets": [{ "expr": "jetstream_stream_total_messages{stream_name=\"USERS\"}", "legendFormat": "" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": null }] } } },
-      "gridPos": { "h": 3, "w": 4, "x": 4, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 6 },
       "id": 11,
       "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Consumers",
+      "title": "BOARDS",
+      "description": "Сообщений в потоке BOARDS (board.*, column.*, card.*, member.*)",
       "type": "stat",
-      "targets": [{ "expr": "jetstream_server_total_consumers", "legendFormat": "" }]
+      "targets": [{ "expr": "jetstream_stream_total_messages{stream_name=\"BOARDS\"}", "legendFormat": "" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }] } } },
-      "gridPos": { "h": 3, "w": 4, "x": 8, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 6 },
       "id": 12,
-      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Total Messages",
-      "type": "stat",
-      "targets": [{ "expr": "jetstream_server_total_messages", "legendFormat": "" }]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "unit": "bytes", "thresholds": { "steps": [{ "color": "orange", "value": null }] } } },
-      "gridPos": { "h": 3, "w": 4, "x": 12, "y": 6 },
-      "id": 13,
       "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Storage",
+      "title": "NOTIFICATIONS",
+      "description": "Сообщений в потоке NOTIFICATIONS (notification.created → WebSocket Gateway)",
       "type": "stat",
-      "targets": [{ "expr": "jetstream_account_storage_used", "legendFormat": "" }]
+      "targets": [{ "expr": "jetstream_stream_total_messages{stream_name=\"NOTIFICATIONS\"}", "legendFormat": "" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "unit": "bytes", "thresholds": { "steps": [{ "color": "purple", "value": null }] } } },
-      "gridPos": { "h": 3, "w": 4, "x": 16, "y": 6 },
-      "id": 14,
-      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Memory Used",
-      "type": "stat",
-      "targets": [{ "expr": "jetstream_account_memory_used", "legendFormat": "" }]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } } },
-      "gridPos": { "h": 3, "w": 4, "x": 20, "y": 6 },
-      "id": 15,
-      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "API Errors",
-      "type": "stat",
-      "targets": [{ "expr": "gnatsd_varz_jetstream_stats_api_errors", "legendFormat": "" }]
-    },
-
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
-      "id": 102,
-      "title": "Stream: USERS → Consumer: user-service-user-created-v4",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 10 },
-      "id": 20,
-      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
-      "title": "USERS: Messages",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "jetstream_stream_total_messages{stream_name=\"USERS\"}", "legendFormat": "total" },
-        { "expr": "jetstream_stream_last_seq{stream_name=\"USERS\"}", "legendFormat": "last_seq" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 10 },
-      "id": 21,
-      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
-      "title": "Consumer: Pending & Ack Pending",
-      "description": "Pending = ещё не доставлено. Ack Pending = доставлено, ждёт подтверждения.",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "jetstream_consumer_num_pending{stream_name=\"USERS\",consumer_name=\"user-service-user-created-v4\"}", "legendFormat": "pending" },
-        { "expr": "jetstream_consumer_num_ack_pending{stream_name=\"USERS\",consumer_name=\"user-service-user-created-v4\"}", "legendFormat": "ack pending" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 10 },
-      "id": 22,
-      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
-      "title": "Consumer: Redelivered & Waiting",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "jetstream_consumer_num_redelivered{stream_name=\"USERS\",consumer_name=\"user-service-user-created-v4\"}", "legendFormat": "redelivered" },
-        { "expr": "jetstream_consumer_num_waiting{stream_name=\"USERS\",consumer_name=\"user-service-user-created-v4\"}", "legendFormat": "waiting" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
-      "id": 23,
-      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
-      "title": "Publish Rate → USERS",
-      "description": "Скорость публикации событий от auth реплик (суммарно по 3 репликам)",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "rate(jetstream_stream_total_messages{stream_name=\"USERS\"}[30s])", "legendFormat": "events/s → USERS" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
-      "id": 24,
-      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
-      "title": "Consumer Delivery Progress",
-      "description": "delivered_stream_seq vs stream last_seq — разница = отставание consumer'а",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "jetstream_stream_last_seq{stream_name=\"USERS\"}", "legendFormat": "stream last_seq (published)" },
-        { "expr": "jetstream_consumer_delivered_stream_seq{stream_name=\"USERS\",consumer_name=\"user-service-user-created-v4\"}", "legendFormat": "consumer delivered_seq (processed)" }
-      ]
-    },
-
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 26 },
-      "id": 103,
-      "title": "Dead Letter Queue",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
           "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 10 }] }
         }
       },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 27 },
-      "id": 30,
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 6 },
+      "id": 13,
       "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "DLQ Messages",
+      "title": "DLQ (ошибки)",
+      "description": "Dead Letter Queue — сообщения которые не удалось обработать после 7 попыток. Должно быть 0",
       "type": "stat",
       "targets": [{ "expr": "jetstream_stream_total_messages{stream_name=\"DLQ\"}", "legendFormat": "" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 10 },
+      "id": 14,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] } },
+      "title": "Сообщений в потоках",
+      "description": "Рост количества сообщений во всех потоках",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "jetstream_stream_total_messages{stream_name=\"USERS\"}", "legendFormat": "USERS" },
+        { "expr": "jetstream_stream_total_messages{stream_name=\"BOARDS\"}", "legendFormat": "BOARDS" },
+        { "expr": "jetstream_stream_total_messages{stream_name=\"NOTIFICATIONS\"}", "legendFormat": "NOTIFICATIONS" },
+        { "expr": "jetstream_stream_total_messages{stream_name=\"DLQ\"}", "legendFormat": "DLQ" }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "id": 102,
+      "title": "Consumers — отставание и проблемы",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 100 }] }
+        }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 17 },
+      "id": 20,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] } },
+      "title": "Необработанные сообщения (pending)",
+      "description": "Сколько сообщений ждут обработки каждым consumer'ом. Если растёт — consumer не успевает",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "jetstream_consumer_num_pending{consumer_name=~\".*-v[2-9].*|user-service.*\"}", "legendFormat": "{{ consumer_name }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 100 }] }
+        }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 17 },
+      "id": 21,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] } },
+      "title": "Ожидают подтверждения (ack pending)",
+      "description": "Доставлены consumer'у, но ещё не подтверждены (Ack). MaxAckPending=500. Если близко к 500 — backpressure",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "jetstream_consumer_num_ack_pending{consumer_name=~\".*-v[2-9].*|user-service.*\"}", "legendFormat": "{{ consumer_name }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 24 },
+      "id": 22,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] } },
+      "title": "Повторные доставки (redelivered)",
+      "description": "Сообщения доставленные повторно из-за ошибок или таймаутов. Если растёт — consumer падает при обработке",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "jetstream_consumer_num_redelivered{consumer_name=~\".*-v[2-9].*|user-service.*\"}", "legendFormat": "{{ consumer_name }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 24 },
+      "id": 23,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Скорость повторных доставок (redelivery/sec)",
+      "description": "Если > 0 — что-то постоянно не обрабатывается",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(jetstream_consumer_num_redelivered{consumer_name=~\".*-v[2-9].*|user-service.*\"}[1m])) by (consumer_name)", "legendFormat": "{{ consumer_name }}" }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "id": 103,
+      "title": "Хранилище",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
           "unit": "bytes",
-          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1048576 }] }
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 104857600 }] }
         }
       },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 27 },
-      "id": 31,
-      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "DLQ Storage",
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 32 },
+      "id": 30,
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Диск (JetStream Storage)",
+      "description": "Сколько места на диске занимают все JetStream потоки",
       "type": "stat",
-      "targets": [{ "expr": "jetstream_stream_total_bytes{stream_name=\"DLQ\"}", "legendFormat": "" }]
+      "targets": [{ "expr": "jetstream_account_storage_used", "legendFormat": "" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 9 }] }
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
         }
       },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 27 },
-      "id": 32,
-      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Backpressure (Ack Pending)",
-      "description": "MaxAckPending=500. Чем ближе к 500, тем сильнее backpressure.",
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 32 },
+      "id": 31,
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Всего потоков",
       "type": "stat",
-      "targets": [{ "expr": "jetstream_consumer_num_ack_pending{consumer_name=\"user-service-user-created-v4\"}", "legendFormat": "" }]
+      "targets": [{ "expr": "jetstream_server_total_streams", "legendFormat": "" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" } },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 27 },
-      "id": 33,
-      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
-      "title": "Redelivery Rate",
-      "type": "timeseries",
-      "targets": [{ "expr": "rate(jetstream_consumer_num_redelivered{consumer_name=\"user-service-user-created-v4\"}[1m])", "legendFormat": "redelivery/s" }]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } },
-      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 31 },
-      "id": 34,
-      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
-      "title": "DLQ Messages Over Time",
-      "type": "timeseries",
-      "targets": [{ "expr": "jetstream_stream_total_messages{stream_name=\"DLQ\"}", "legendFormat": "DLQ total" }]
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 32 },
+      "id": 32,
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Всего consumers",
+      "description": "Durable consumers подписанные на потоки (notification-service, gateway, cache consumers)",
+      "type": "stat",
+      "targets": [{ "expr": "jetstream_server_total_consumers", "legendFormat": "" }]
     }
   ],
   "refresh": "5s",
+  "liveNow": true,
   "schemaVersion": 39,
   "tags": ["nats", "jetstream"],
   "templating": { "list": [] },
-  "time": { "from": "now-30m", "to": "now" },
-  "timepicker": {},
+  "time": { "from": "now-5m", "to": "now" },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+  },
   "timezone": "browser",
   "title": "NATS JetStream",
   "uid": "nats-jetstream",
-  "version": 3
+  "version": 4
 }

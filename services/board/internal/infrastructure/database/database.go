@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func NewPostgresDB(databaseURL string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", databaseURL)
+	db, err := sql.Open("pgx", databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("open database: %w", err)
 	}
@@ -17,9 +17,8 @@ func NewPostgresDB(databaseURL string) (*sql.DB, error) {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
 
-	// Для Board Service — больше подключений (highload)
-	db.SetMaxOpenConns(50)
-	db.SetMaxIdleConns(20)
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(12)
 
 	return db, nil
 }

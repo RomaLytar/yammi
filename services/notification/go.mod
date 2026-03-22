@@ -4,8 +4,9 @@ go 1.24
 
 require (
 	github.com/google/uuid v1.6.0
-	github.com/lib/pq v1.10.9
+	github.com/jackc/pgx/v5 v5.7.4
 	github.com/nats-io/nats.go v1.39.1
+	github.com/prometheus/client_golang v1.21.1
 	github.com/romanlovesweed/yammi/pkg/events v0.0.0
 	google.golang.org/grpc v1.71.0
 	google.golang.org/protobuf v1.36.5

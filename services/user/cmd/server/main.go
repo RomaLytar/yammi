@@ -1,13 +1,18 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	userpb "github.com/romanlovesweed/yammi/services/user/api/proto/v1"
 	delivery "github.com/romanlovesweed/yammi/services/user/internal/delivery/grpc"
@@ -39,14 +44,23 @@ func main() {
 	}
 	defer db.Close()
 
-	// Migrations
+	// Migrations (напрямую к PostgreSQL, не через PgBouncer)
 	migrationsDir := os.Getenv("MIGRATIONS_DIR")
 	if migrationsDir == "" {
 		migrationsDir = "/app/migrations"
 	}
-	if err := infrastructure.RunMigrations(db, migrationsDir); err != nil {
+	migrationURL := os.Getenv("MIGRATION_DATABASE_URL")
+	if migrationURL == "" {
+		migrationURL = databaseURL
+	}
+	migrationDB, err := infrastructure.NewPostgresDB(migrationURL)
+	if err != nil {
+		log.Fatalf("failed to connect to migration database: %v", err)
+	}
+	if err := infrastructure.RunMigrations(migrationDB, migrationsDir); err != nil {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
+	migrationDB.Close()
 
 	// Repository
 	userRepo := postgres.NewUserRepo(db)
@@ -74,7 +88,9 @@ func main() {
 
 	// gRPC server
 	handler := delivery.NewUserHandler(userUC)
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(recoveryInterceptor()),
+	)
 	userpb.RegisterUserServiceServer(grpcServer, handler)
 
 	lis, err := net.Listen("tcp", ":"+port)
@@ -95,4 +111,16 @@ func main() {
 
 	log.Println("user-service shutting down...")
 	grpcServer.GracefulStop()
+}
+
+func recoveryInterceptor() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("PANIC recovered in %s: %v\n%s", info.FullMethod, r, debug.Stack())
+				err = status.Errorf(codes.Internal, fmt.Sprintf("internal error: %v", r))
+			}
+		}()
+		return handler(ctx, req)
+	}
 }

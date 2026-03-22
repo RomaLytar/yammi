@@ -3,15 +3,18 @@ package main
 import (
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
 	delivery "github.com/RomaLytar/yammi/services/board/internal/delivery/grpc"
 	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/database"
+	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/metrics"
 	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/nats"
 	"github.com/RomaLytar/yammi/services/board/internal/repository/postgres"
 	"github.com/RomaLytar/yammi/services/board/internal/usecase"
@@ -21,6 +24,11 @@ func main() {
 	port := os.Getenv("BOARD_GRPC_PORT")
 	if port == "" {
 		port = "50053"
+	}
+
+	metricsPort := os.Getenv("METRICS_PORT")
+	if metricsPort == "" {
+		metricsPort = "2112"
 	}
 
 	databaseURL := os.Getenv("DATABASE_URL")
@@ -33,6 +41,16 @@ func main() {
 		log.Fatal("NATS_URL is required")
 	}
 
+	// Metrics HTTP server
+	go func() {
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.Handler())
+		log.Printf("metrics server started on :%s", metricsPort)
+		if err := http.ListenAndServe(":"+metricsPort, mux); err != nil {
+			log.Fatalf("metrics server failed: %v", err)
+		}
+	}()
+
 	// Database
 	db, err := database.NewPostgresDB(databaseURL)
 	if err != nil {
@@ -40,14 +58,23 @@ func main() {
 	}
 	defer db.Close()
 
-	// Migrations
+	// Migrations (напрямую к PostgreSQL, не через PgBouncer — advisory locks не работают в transaction mode)
 	migrationsDir := os.Getenv("MIGRATIONS_DIR")
 	if migrationsDir == "" {
 		migrationsDir = "/app/migrations"
 	}
-	if err := database.RunMigrations(db, migrationsDir); err != nil {
+	migrationURL := os.Getenv("MIGRATION_DATABASE_URL")
+	if migrationURL == "" {
+		migrationURL = databaseURL
+	}
+	migrationDB, err := database.NewPostgresDB(migrationURL)
+	if err != nil {
+		log.Fatalf("failed to connect to migration database: %v", err)
+	}
+	if err := database.RunMigrations(migrationDB, migrationsDir); err != nil {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
+	migrationDB.Close()
 
 	// NATS publisher
 	natsPublisher, err := nats.NewPublisher(natsURL)
@@ -112,7 +139,9 @@ func main() {
 		listMembersUC,
 	)
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(metrics.UnaryServerInterceptor()),
+	)
 	boardpb.RegisterBoardServiceServer(grpcServer, handler)
 
 	lis, err := net.Listen("tcp", ":"+port)

@@ -3,6 +3,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    command: ["postgres", "-c", "max_connections=200"]
     environment:
       POSTGRES_USER: yammi
       POSTGRES_PASSWORD: yammi
@@ -39,6 +40,22 @@ services:
       timeout: 3s
       retries: 5
 
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    volumes:
+      - ./deployments/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
+      - ./deployments/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
+    ports:
+      - "6432:6432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 6432 -U yammi || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   # --- Monitoring ---
 
   nats-exporter:
@@ -63,7 +80,7 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_AUTH_ANONYMOUS_ENABLED: "true"
-      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
     volumes:
       - ./deployments/monitoring/grafana/provisioning:/etc/grafana/provisioning
       - ./deployments/monitoring/grafana/dashboards:/var/lib/grafana/dashboards
@@ -80,14 +97,15 @@ services:
       dockerfile: services/auth/Dockerfile
     environment:
       AUTH_GRPC_PORT: "50051"
-      DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_auth?sslmode=disable"
+      DATABASE_URL: "postgres://yammi:yammi@pgbouncer:6432/yammi_auth?sslmode=disable"
+      MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_auth?sslmode=disable"
       NATS_URL: "nats://nats:4222"
       BCRYPT_COST: "8"
       JWT_SEED: "QLVciZ5Cbj3PYXfT2U5Y7DTx+30XaoNBcW4zR4i5y/w="
     deploy:
       replicas: 5
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
       nats:
         condition: service_healthy
@@ -98,12 +116,13 @@ services:
       dockerfile: services/user/Dockerfile
     environment:
       USER_GRPC_PORT: "50052"
-      DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_user?sslmode=disable"
+      DATABASE_URL: "postgres://yammi:yammi@pgbouncer:6432/yammi_user?sslmode=disable"
+      MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_user?sslmode=disable"
       NATS_URL: "nats://nats:4222"
     ports:
       - "50052:50052"
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
       nats:
         condition: service_healthy
@@ -114,13 +133,14 @@ services:
       dockerfile: Dockerfile
     environment:
       BOARD_GRPC_PORT: "50053"
-      DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_board?sslmode=disable"
+      DATABASE_URL: "postgres://yammi:yammi@pgbouncer:6432/yammi_board?sslmode=disable"
+      MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_board?sslmode=disable"
       REDIS_URL: "redis://redis:6379/0"
       NATS_URL: "nats://nats:4222"
     ports:
       - "50053:50053"
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -133,28 +153,31 @@ services:
       dockerfile: Dockerfile
     environment:
       COMMENT_GRPC_PORT: "50054"
-      DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_comment?sslmode=disable"
+      DATABASE_URL: "postgres://yammi:yammi@pgbouncer:6432/yammi_comment?sslmode=disable"
+      MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_comment?sslmode=disable"
       NATS_URL: "nats://nats:4222"
     ports:
       - "50054:50054"
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
       nats:
         condition: service_healthy
 
   notification:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: services/notification/Dockerfile
     environment:
       NOTIFICATION_GRPC_PORT: "50055"
-      DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_notification?sslmode=disable"
+      DATABASE_URL: "postgres://yammi:yammi@pgbouncer:6432/yammi_notification?sslmode=disable"
+      MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_notification?sslmode=disable"
       NATS_URL: "nats://nats:4222"
     ports:
       - "50055:50055"
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
       nats:
         condition: service_healthy

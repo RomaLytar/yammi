@@ -21,5 +21,5 @@ FROM alpine:3.19
 RUN apk add --no-cache ca-certificates
 COPY --from=builder /app/board /app/board
 COPY migrations /app/migrations
-EXPOSE 50053
+EXPOSE 50053 2112
 CMD ["/app/board"]

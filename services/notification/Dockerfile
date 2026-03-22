@@ -22,5 +22,5 @@ FROM alpine:3.19
 RUN apk add --no-cache ca-certificates
 COPY --from=builder /app/notification /app/notification
 COPY --from=builder /build/services/notification/migrations /app/migrations
-EXPOSE 50055
+EXPOSE 50055 2112
 CMD ["/app/notification"]

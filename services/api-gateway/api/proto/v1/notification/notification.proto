@@ -1,0 +1,82 @@
+syntax = "proto3";
+package notification.v1;
+option go_package = "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/notification;notificationpb";
+
+service NotificationService {
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse);
+  rpc MarkAsRead(MarkAsReadRequest) returns (MarkAsReadResponse);
+  rpc MarkAllAsRead(MarkAllAsReadRequest) returns (MarkAllAsReadResponse);
+  rpc GetUnreadCount(GetUnreadCountRequest) returns (GetUnreadCountResponse);
+  rpc GetSettings(GetSettingsRequest) returns (GetSettingsResponse);
+  rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse);
+}
+
+message Notification {
+  string id = 1;
+  string user_id = 2;
+  string type = 3;
+  string title = 4;
+  string message = 5;
+  map<string, string> metadata = 6;
+  bool is_read = 7;
+  string created_at = 8;
+}
+
+message ListNotificationsRequest {
+  string user_id = 1;
+  int32 limit = 2;
+  string cursor = 3;
+  string type_filter = 4;
+  string search = 5;
+}
+
+message ListNotificationsResponse {
+  repeated Notification notifications = 1;
+  string next_cursor = 2;
+  int32 total_unread = 3;
+}
+
+message MarkAsReadRequest {
+  string user_id = 1;
+  repeated string notification_ids = 2;
+}
+
+message MarkAsReadResponse {}
+
+message MarkAllAsReadRequest {
+  string user_id = 1;
+}
+
+message MarkAllAsReadResponse {}
+
+message GetUnreadCountRequest {
+  string user_id = 1;
+}
+
+message GetUnreadCountResponse {
+  int32 count = 1;
+}
+
+message NotificationSettings {
+  string user_id = 1;
+  bool enabled = 2;
+  bool realtime_enabled = 3;
+}
+
+message GetSettingsRequest {
+  string user_id = 1;
+}
+
+message GetSettingsResponse {
+  NotificationSettings settings = 1;
+}
+
+message UpdateSettingsRequest {
+  string user_id = 1;
+  bool enabled = 2;
+  bool realtime_enabled = 3;
+}
+
+message UpdateSettingsResponse {
+  NotificationSettings settings = 1;
+}

@@ -7,205 +7,392 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 100,
-      "title": "Row 1: Operations (counters)",
+      "title": "gRPC Operations",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
           "unit": "ops"
         }
       },
-      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 1 },
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 1 },
       "id": 1,
       "options": {
         "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "list", "placement": "bottom" }
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
       },
-      "title": "Board Operations Total",
-      "description": "Total operations counter by method type",
+      "title": "gRPC запросы (по методу)",
+      "description": "Скорость gRPC запросов: создание/получение/обновление/удаление досок, колонок, карточек, участников",
       "type": "timeseries",
       "targets": [
-        { "expr": "rate(board_operations_total{method=\"create\"}[1m])", "legendFormat": "create (green)" },
-        { "expr": "rate(board_operations_total{method=\"get\"}[1m])", "legendFormat": "get (blue)" },
-        { "expr": "rate(board_operations_total{method=\"list\"}[1m])", "legendFormat": "list (yellow)" },
-        { "expr": "rate(board_operations_total{method=\"update\"}[1m])", "legendFormat": "update (orange)" }
+        { "expr": "sum(rate(board_grpc_requests_total[1m])) by (method)", "legendFormat": "{{ method }}" }
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "ops"
-        }
-      },
-      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 7 },
-      "id": 2,
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      },
-      "title": "Card Operations Total",
-      "description": "Card move operations counter",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "rate(card_operations_total{method=\"move\"}[1m])", "legendFormat": "move (purple)" }
-      ]
-    },
-
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
-      "id": 101,
-      "title": "Row 2: Latency (histograms, p50/p95/p99)",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "s"
-        }
-      },
-      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 14 },
-      "id": 3,
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      },
-      "title": "Board Query Latency - Get Board",
-      "description": "Query duration for get_board operation (p50, p95, p99)",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "board_query_duration_seconds{query=\"get_board\",quantile=\"0.5\"}", "legendFormat": "p50" },
-        { "expr": "board_query_duration_seconds{query=\"get_board\",quantile=\"0.95\"}", "legendFormat": "p95 (threshold: yellow > 200ms, red > 500ms)" },
-        { "expr": "board_query_duration_seconds{query=\"get_board\",quantile=\"0.99\"}", "legendFormat": "p99" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "s",
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.2 },
-              { "color": "red", "value": 0.5 }
-            ]
-          }
-        }
-      },
-      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 14 },
-      "id": 4,
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      },
-      "title": "Card Move Latency - p95",
-      "description": "p95 query duration for move_card operation with thresholds",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "board_query_duration_seconds{query=\"move_card\",quantile=\"0.95\"}", "legendFormat": "p95 move_card" }
-      ]
-    },
-
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 },
-      "id": 102,
-      "title": "Row 3: Cache & Performance",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "unit": "percent",
-          "max": 100,
           "thresholds": {
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "green", "value": 70 }
+              { "color": "green", "value": null }
             ]
           }
         }
       },
-      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 21 },
-      "id": 5,
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "id": 2,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
-      "title": "Board Cache Hit Ratio",
-      "description": "Cache hit ratio gauge (0-100%, green > 70%, yellow 50-70%, red < 50%)",
+      "title": "RPS (req/sec)",
+      "description": "Текущая скорость gRPC запросов в секунду",
       "type": "stat",
       "targets": [
-        { "expr": "board_cache_hit_ratio", "legendFormat": "" }
+        { "expr": "sum(rate(board_grpc_requests_total[1m]))", "legendFormat": "" }
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "unit": "ops",
           "thresholds": {
             "steps": [
               { "color": "green", "value": null },
-              { "color": "red", "value": 100 }
+              { "color": "red", "value": 1 }
             ]
           }
         }
       },
-      "gridPos": { "h": 5, "w": 8, "x": 8, "y": 21 },
-      "id": 6,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
-      },
-      "title": "Optimistic Lock Conflicts",
-      "description": "Conflicts total (red threshold > 100/min)",
-      "type": "stat",
-      "targets": [
-        { "expr": "rate(board_optimistic_lock_conflicts_total[1m])", "legendFormat": "" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "unit": "short",
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 0 }
-            ]
-          }
-        }
-      },
-      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 21 },
-      "id": 7,
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "id": 3,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
-      "title": "Repository Errors",
-      "description": "Total repository errors (red if > 0)",
+      "title": "Ошибки gRPC",
+      "description": "gRPC запросы с ошибками (все кроме OK)",
       "type": "stat",
       "targets": [
-        { "expr": "rate(board_repository_errors_total[1m])", "legendFormat": "" }
+        { "expr": "sum(board_grpc_requests_total{code!=\"OK\"})", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 5 },
+      "id": 4,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Ошибки по методу и коду",
+      "description": "gRPC ошибки разбитые по методу и статус коду",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(board_grpc_requests_total{code!=\"OK\"}[1m])) by (method, code)", "legendFormat": "{{ method }} ({{ code }})" }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 101,
+      "title": "Board / Column / Card / Member Operations",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 10 },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Досок создано",
+      "type": "stat",
+      "targets": [
+        { "expr": "board_grpc_requests_total{method=\"CreateBoard\",code=\"OK\"}", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "purple", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 10 },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Колонок создано",
+      "type": "stat",
+      "targets": [
+        { "expr": "board_grpc_requests_total{method=\"AddColumn\",code=\"OK\"}", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "orange", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 10 },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Карточек создано",
+      "type": "stat",
+      "targets": [
+        { "expr": "board_grpc_requests_total{method=\"CreateCard\",code=\"OK\"}", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 10 },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Участников добавлено",
+      "type": "stat",
+      "targets": [
+        { "expr": "board_grpc_requests_total{method=\"AddMember\",code=\"OK\"}", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 14 },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Досок удалено",
+      "type": "stat",
+      "targets": [
+        { "expr": "board_grpc_requests_total{method=\"DeleteBoard\",code=\"OK\"}", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 14 },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Колонок удалено",
+      "type": "stat",
+      "targets": [
+        { "expr": "board_grpc_requests_total{method=\"DeleteColumn\",code=\"OK\"}", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 14 },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Карточек удалено",
+      "type": "stat",
+      "targets": [
+        { "expr": "board_grpc_requests_total{method=\"DeleteCard\",code=\"OK\"}", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "yellow", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 14 },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Карточек перемещено",
+      "type": "stat",
+      "targets": [
+        { "expr": "board_grpc_requests_total{method=\"MoveCard\",code=\"OK\"}", "legendFormat": "" }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+      "id": 102,
+      "title": "NATS Events Published",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 7, "w": 16, "x": 0, "y": 19 },
+      "id": 13,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+      },
+      "title": "Опубликованные события (по subject)",
+      "description": "NATS события опубликованные Board Service",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(board_events_published_total[1m])", "legendFormat": "{{ subject }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 7, "w": 4, "x": 16, "y": 19 },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Events/sec",
+      "description": "Скорость публикации событий в NATS",
+      "type": "stat",
+      "targets": [
+        { "expr": "sum(rate(board_events_published_total[1m]))", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 7, "w": 4, "x": 20, "y": 19 },
+      "id": 15,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Ошибки публикации",
+      "description": "Ошибки отправки событий в NATS",
+      "type": "stat",
+      "targets": [
+        { "expr": "sum(board_event_publish_errors_total)", "legendFormat": "" }
       ]
     },
 
@@ -213,94 +400,65 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 26 },
       "id": 103,
-      "title": "Row 4: Database (PgBouncer, когда будет)",
+      "title": "Latency",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 20 }
-            ]
-          }
+          "color": { "mode": "palette-classic" },
+          "unit": "s"
         }
       },
-      "gridPos": { "h": 5, "w": 12, "x": 0, "y": 27 },
-      "id": 8,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
-      },
-      "title": "PgBouncer Active Connections",
-      "description": "Active database connections to Board Service DB",
-      "type": "stat",
-      "targets": [
-        { "expr": "pgbouncer_active_connections{database=\"board_service\"}", "legendFormat": "" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 10 },
-              { "color": "red", "value": 50 }
-            ]
-          }
-        }
-      },
-      "gridPos": { "h": 5, "w": 12, "x": 12, "y": 27 },
-      "id": 9,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
-      },
-      "title": "PgBouncer Waiting Clients",
-      "description": "Waiting clients count (yellow > 10, red > 50)",
-      "type": "stat",
-      "targets": [
-        { "expr": "pgbouncer_waiting_clients{database=\"board_service\"}", "legendFormat": "" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" }
-        }
-      },
-      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 32 },
-      "id": 10,
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 27 },
+      "id": 16,
       "options": {
         "tooltip": { "mode": "multi" },
         "legend": { "displayMode": "list", "placement": "bottom" }
       },
-      "title": "PgBouncer Connection Pool Status",
-      "description": "Active and waiting connections trend over time",
+      "title": "gRPC Latency — p50 / p95 / p99",
+      "description": "Длительность gRPC запросов (персентили)",
       "type": "timeseries",
       "targets": [
-        { "expr": "pgbouncer_active_connections{database=\"board_service\"}", "legendFormat": "active" },
-        { "expr": "pgbouncer_waiting_clients{database=\"board_service\"}", "legendFormat": "waiting" }
+        { "expr": "histogram_quantile(0.50, sum(rate(board_grpc_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(board_grpc_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(board_grpc_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "s"
+        }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 27 },
+      "id": 17,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] }
+      },
+      "title": "Latency по методу (p95)",
+      "description": "p95 latency для каждого gRPC метода",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(board_grpc_request_duration_seconds_bucket[5m])) by (le, method))", "legendFormat": "{{ method }}" }
       ]
     }
   ],
   "refresh": "5s",
+  "liveNow": true,
   "schemaVersion": 39,
-  "tags": ["board-service", "operations", "performance"],
+  "tags": ["board-service", "grpc", "events"],
   "templating": { "list": [] },
-  "time": { "from": "now-1h", "to": "now" },
-  "timepicker": {},
+  "time": { "from": "now-5m", "to": "now" },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+  },
   "timezone": "browser",
   "title": "Board Service",
   "uid": "board-service",
-  "version": 1
+  "version": 2
 }

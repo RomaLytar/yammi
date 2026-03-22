@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS column_names;
+DROP TABLE IF EXISTS card_names;
+DROP TABLE IF EXISTS user_names;
+DROP TABLE IF EXISTS board_names;

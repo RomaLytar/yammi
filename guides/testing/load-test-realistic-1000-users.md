@@ -884,3 +884,49 @@ Teardown:
 | Errors | 0% | 0% | 0% | **0.0%** |
 
 **Notification delivery: -59%** (20.8s → 8.6s) при 0% ошибок.
+
+---
+
+## Прогон #27: Split API + Consumer (отдельные процессы)
+
+**Дата:** 2026-03-22
+
+**Архитектура:**
+- `notification-api` — gRPC only, 1 instance, pgbouncer API pool (30 conn)
+- `notification-consumer` — NATS only, 3 instances, pgbouncer-consumer pool (30 conn)
+- Отдельные процессы, независимое масштабирование
+- Health checks `/healthz`, log prefix `[notification-api]`/`[notification-consumer]`
+- Чистая БД, Redis flushed
+
+| Метрика | #26 (1 process, best) | #27 (split processes) | Δ |
+|---------|----------------------|-----------------------|---|
+| Create board p95 | 238ms | **282ms** | +18% |
+| Add member p95 | 664ms | **728ms** | +10% |
+| Create card p95 | 553ms | **600ms** | +8% |
+| Move card p95 | 817ms | **884ms** | +8% |
+| Notifications GET p95 | 66ms | **72ms** | +9% |
+| **Notif delivery p95** | **8583ms** | **14284ms** | **+66%** |
+| Duration p95 | 626ms | **688ms** | +10% |
+| Total requests | 194k | **184k** | -5% |
+| Error rate | 0.0% | **0.0%** | ≈ |
+
+### Анализ
+
+Delivery выросло с 8.6s до 14.3s. API latency на том же уровне (~10% разброс — normal variance). Причины:
+
+1. **NATS consumer overhead** — отдельный процесс = отдельное NATS-соединение, JetStream context, stream creation. Это startup cost, но влияет на throughput при concurrent processing.
+2. **3 consumer processes vs 3 consumer goroutine groups** — отдельные процессы имеют больше overhead (memory, GC, scheduling) чем goroutines внутри одного процесса.
+3. **Cold start** — первый прогон после split, consumer instances прогреваются (name cache, settings cache).
+
+### Ключевой вывод
+
+Split даёт **архитектурный выигрыш** (независимое масштабирование, изоляция), но не latency выигрыш при текущем масштабе. Delivery 14.3s > 8.6s потому что:
+- 3 отдельных процесса создают больше PgBouncer connection churn чем 3 goroutine groups в одном процессе
+- Каждый consumer instance делает отдельный NATS subscribe + JetStream setup
+
+**Когда split оправдан:**
+- При 5+ consumer instances (горизонтальное масштабирование)
+- При CPU saturation на одном процессе
+- При необходимости независимого деплоя API vs Consumer
+
+### Текущий best result остаётся #26 (8.6s delivery)

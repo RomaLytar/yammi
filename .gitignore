@@ -11,3 +11,10 @@
 # Internal guides (not for public repo)
 GUIDE.md
 guides/
+
+# Generated proto (regenerated at build time)
+**/gen/
+
+# Binaries
+**/server
+**/bin/

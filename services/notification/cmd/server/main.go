@@ -97,12 +97,27 @@ func main() {
 		log.Fatal("REDIS_URL is required")
 	}
 
-	// Repositories
+	// Consumer DB (отдельный PgBouncer pool — не блокирует gRPC API)
+	consumerDBURL := os.Getenv("CONSUMER_DATABASE_URL")
+	if consumerDBURL == "" {
+		consumerDBURL = databaseURL // fallback на общий pool
+	}
+	consumerDB, err := database.NewPostgresDB(consumerDBURL)
+	if err != nil {
+		log.Fatalf("failed to connect to consumer database: %v", err)
+	}
+	defer consumerDB.Close()
+	log.Printf("consumer DB pool connected (separate from API)")
+
+	// Repositories (API — через основной pgbouncer)
 	notificationRepo := postgres.NewNotificationRepo(db)
 	settingsRepo := postgres.NewSettingsRepo(db)
-	boardMemberRepo := postgres.NewBoardMemberRepo(db)
 	boardEventRepo := postgres.NewBoardEventRepo(db)
-	nameCacheRepo := postgres.NewNameCacheRepo(db)
+
+	// Repositories (Consumer — через pgbouncer-consumer)
+	boardMemberRepo := postgres.NewBoardMemberRepo(consumerDB)
+	nameCacheRepo := postgres.NewNameCacheRepo(consumerDB)
+	consumerBoardEventRepo := postgres.NewBoardEventRepo(consumerDB)
 
 	// Redis unread counter
 	unreadCounter, err := redispkg.NewUnreadCounter(redisURL)
@@ -117,8 +132,8 @@ func main() {
 	// In-memory name cache (decorator над nameCacheRepo — 0 DB queries на write path)
 	nameCache := cache.NewInMemoryNameCache(nameCacheRepo)
 
-	// NATS consumer (создаём до publisher, чтобы получить JetStream context)
-	createUC := usecase.NewCreateNotificationUseCase(notificationRepo, settingsCache, nil, boardEventRepo, unreadCounter, boardMemberRepo)
+	// NATS consumer (использует consumer DB pool — отдельный от gRPC API)
+	createUC := usecase.NewCreateNotificationUseCase(notificationRepo, settingsCache, nil, consumerBoardEventRepo, unreadCounter, boardMemberRepo)
 
 	consumer, err := natspkg.NewConsumer(natsURL, createUC, boardMemberRepo, nameCache, settingsCache)
 	if err != nil {

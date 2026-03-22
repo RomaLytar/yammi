@@ -2,7 +2,9 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"sync"
 
 	"github.com/RomaLytar/yammi/services/notification/internal/domain"
 )
@@ -11,7 +13,12 @@ type GetUnreadCountUseCase struct {
 	boardEventRepo BoardEventRepository
 	memberRepo     BoardMemberRepository
 	repo           NotificationRepository
-	cache          UnreadCounter // Redis — lazy cache, НЕ источник истины
+	cache          UnreadCounter
+
+	// Singleflight: предотвращает thundering herd при cache miss.
+	// 1000 concurrent miss для одного userID → 1 SQL query, остальные ждут.
+	mu      sync.Mutex
+	inflight map[string]chan struct{}
 }
 
 func NewGetUnreadCountUseCase(
@@ -25,38 +32,68 @@ func NewGetUnreadCountUseCase(
 		memberRepo:     memberRepo,
 		repo:           repo,
 		cache:          cache,
+		inflight:       make(map[string]chan struct{}),
 	}
 }
 
-// Execute: Redis GET (cache hit) → Redis MGET + SQL cursors (cache miss) → SET.
-// Быстрый path: Redis cache hit = O(1). Медленный: MGET + 1 SQL query.
-// При ошибках возвращает 0 (eventual consistency), не таймаутит.
 func (uc *GetUnreadCountUseCase) Execute(ctx context.Context, userID string) (int, error) {
 	if userID == "" {
 		return 0, domain.ErrEmptyUserID
 	}
 
-	// 1. Redis cache (hit = instant, miss = SQL fallback)
+	// 1. Redis cache hit = O(1)
 	if uc.cache != nil {
 		if cached, err := uc.cache.Get(ctx, userID); err == nil && cached >= 0 {
 			return cached, nil
 		}
 	}
 
+	// 2. Singleflight: если уже вычисляем для этого user — ждём
+	uc.mu.Lock()
+	if ch, ok := uc.inflight[userID]; ok {
+		uc.mu.Unlock()
+		<-ch // ждём завершения другого запроса
+		// Теперь результат в Redis cache
+		if uc.cache != nil {
+			if cached, err := uc.cache.Get(ctx, userID); err == nil && cached >= 0 {
+				return cached, nil
+			}
+		}
+		return 0, nil
+	}
+	ch := make(chan struct{})
+	uc.inflight[userID] = ch
+	uc.mu.Unlock()
 
-	// 2. Cache miss → вычисляем: Redis MGET (board seqs) + SQL (user cursors)
+	defer func() {
+		uc.mu.Lock()
+		delete(uc.inflight, userID)
+		close(ch) // разблокируем ожидающих
+		uc.mu.Unlock()
+	}()
+
+	// 3. Вычисляем: Redis MGET (board seqs) + SQL (user cursors)
+	total := uc.computeUnread(ctx, userID)
+
+	// 4. Кэшируем в Redis
+	if uc.cache != nil {
+		_ = uc.cache.Set(ctx, userID, total)
+	}
+
+	return total, nil
+}
+
+func (uc *GetUnreadCountUseCase) computeUnread(ctx context.Context, userID string) int {
 	boardIDs, err := uc.memberRepo.ListBoardIDsByUser(ctx, userID)
 	if err != nil {
 		log.Printf("failed to list boards for user %s: %v", userID, err)
-		boardIDs = nil
+		return 0
 	}
 
 	boardUnread := 0
 	if len(boardIDs) > 0 && uc.cache != nil {
-		// Redis MGET: max_seq per board (1 round-trip, O(1))
 		boardSeqs, _ := uc.cache.GetBoardSeqs(ctx, boardIDs)
 		if len(boardSeqs) > 0 {
-			// SQL: user cursors only (1 lightweight query, no board_events scan)
 			cursors, _ := uc.boardEventRepo.GetUserCursors(ctx, userID, boardIDs)
 			for boardID, maxSeq := range boardSeqs {
 				lastSeen := cursors[boardID]
@@ -65,17 +102,9 @@ func (uc *GetUnreadCountUseCase) Execute(ctx context.Context, userID string) (in
 				}
 			}
 		}
-		// Redis miss для доски = 0 unread (eventually consistent)
-		// Следующий event на доске SET'ит board_seq в Redis
 	}
 
 	directUnread, _ := uc.repo.GetUnreadCount(ctx, userID)
-	total := boardUnread + directUnread
-
-	// 3. Кэшируем в Redis (без TTL — инвалидируется через MarkRead)
-	if uc.cache != nil {
-		_ = uc.cache.Set(ctx, userID, total)
-	}
-
-	return total, nil
+	_ = fmt.Sprintf("") // suppress unused import
+	return boardUnread + directUnread
 }

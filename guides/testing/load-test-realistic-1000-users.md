@@ -754,3 +754,94 @@ Lazy cache лучше чистого SQL (87ms vs 121ms GET), но хуже Redi
 - **Разделить NATS consumer и gRPC server** — разные PgBouncer pools или разные инстансы
 - **Pre-warm Redis cache** при старте теста
 - **PgBouncer pool_size 20 → 50** — увеличить для notification DB
+
+---
+
+## Прогон #25: Чистая БД + Split PgBouncer + Singleflight + In-Memory Cache
+
+**Дата:** 2026-03-22
+
+**Условия:**
+- Чистая БД (все таблицы truncated, NATS streams пересозданы, Redis flushed)
+- Чистый Prometheus (метрики с нуля)
+- 20 members/board
+- 1 notification instance
+- Split PgBouncer: API pool (30 conn) + Consumer pool (30 conn)
+- Singleflight на unread count (предотвращает thundering herd)
+- In-memory name cache (0 DB queries на write path)
+- Redis lazy cache + board_seq MGET
+- k6 teardown: удаление досок + mark all read после теста
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║           НАГРУЗОЧНЫЙ ТЕСТ: 1000 пользователей                 ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Members/board: 20                                              ║
+║                                                                  ║
+║  ── Latency (p95) ──────────────────────────────────────────    ║
+║  Создание доски:          286 ms                                ║
+║  Добавление участника:    756 ms                                ║
+║  Создание колонки:        448 ms                                ║
+║  Создание карточки:       632 ms                                ║
+║  Перемещение карточки:    926 ms                                ║
+║  Нотификации GET:          67 ms                                ║
+║  Notif delivery:         9670 ms                                ║
+║                                                                  ║
+║  ── Throughput ────────────────────────────────────────────────  ║
+║  Total requests:       184,797                                  ║
+║  Failed requests:        0.0%                                   ║
+║  Duration p95:            708 ms                                ║
+║  Error rate:             0.0%                                   ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+### Сравнение с предыдущими (20 members/board)
+
+| Метрика | #11 (baseline 20m) | #12 (consumer groups) | #25 (чистая БД + split pgb) |
+|---------|-------------------|-----------------------|-----------------------------|
+| Create board p95 | 237ms | 322ms | **286ms** |
+| Add member p95 | 592ms | 843ms | **756ms** |
+| Create card p95 | 491ms | 678ms | **632ms** |
+| Move card p95 | 704ms | 1007ms | **926ms** |
+| **Notifications GET p95** | **47ms** | **47ms** | **67ms** |
+| **Notif delivery p95** | **20.8s** | **11.1s** | **9.7s** |
+| Duration p95 | 557ms | 796ms | **708ms** |
+| Total requests | 198k | 171k | **185k** |
+| **Error rate** | **0%** | **0%** | **0.0%** |
+
+### Ключевые результаты
+
+1. **Notif delivery: 9.7s** — лучший результат за все тесты с 20 members/board (-53% vs #11)
+2. **Notifications GET: 67ms** — Redis lazy cache + singleflight работает (0% errors!)
+3. **0.0% errors** — система полностью стабильна
+4. **184k requests** — throughput на уровне #11 (198k), выше чем #12 (171k)
+5. **Split PgBouncer** решил проблему timeout'ов notification GET
+
+### Что дало эффект (по сравнению с #17-#22 где notification таймаутил)
+
+| Оптимизация | Эффект |
+|-------------|--------|
+| Чистая БД (0 rows) | Никакого data bloat, statistics актуальны |
+| Split PgBouncer | Consumer не блокирует gRPC API |
+| Singleflight | Нет thundering herd на cache miss |
+| In-memory name cache | 0 DB queries на event handler write path |
+| Redis board_seq MGET | O(B) read вместо SQL MAX across partitions |
+
+### Архитектура (текущее состояние)
+
+```
+Write path (1 event):
+  1 INSERT board_events (O(1))
+  1 Redis SET board_seq (O(1))
+  1 NATS publish (O(1))
+  TOTAL: O(1), не зависит от N members
+
+Read path (unread count):
+  Redis GET unread:{user} (cache hit = 0.01ms)
+  cache miss → Redis MGET board_seqs + SQL cursors → cache SET
+  singleflight: 1 query per user, не 1000
+
+Teardown:
+  k6 удаляет все доски + mark all read после теста
+```

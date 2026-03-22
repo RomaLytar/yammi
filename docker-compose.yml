@@ -56,6 +56,20 @@ services:
       timeout: 3s
       retries: 5
 
+  pgbouncer-consumer:
+    image: edoburu/pgbouncer:latest
+    volumes:
+      - ./deployments/pgbouncer/pgbouncer-consumer.ini:/etc/pgbouncer/pgbouncer.ini
+      - ./deployments/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 6432 -U yammi || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   # --- Monitoring ---
 
   nats-exporter:
@@ -169,6 +183,7 @@ services:
     environment:
       NOTIFICATION_GRPC_PORT: "50055"
       DATABASE_URL: "postgres://yammi:yammi@pgbouncer:6432/yammi_notification?sslmode=disable"
+      CONSUMER_DATABASE_URL: "postgres://yammi:yammi@pgbouncer-consumer:6432/yammi_notification?sslmode=disable"
       MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_notification?sslmode=disable"
       NATS_URL: "nats://nats:4222"
       REDIS_URL: "redis://redis:6379/1"
@@ -176,6 +191,8 @@ services:
       replicas: 3
     depends_on:
       pgbouncer:
+        condition: service_healthy
+      pgbouncer-consumer:
         condition: service_healthy
       redis:
         condition: service_healthy

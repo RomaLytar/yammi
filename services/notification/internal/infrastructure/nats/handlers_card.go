@@ -24,7 +24,7 @@ func (c *Consumer) buildTitle(ctx context.Context, action, boardID string) strin
 }
 
 func (c *Consumer) subscribeCardCreated() error {
-	_, err := c.js.Subscribe(events.SubjectCardCreated, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectCardCreated, "notification-workers", func(msg *nats.Msg) {
 		var event events.CardCreated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardCreated, err)
@@ -65,7 +65,7 @@ func (c *Consumer) subscribeCardCreated() error {
 }
 
 func (c *Consumer) subscribeCardUpdated() error {
-	_, err := c.js.Subscribe(events.SubjectCardUpdated, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectCardUpdated, "notification-workers", func(msg *nats.Msg) {
 		var event events.CardUpdated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardUpdated, err)
@@ -106,7 +106,7 @@ func (c *Consumer) subscribeCardUpdated() error {
 }
 
 func (c *Consumer) subscribeCardMoved() error {
-	_, err := c.js.Subscribe(events.SubjectCardMoved, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectCardMoved, "notification-workers", func(msg *nats.Msg) {
 		var event events.CardMoved
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardMoved, err)
@@ -151,7 +151,7 @@ func (c *Consumer) subscribeCardMoved() error {
 }
 
 func (c *Consumer) subscribeCardDeleted() error {
-	_, err := c.js.Subscribe(events.SubjectCardDeleted, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectCardDeleted, "notification-workers", func(msg *nats.Msg) {
 		var event events.CardDeleted
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardDeleted, err)

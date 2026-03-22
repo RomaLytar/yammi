@@ -14,20 +14,21 @@ import (
 
 // Consumer versioning: инкремент при изменении логики обработки.
 const (
-	consumerUserCreated    = "notification-service-user-created-v2"
-	consumerBoardCreated   = "notification-service-board-created-v2"
-	consumerBoardUpdated   = "notification-service-board-updated-v2"
-	consumerBoardDeleted   = "notification-service-board-deleted-v2"
-	consumerColumnCreated  = "notification-service-column-created-v2"
-	consumerColumnUpdated  = "notification-service-column-updated-v2"
-	consumerColumnDeleted  = "notification-service-column-deleted-v2"
-	consumerCardCreated    = "notification-service-card-created-v2"
-	consumerCardUpdated    = "notification-service-card-updated-v2"
-	consumerCardMoved      = "notification-service-card-moved-v2"
-	consumerCardDeleted    = "notification-service-card-deleted-v2"
-	consumerMemberAdded    = "notification-service-member-added-v2"
-	consumerMemberRemoved    = "notification-service-member-removed-v2"
-	consumerSettingsUpdated  = "notification-service-settings-updated-v1"
+	// v3: QueueSubscribe для consumer groups (параллельная обработка N инстансами)
+	consumerUserCreated    = "notification-service-user-created-v3"
+	consumerBoardCreated   = "notification-service-board-created-v3"
+	consumerBoardUpdated   = "notification-service-board-updated-v3"
+	consumerBoardDeleted   = "notification-service-board-deleted-v3"
+	consumerColumnCreated  = "notification-service-column-created-v3"
+	consumerColumnUpdated  = "notification-service-column-updated-v3"
+	consumerColumnDeleted  = "notification-service-column-deleted-v3"
+	consumerCardCreated    = "notification-service-card-created-v3"
+	consumerCardUpdated    = "notification-service-card-updated-v3"
+	consumerCardMoved      = "notification-service-card-moved-v3"
+	consumerCardDeleted    = "notification-service-card-deleted-v3"
+	consumerMemberAdded    = "notification-service-member-added-v3"
+	consumerMemberRemoved    = "notification-service-member-removed-v3"
+	consumerSettingsUpdated  = "notification-service-settings-updated-v2"
 
 	maxDeliveries = 7
 	maxAckPending = 500

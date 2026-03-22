@@ -15,7 +15,7 @@ import (
 // --- Board events ---
 
 func (c *Consumer) subscribeBoardCreated() error {
-	_, err := c.js.Subscribe(events.SubjectBoardCreated, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectBoardCreated, "notification-workers", func(msg *nats.Msg) {
 		var event events.BoardCreated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectBoardCreated, err)
@@ -50,7 +50,7 @@ func (c *Consumer) subscribeBoardCreated() error {
 }
 
 func (c *Consumer) subscribeBoardUpdated() error {
-	_, err := c.js.Subscribe(events.SubjectBoardUpdated, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectBoardUpdated, "notification-workers", func(msg *nats.Msg) {
 		var event events.BoardUpdated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectBoardUpdated, err)
@@ -83,7 +83,7 @@ func (c *Consumer) subscribeBoardUpdated() error {
 }
 
 func (c *Consumer) subscribeBoardDeleted() error {
-	_, err := c.js.Subscribe(events.SubjectBoardDeleted, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectBoardDeleted, "notification-workers", func(msg *nats.Msg) {
 		var event events.BoardDeleted
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectBoardDeleted, err)
@@ -125,7 +125,7 @@ func (c *Consumer) subscribeBoardDeleted() error {
 // --- Column events ---
 
 func (c *Consumer) subscribeColumnCreated() error {
-	_, err := c.js.Subscribe(events.SubjectColumnCreated, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectColumnCreated, "notification-workers", func(msg *nats.Msg) {
 		var event events.ColumnCreated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectColumnCreated, err)
@@ -160,7 +160,7 @@ func (c *Consumer) subscribeColumnCreated() error {
 }
 
 func (c *Consumer) subscribeColumnUpdated() error {
-	_, err := c.js.Subscribe(events.SubjectColumnUpdated, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectColumnUpdated, "notification-workers", func(msg *nats.Msg) {
 		var event events.ColumnUpdated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectColumnUpdated, err)
@@ -195,7 +195,7 @@ func (c *Consumer) subscribeColumnUpdated() error {
 }
 
 func (c *Consumer) subscribeColumnDeleted() error {
-	_, err := c.js.Subscribe(events.SubjectColumnDeleted, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectColumnDeleted, "notification-workers", func(msg *nats.Msg) {
 		var event events.ColumnDeleted
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectColumnDeleted, err)

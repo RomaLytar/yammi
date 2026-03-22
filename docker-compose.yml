@@ -172,6 +172,8 @@ services:
       MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_notification?sslmode=disable"
       NATS_URL: "nats://nats:4222"
       REDIS_URL: "redis://redis:6379/1"
+    deploy:
+      replicas: 3
     depends_on:
       pgbouncer:
         condition: service_healthy

@@ -16,7 +16,7 @@ import (
 // --- User events ---
 
 func (c *Consumer) subscribeUserCreated() error {
-	_, err := c.js.Subscribe(events.SubjectUserCreated, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectUserCreated, "notification-workers", func(msg *nats.Msg) {
 		var event events.UserCreated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectUserCreated, err)
@@ -54,7 +54,7 @@ func (c *Consumer) subscribeSettingsUpdated() error {
 		return nil
 	}
 
-	_, err := c.js.Subscribe(events.SubjectNotificationSettingsUpdated, func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectNotificationSettingsUpdated, "notification-workers", func(msg *nats.Msg) {
 		var event events.NotificationSettingsUpdated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on settings.updated: %v", err)

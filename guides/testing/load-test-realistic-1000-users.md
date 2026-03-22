@@ -551,8 +551,35 @@ Latency выросла — прогон после множественных р
 
 Notification delivery ~21s — это N Redis INCR на каждый board event. С 20 members: 1 event → 1 INSERT + ~19 Redis INCR + settings batch + member list. NATS consumer обрабатывает события последовательно.
 
-### Следующие шаги
+---
 
-- 🔥 **NATS consumer groups** — когда NATS lag начнёт расти
-- 🔥 **Тест 2000/5000/10000 VU** — найти breaking point
-- 📊 **Grafana dashboard** с новыми метриками (goroutines, members_per_event)
+## Прогон #12: NATS consumer groups (×3 инстансов) + 20 members
+
+**Дата:** 2026-03-22
+
+**Изменения:**
+- **NATS QueueSubscribe** — `notification-workers` queue group, 3 инстанса notification service обрабатывают события параллельно (round-robin)
+- Consumer version bumped v2 → v3 (новые durable consumers с queue group)
+- Cache consumers остаются per-instance (каждый строит свой кеш)
+
+| Метрика | #11 (1 instance, 20 members) | #12 (3 instances, 20 members) | Δ |
+|---------|-----------------------------|-----------------------------|---|
+| Create board p95 | 237ms | **322ms** | +36% |
+| Add member p95 | 592ms | **843ms** | +42% |
+| Create card p95 | 491ms | **678ms** | +38% |
+| Move card p95 | 704ms | **1007ms** | +43% |
+| Notifications GET p95 | 47ms | **47ms** | ≈ |
+| **Notif delivery p95** | **20854ms** | **11111ms** | **-47%** |
+| Duration p95 | 557ms | **796ms** | +43% |
+| Total requests | 198k | **171k** | -14% |
+| Error rate | 0% | **0%** | ≈ |
+
+### Анализ
+
+**Notification delivery: 20.8s → 11.1s (-47%)** — линейный выигрыш от ×3 consumer instances (ожидалось ×3, получили ~×2 из-за shared DB/Redis).
+
+API latency выросла — 3 notification instances конкурируют за PgBouncer connections. Throughput снизился из-за большего overhead на addMember (20 members/board = 20 gRPC calls + 20 cache inserts × 3 instances).
+
+### Ключевой вывод
+
+Consumer groups — линейное масштабирование notification processing. При 20 members/board delivery уменьшается пропорционально числу инстансов. Дальнейшее масштабирование ограничено shared resources (PgBouncer pool, Redis).

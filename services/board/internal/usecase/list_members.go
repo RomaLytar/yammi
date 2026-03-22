@@ -31,3 +31,9 @@ func (uc *ListMembersUseCase) Execute(ctx context.Context, boardID, userID strin
 	// 2. Загружаем участников
 	return uc.memberRepo.ListMembers(ctx, boardID, 100, 0)
 }
+
+// ExecuteAuthorized загружает участников без проверки доступа.
+// Вызывать только когда доступ уже проверен (например, в GetBoard handler после getBoard.Execute).
+func (uc *ListMembersUseCase) ExecuteAuthorized(ctx context.Context, boardID string) ([]*domain.Member, error) {
+	return uc.memberRepo.ListMembers(ctx, boardID, 100, 0)
+}

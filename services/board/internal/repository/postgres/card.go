@@ -44,18 +44,18 @@ func (r *CardRepository) Create(ctx context.Context, card *domain.Card) error {
 	return nil
 }
 
-// GetByID возвращает карточку по ID (партиции прозрачны)
-func (r *CardRepository) GetByID(ctx context.Context, cardID string) (*domain.Card, error) {
+// GetByID возвращает карточку по ID с проверкой принадлежности к доске (IDOR protection)
+func (r *CardRepository) GetByID(ctx context.Context, cardID, boardID string) (*domain.Card, error) {
 	query := `
 		SELECT id, column_id, title, description, position, assignee_id, creator_id, created_at, updated_at
 		FROM cards
-		WHERE id = $1
+		WHERE id = $1 AND board_id = $2
 	`
 
 	var card domain.Card
 	var assigneeID sql.NullString
 
-	err := r.db.QueryRowContext(ctx, query, cardID).Scan(
+	err := r.db.QueryRowContext(ctx, query, cardID, boardID).Scan(
 		&card.ID, &card.ColumnID, &card.Title, &card.Description,
 		&card.Position, &assigneeID, &card.CreatorID, &card.CreatedAt, &card.UpdatedAt,
 	)

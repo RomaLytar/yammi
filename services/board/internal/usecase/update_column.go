@@ -48,11 +48,9 @@ func (uc *UpdateColumnUseCase) Execute(ctx context.Context, columnID, boardID, u
 		return nil, err
 	}
 
-	// 5. Обновляем updated_at доски
-	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
-
-	// 6. Публикуем событие
+	// 5. Обновляем updated_at доски + публикуем событие (async, non-blocking)
 	go func() {
+		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
 		_ = uc.publisher.PublishColumnUpdated(context.Background(), ColumnUpdated{
 			EventID:      generateEventID(),
 			EventVersion: 1,

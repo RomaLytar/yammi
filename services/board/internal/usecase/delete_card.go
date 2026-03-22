@@ -35,7 +35,7 @@ func (uc *DeleteCardUseCase) Execute(ctx context.Context, cardIDs []string, boar
 	// 2. Если не owner, проверяем что каждая карточка принадлежит пользователю
 	if role != domain.RoleOwner {
 		for _, cardID := range cardIDs {
-			card, err := uc.cardRepo.GetByID(ctx, cardID)
+			card, err := uc.cardRepo.GetByID(ctx, cardID, boardID)
 			if err != nil {
 				return err
 			}
@@ -50,11 +50,9 @@ func (uc *DeleteCardUseCase) Execute(ctx context.Context, cardIDs []string, boar
 		return err
 	}
 
-	// 4. Обновляем updated_at доски
-	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
-
-	// 5. Публикуем события
+	// 4. Обновляем updated_at доски + публикуем события (async, non-blocking)
 	go func() {
+		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
 		for _, cardID := range cardIDs {
 			_ = uc.publisher.PublishCardDeleted(context.Background(), CardDeleted{
 				EventID:      generateEventID(),

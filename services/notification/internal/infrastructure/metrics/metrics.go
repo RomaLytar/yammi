@@ -61,4 +61,16 @@ var (
 		Name: "notification_event_retries_total",
 		Help: "Event processing retries by subject",
 	}, []string{"subject"})
+
+	// BoardEventsCreated — счётчик board events (1 на событие, без fan-out).
+	BoardEventsCreated = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "notification_board_events_created_total",
+		Help: "Board events created (1 per event, replaces N notifications fan-out)",
+	}, []string{"type"})
+
+	// RedisIncrements — счётчик Redis INCR операций для unread counters.
+	RedisIncrements = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "notification_redis_increments_total",
+		Help: "Redis INCR operations for unread counters",
+	})
 )

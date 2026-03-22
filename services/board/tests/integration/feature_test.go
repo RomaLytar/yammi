@@ -512,7 +512,7 @@ func TestFeature_CreateCard_SetsCreatorID(t *testing.T) {
 	}
 
 	// Verify creator_id is set to member's user ID
-	loaded, err := cardRepo.GetByID(ctx, card.ID)
+	loaded, err := cardRepo.GetByID(ctx, card.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to load card: %v", err)
 	}
@@ -602,7 +602,7 @@ func TestFeature_MoveCard_MemberCanMove(t *testing.T) {
 	}
 
 	// Verify in DB
-	loaded, err := cardRepo.GetByID(ctx, card.ID)
+	loaded, err := cardRepo.GetByID(ctx, card.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to load card: %v", err)
 	}
@@ -650,7 +650,7 @@ func TestFeature_MoveCard_NonMemberDenied(t *testing.T) {
 	}
 
 	// Verify card is still in original column
-	loaded, err := cardRepo.GetByID(ctx, card.ID)
+	loaded, err := cardRepo.GetByID(ctx, card.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to load card: %v", err)
 	}
@@ -707,7 +707,7 @@ func TestFeature_UpdateCard_MemberCanUpdate(t *testing.T) {
 	}
 
 	// Verify in DB
-	loaded, err := cardRepo.GetByID(ctx, card.ID)
+	loaded, err := cardRepo.GetByID(ctx, card.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to load card: %v", err)
 	}

@@ -140,10 +140,10 @@ func TestDeleteBoard_CascadeDeletesCards(t *testing.T) {
 	uc := usecase.NewDeleteBoardUseCase(boardRepo, memberRepo, publisher)
 	uc.Execute(ctx, []string{board.ID}, ownerID)
 
-	if _, err := cardRepo.GetByID(ctx, card1.ID); err != domain.ErrCardNotFound {
+	if _, err := cardRepo.GetByID(ctx, card1.ID, board.ID); err != domain.ErrCardNotFound {
 		t.Errorf("Card 1 should be gone after cascade")
 	}
-	if _, err := cardRepo.GetByID(ctx, card2.ID); err != domain.ErrCardNotFound {
+	if _, err := cardRepo.GetByID(ctx, card2.ID, board.ID); err != domain.ErrCardNotFound {
 		t.Errorf("Card 2 should be gone after cascade")
 	}
 }
@@ -181,7 +181,7 @@ func TestDeleteCard_CreatorCanDelete(t *testing.T) {
 		t.Fatalf("Creator should delete own card: %v", err)
 	}
 
-	if _, err := cardRepo.GetByID(ctx, card.ID); err != domain.ErrCardNotFound {
+	if _, err := cardRepo.GetByID(ctx, card.ID, board.ID); err != domain.ErrCardNotFound {
 		t.Errorf("Card should be gone")
 	}
 }
@@ -219,7 +219,7 @@ func TestDeleteCard_OwnerCanDeleteAnyCard(t *testing.T) {
 		t.Fatalf("Owner should delete any card: %v", err)
 	}
 
-	if _, err := cardRepo.GetByID(ctx, card.ID); err != domain.ErrCardNotFound {
+	if _, err := cardRepo.GetByID(ctx, card.ID, board.ID); err != domain.ErrCardNotFound {
 		t.Errorf("Card should be gone")
 	}
 }
@@ -260,7 +260,7 @@ func TestDeleteCard_MemberCannotDeleteOthersCard(t *testing.T) {
 		t.Errorf("Expected ErrAccessDenied, got %v", err)
 	}
 
-	if _, err := cardRepo.GetByID(ctx, card.ID); err != nil {
+	if _, err := cardRepo.GetByID(ctx, card.ID, board.ID); err != nil {
 		t.Errorf("Card should still exist: %v", err)
 	}
 }
@@ -301,7 +301,7 @@ func TestDeleteCard_BatchDelete(t *testing.T) {
 	}
 
 	for _, id := range cardIDs {
-		if _, err := cardRepo.GetByID(ctx, id); err != domain.ErrCardNotFound {
+		if _, err := cardRepo.GetByID(ctx, id, board.ID); err != domain.ErrCardNotFound {
 			t.Errorf("Card %s should be gone", id)
 		}
 	}
@@ -340,7 +340,7 @@ func TestDeleteCard_NonMemberCannotDelete(t *testing.T) {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
 
-	if _, err := cardRepo.GetByID(ctx, card.ID); err != nil {
+	if _, err := cardRepo.GetByID(ctx, card.ID, board.ID); err != nil {
 		t.Errorf("Card should still exist: %v", err)
 	}
 }

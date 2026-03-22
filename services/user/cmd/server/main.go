@@ -14,11 +14,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	userpb "github.com/romanlovesweed/yammi/services/user/api/proto/v1"
-	delivery "github.com/romanlovesweed/yammi/services/user/internal/delivery/grpc"
-	"github.com/romanlovesweed/yammi/services/user/internal/infrastructure"
-	"github.com/romanlovesweed/yammi/services/user/internal/repository/postgres"
-	"github.com/romanlovesweed/yammi/services/user/internal/usecase"
+	userpb "github.com/RomaLytar/yammi/services/user/api/proto/v1"
+	delivery "github.com/RomaLytar/yammi/services/user/internal/delivery/grpc"
+	"github.com/RomaLytar/yammi/services/user/internal/infrastructure"
+	"github.com/RomaLytar/yammi/services/user/internal/repository/postgres"
+	"github.com/RomaLytar/yammi/services/user/internal/usecase"
 )
 
 func main() {

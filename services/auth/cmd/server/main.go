@@ -17,11 +17,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	authpb "github.com/romanlovesweed/yammi/services/auth/api/proto/v1"
-	delivery "github.com/romanlovesweed/yammi/services/auth/internal/delivery/grpc"
-	"github.com/romanlovesweed/yammi/services/auth/internal/infrastructure"
-	"github.com/romanlovesweed/yammi/services/auth/internal/repository/postgres"
-	"github.com/romanlovesweed/yammi/services/auth/internal/usecase"
+	authpb "github.com/RomaLytar/yammi/services/auth/api/proto/v1"
+	delivery "github.com/RomaLytar/yammi/services/auth/internal/delivery/grpc"
+	"github.com/RomaLytar/yammi/services/auth/internal/infrastructure"
+	"github.com/RomaLytar/yammi/services/auth/internal/repository/postgres"
+	"github.com/RomaLytar/yammi/services/auth/internal/usecase"
 )
 
 func main() {

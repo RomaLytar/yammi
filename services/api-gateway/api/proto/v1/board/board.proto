@@ -3,7 +3,7 @@
 syntax = "proto3";
 
 package board.v1;
-option go_package = "github.com/romanlovesweed/yammi/services/api-gateway/api/proto/v1/board;boardpb";
+option go_package = "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board;boardpb";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";

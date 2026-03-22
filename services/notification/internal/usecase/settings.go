@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/romanlovesweed/yammi/services/notification/internal/domain"
+	"github.com/RomaLytar/yammi/services/notification/internal/domain"
 )
 
 type SettingsUseCase struct {

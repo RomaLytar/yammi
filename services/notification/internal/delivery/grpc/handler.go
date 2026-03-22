@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	notificationpb "github.com/romanlovesweed/yammi/services/notification/api/proto/v1"
-	"github.com/romanlovesweed/yammi/services/notification/internal/domain"
-	"github.com/romanlovesweed/yammi/services/notification/internal/usecase"
+	notificationpb "github.com/RomaLytar/yammi/services/notification/api/proto/v1"
+	"github.com/RomaLytar/yammi/services/notification/internal/domain"
+	"github.com/RomaLytar/yammi/services/notification/internal/usecase"
 )
 
 type Handler struct {

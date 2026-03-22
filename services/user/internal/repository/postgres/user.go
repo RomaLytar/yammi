@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/romanlovesweed/yammi/services/user/internal/domain"
+	"github.com/RomaLytar/yammi/services/user/internal/domain"
 )
 
 type UserRepo struct {

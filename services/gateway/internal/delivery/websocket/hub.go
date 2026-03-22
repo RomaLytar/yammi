@@ -19,7 +19,8 @@ type Hub struct {
 	unsubscribe chan *Subscription
 	broadcast  chan *BroadcastMessage
 
-	mu sync.RWMutex
+	done chan struct{}
+	mu   sync.RWMutex
 }
 
 // Subscription — запрос на подписку/отписку клиента от доски.
@@ -49,6 +50,7 @@ func NewHub() *Hub {
 		subscribe:   make(chan *Subscription, 256),
 		unsubscribe: make(chan *Subscription, 256),
 		broadcast:   make(chan *BroadcastMessage, 1024),
+		done:        make(chan struct{}),
 	}
 }
 
@@ -56,6 +58,9 @@ func NewHub() *Hub {
 func (h *Hub) Run() {
 	for {
 		select {
+		case <-h.done:
+			return
+
 		case client := <-h.register:
 			h.addClient(client)
 
@@ -72,6 +77,11 @@ func (h *Hub) Run() {
 			h.handleBroadcast(msg)
 		}
 	}
+}
+
+// Stop gracefully останавливает Hub.
+func (h *Hub) Stop() {
+	close(h.done)
 }
 
 func (h *Hub) addClient(client *Client) {
@@ -145,6 +155,8 @@ func (h *Hub) handleBroadcast(msg *BroadcastMessage) {
 	defer h.mu.RUnlock()
 
 	if msg.BoardID != "" {
+		subs := len(h.boards[msg.BoardID])
+		log.Printf("hub: broadcast to board=%s, subscribers=%d, exclude=%s, payload_len=%d", msg.BoardID, subs, msg.ExcludeUserID, len(msg.Data))
 		h.broadcastToBoard(msg.BoardID, msg.Data, msg.ExcludeUserID)
 	}
 

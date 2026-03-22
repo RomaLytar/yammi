@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 
-	"github.com/romanlovesweed/yammi/pkg/events"
+	"github.com/RomaLytar/yammi/pkg/events"
 )
 
 type NATSPublisher struct {
@@ -30,13 +30,16 @@ func NewNATSPublisher(natsURL string) (*NATSPublisher, error) {
 		return nil, fmt.Errorf("get jetstream context: %w", err)
 	}
 
-	_, err = js.AddStream(&nats.StreamConfig{
+	streamCfg := &nats.StreamConfig{
 		Name:     events.StreamUsers,
 		Subjects: []string{"user.>"},
-		MaxAge:   7 * 24 * time.Hour,
-	})
-	// Стрим может уже существовать (другая реплика создала) — это нормально
-	if err != nil && !isStreamAlreadyExists(err) {
+		MaxAge:   30 * 24 * time.Hour,
+	}
+	_, err = js.AddStream(streamCfg)
+	if err != nil && isStreamAlreadyExists(err) {
+		_, err = js.UpdateStream(streamCfg)
+	}
+	if err != nil {
 		nc.Close()
 		return nil, fmt.Errorf("ensure stream: %w", err)
 	}
@@ -94,5 +97,11 @@ func (p *NATSPublisher) Close() {
 }
 
 func isStreamAlreadyExists(err error) bool {
-	return err != nil && err.Error() == "stream name already in use"
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return msg == "stream name already in use" ||
+		msg == "nats: stream name already in use" ||
+		err == nats.ErrStreamNameAlreadyInUse
 }

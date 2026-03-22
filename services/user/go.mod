@@ -1,11 +1,11 @@
-module github.com/romanlovesweed/yammi/services/user
+module github.com/RomaLytar/yammi/services/user
 
 go 1.24
 
 require (
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/nats-io/nats.go v1.37.0
-	github.com/romanlovesweed/yammi/pkg/events v0.0.0
+	github.com/RomaLytar/yammi/pkg/events v0.0.0
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.2
 )
@@ -18,4 +18,4 @@ require (
 	golang.org/x/sys v0.25.0 // indirect
 )
 
-replace github.com/romanlovesweed/yammi/pkg/events => ../../pkg/events
+replace github.com/RomaLytar/yammi/pkg/events => ../../pkg/events

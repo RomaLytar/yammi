@@ -49,7 +49,7 @@ func TestCardRepository_Create(t *testing.T) {
 	}
 
 	// Verify card exists
-	loaded, err := cardRepo.GetByID(ctx, card.ID)
+	loaded, err := cardRepo.GetByID(ctx, card.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to load card: %v", err)
 	}
@@ -108,7 +108,7 @@ func TestCardRepository_CreateWithoutAssignee(t *testing.T) {
 	}
 
 	// Verify card has no assignee
-	loaded, _ := cardRepo.GetByID(ctx, card.ID)
+	loaded, _ := cardRepo.GetByID(ctx, card.ID, board.ID)
 	if loaded.AssigneeID != nil {
 		t.Errorf("Expected nil assignee, got %v", loaded.AssigneeID)
 	}
@@ -129,7 +129,7 @@ func TestCardRepository_GetByID_NotFound(t *testing.T) {
 	cardRepo := postgres.NewCardRepository(db)
 	ctx := context.Background()
 
-	_, err = cardRepo.GetByID(ctx, uuid.NewString())
+	_, err = cardRepo.GetByID(ctx, uuid.NewString(), uuid.NewString())
 	if err != domain.ErrCardNotFound {
 		t.Errorf("Expected ErrCardNotFound, got %v", err)
 	}
@@ -288,7 +288,7 @@ func TestCardRepository_Update(t *testing.T) {
 	}
 
 	// Verify updates
-	loaded, _ := cardRepo.GetByID(ctx, card.ID)
+	loaded, _ := cardRepo.GetByID(ctx, card.ID, board.ID)
 	if loaded.Title != "Updated Title" {
 		t.Errorf("Expected title 'Updated Title', got %s", loaded.Title)
 	}
@@ -346,7 +346,7 @@ func TestCardRepository_Move(t *testing.T) {
 	}
 
 	// Verify card moved
-	loaded, _ := cardRepo.GetByID(ctx, card.ID)
+	loaded, _ := cardRepo.GetByID(ctx, card.ID, board.ID)
 	if loaded.ColumnID != column2.ID {
 		t.Errorf("Expected column ID %s, got %s", column2.ID, loaded.ColumnID)
 	}
@@ -391,7 +391,7 @@ func TestCardRepository_Delete(t *testing.T) {
 	}
 
 	// Verify deleted
-	_, err = cardRepo.GetByID(ctx, card.ID)
+	_, err = cardRepo.GetByID(ctx, card.ID, board.ID)
 	if err != domain.ErrCardNotFound {
 		t.Errorf("Expected ErrCardNotFound after delete, got %v", err)
 	}

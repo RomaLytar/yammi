@@ -87,3 +87,13 @@ func (r *NameCacheRepo) DeleteColumnName(ctx context.Context, columnID string) e
 	_, err := r.db.ExecContext(ctx, `DELETE FROM column_names WHERE column_id = $1`, columnID)
 	return err
 }
+
+func (r *NameCacheRepo) TruncateCache(ctx context.Context) error {
+	tables := []string{"user_names", "board_names", "card_names", "column_names"}
+	for _, t := range tables {
+		if _, err := r.db.ExecContext(ctx, "DELETE FROM "+t); err != nil {
+			return err
+		}
+	}
+	return nil
+}

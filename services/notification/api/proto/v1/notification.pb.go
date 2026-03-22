@@ -827,7 +827,7 @@ const file_api_proto_v1_notification_proto_rawDesc = "" +
 	"\rMarkAllAsRead\x12%.notification.v1.MarkAllAsReadRequest\x1a&.notification.v1.MarkAllAsReadResponse\x12a\n" +
 	"\x0eGetUnreadCount\x12&.notification.v1.GetUnreadCountRequest\x1a'.notification.v1.GetUnreadCountResponse\x12X\n" +
 	"\vGetSettings\x12#.notification.v1.GetSettingsRequest\x1a$.notification.v1.GetSettingsResponse\x12a\n" +
-	"\x0eUpdateSettings\x12&.notification.v1.UpdateSettingsRequest\x1a'.notification.v1.UpdateSettingsResponseBSZQgithub.com/romanlovesweed/yammi/services/notification/api/proto/v1;notificationpbb\x06proto3"
+	"\x0eUpdateSettings\x12&.notification.v1.UpdateSettingsRequest\x1a'.notification.v1.UpdateSettingsResponseBSZQgithub.com/RomaLytar/yammi/services/notification/api/proto/v1;notificationpbb\x06proto3"
 
 var (
 	file_api_proto_v1_notification_proto_rawDescOnce sync.Once

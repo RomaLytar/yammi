@@ -53,8 +53,8 @@ type CardRepository interface {
 	// Create создает новую карточку
 	Create(ctx context.Context, card *domain.Card) error
 
-	// GetByID возвращает карточку по ID
-	GetByID(ctx context.Context, cardID string) (*domain.Card, error)
+	// GetByID возвращает карточку по ID (фильтруется по boardID для защиты от IDOR)
+	GetByID(ctx context.Context, cardID, boardID string) (*domain.Card, error)
 
 	// GetLastInColumn возвращает последнюю карточку в колонке (для генерации lexorank)
 	GetLastInColumn(ctx context.Context, columnID string) (*domain.Card, error)

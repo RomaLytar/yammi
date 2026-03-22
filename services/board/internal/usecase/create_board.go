@@ -32,7 +32,7 @@ func (uc *CreateBoardUseCase) Execute(ctx context.Context, title, description, o
 		return nil, err
 	}
 
-	// 3. Публикуем событие (async, non-blocking)
+	// 3. Публикуем события (async, non-blocking)
 	go func() {
 		_ = uc.publisher.PublishBoardCreated(context.Background(), BoardCreated{
 			EventID:      generateEventID(),
@@ -42,6 +42,17 @@ func (uc *CreateBoardUseCase) Execute(ctx context.Context, title, description, o
 			OwnerID:      board.OwnerID,
 			Title:        board.Title,
 			Description:  board.Description,
+		})
+		// Публикуем MemberAdded для owner — notification cache должен узнать об участнике
+		_ = uc.publisher.PublishMemberAdded(context.Background(), MemberAdded{
+			EventID:      generateEventID(),
+			EventVersion: 1,
+			OccurredAt:   board.CreatedAt,
+			BoardID:      board.ID,
+			UserID:       board.OwnerID,
+			ActorID:      board.OwnerID,
+			Role:         string(domain.RoleOwner),
+			BoardTitle:   board.Title,
 		})
 	}()
 

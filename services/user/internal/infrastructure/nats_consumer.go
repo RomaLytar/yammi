@@ -10,9 +10,9 @@ import (
 
 	"github.com/nats-io/nats.go"
 
-	"github.com/romanlovesweed/yammi/pkg/events"
-	"github.com/romanlovesweed/yammi/services/user/internal/domain"
-	"github.com/romanlovesweed/yammi/services/user/internal/usecase"
+	"github.com/RomaLytar/yammi/pkg/events"
+	"github.com/RomaLytar/yammi/services/user/internal/domain"
+	"github.com/RomaLytar/yammi/services/user/internal/usecase"
 )
 
 // Consumer versioning: инкремент версии при изменении логики обработки событий.
@@ -46,24 +46,30 @@ func NewNATSConsumer(natsURL string, uc *usecase.UserUseCase) (*NATSConsumer, er
 		return nil, fmt.Errorf("get jetstream context: %w", err)
 	}
 
-	// Ensure USERS stream (может уже существовать — другая реплика создала)
-	_, err = js.AddStream(&nats.StreamConfig{
+	// Ensure USERS stream
+	usersCfg := &nats.StreamConfig{
 		Name:     events.StreamUsers,
 		Subjects: []string{"user.>"},
-		MaxAge:   7 * 24 * time.Hour,
-	})
-	if err != nil && !isStreamAlreadyExists(err) {
+		MaxAge:   30 * 24 * time.Hour,
+	}
+	if _, err = js.AddStream(usersCfg); err != nil && isStreamAlreadyExists(err) {
+		_, err = js.UpdateStream(usersCfg)
+	}
+	if err != nil {
 		nc.Close()
 		return nil, fmt.Errorf("ensure users stream: %w", err)
 	}
 
-	// Ensure DLQ stream (30 days retention for investigation)
-	_, err = js.AddStream(&nats.StreamConfig{
+	// Ensure DLQ stream
+	dlqCfg := &nats.StreamConfig{
 		Name:     events.StreamDLQ,
 		Subjects: []string{"dlq.>"},
 		MaxAge:   30 * 24 * time.Hour,
-	})
-	if err != nil && !isStreamAlreadyExists(err) {
+	}
+	if _, err = js.AddStream(dlqCfg); err != nil && isStreamAlreadyExists(err) {
+		_, err = js.UpdateStream(dlqCfg)
+	}
+	if err != nil {
 		nc.Close()
 		return nil, fmt.Errorf("ensure dlq stream: %w", err)
 	}
@@ -184,5 +190,11 @@ func (c *NATSConsumer) subscribeUserDeleted() error {
 }
 
 func isStreamAlreadyExists(err error) bool {
-	return err != nil && err.Error() == "stream name already in use"
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return msg == "stream name already in use" ||
+		msg == "nats: stream name already in use" ||
+		err == nats.ErrStreamNameAlreadyInUse
 }

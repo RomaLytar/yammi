@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/romanlovesweed/yammi/services/gateway/internal/delivery/websocket"
-	"github.com/romanlovesweed/yammi/services/gateway/internal/infrastructure/auth"
-	"github.com/romanlovesweed/yammi/services/gateway/internal/infrastructure/queue"
+	"github.com/RomaLytar/yammi/services/gateway/internal/delivery/websocket"
+	"github.com/RomaLytar/yammi/services/gateway/internal/infrastructure/auth"
+	"github.com/RomaLytar/yammi/services/gateway/internal/infrastructure/queue"
 )
 
 func main() {
@@ -81,6 +81,7 @@ func main() {
 
 	log.Println("ws-gateway shutting down...")
 
+	hub.Stop()
 	consumer.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

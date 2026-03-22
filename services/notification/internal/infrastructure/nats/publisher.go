@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 
-	"github.com/romanlovesweed/yammi/pkg/events"
-	"github.com/romanlovesweed/yammi/services/notification/internal/domain"
+	"github.com/RomaLytar/yammi/pkg/events"
+	"github.com/RomaLytar/yammi/services/notification/internal/domain"
 )
 
 type Publisher struct {
@@ -53,6 +53,36 @@ func (p *Publisher) PublishNotificationsBatch(ctx context.Context, notifications
 			return err
 		}
 	}
+	return nil
+}
+
+// PublishBoardEventNotification публикует ОДНО событие для WebSocket push.
+// Gateway рассылает подписчикам доски (вместо N отдельных notification.created).
+func (p *Publisher) PublishBoardEventNotification(ctx context.Context, event *domain.BoardEvent) error {
+	// Формат совместимый с фронтендом (те же поля что notification.created)
+	payload := map[string]interface{}{
+		"id":         event.ID,
+		"event_id":   event.ID,
+		"board_id":   event.BoardID,
+		"actor_id":   event.ActorID,
+		"type":       string(event.EventType),
+		"title":      event.Title,
+		"message":    event.Message,
+		"metadata":   event.Metadata,
+		"created_at": event.CreatedAt,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal board event notification: %w", err)
+	}
+
+	// Публикуем на отдельный subject — gateway подписан и broadcast'ит подписчикам board
+	_, err = p.js.Publish("notification.board_event", data)
+	if err != nil {
+		return fmt.Errorf("publish notification.board_event: %w", err)
+	}
+
 	return nil
 }
 

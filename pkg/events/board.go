@@ -130,8 +130,8 @@ type CardMoved struct {
 	CardID         string    `json:"card_id"`
 	BoardID        string    `json:"board_id"`
 	ActorID        string    `json:"actor_id"`
-	SourceColumnID string    `json:"source_column_id"`
-	TargetColumnID string    `json:"target_column_id"`
+	FromColumnID   string    `json:"from_column_id"`
+	ToColumnID     string    `json:"to_column_id"`
 	NewPosition    string    `json:"new_position"`
 }
 

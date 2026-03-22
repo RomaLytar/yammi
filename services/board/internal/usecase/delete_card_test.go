@@ -31,7 +31,6 @@ func TestDeleteCardUseCase_Execute(t *testing.T) {
 			setupMocks: func(cardRepo *MockCardRepository, boardRepo *MockBoardRepository, memberRepo *MockMembershipRepository, publisher *MockEventPublisher) {
 				memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").Return(true, domain.RoleOwner, nil)
 				cardRepo.On("BatchDelete", mock.Anything, "board-123", []string{"card-123"}).Return(nil)
-				boardRepo.On("TouchUpdatedAt", mock.Anything, "board-123").Return(nil)
 			},
 			wantErr: false,
 		},
@@ -42,7 +41,7 @@ func TestDeleteCardUseCase_Execute(t *testing.T) {
 			userID:  "user-456",
 			setupMocks: func(cardRepo *MockCardRepository, boardRepo *MockBoardRepository, memberRepo *MockMembershipRepository, publisher *MockEventPublisher) {
 				memberRepo.On("IsMember", mock.Anything, "board-123", "user-456").Return(true, domain.RoleMember, nil)
-				cardRepo.On("GetByID", mock.Anything, "card-123").Return(&domain.Card{
+				cardRepo.On("GetByID", mock.Anything, "card-123", "board-123").Return(&domain.Card{
 					ID:        "card-123",
 					ColumnID:  "column-1",
 					Title:     "Test Card",
@@ -52,7 +51,6 @@ func TestDeleteCardUseCase_Execute(t *testing.T) {
 					UpdatedAt: now,
 				}, nil)
 				cardRepo.On("BatchDelete", mock.Anything, "board-123", []string{"card-123"}).Return(nil)
-				boardRepo.On("TouchUpdatedAt", mock.Anything, "board-123").Return(nil)
 			},
 			wantErr: false,
 		},
@@ -74,7 +72,7 @@ func TestDeleteCardUseCase_Execute(t *testing.T) {
 			userID:  "user-456",
 			setupMocks: func(cardRepo *MockCardRepository, boardRepo *MockBoardRepository, memberRepo *MockMembershipRepository, publisher *MockEventPublisher) {
 				memberRepo.On("IsMember", mock.Anything, "board-123", "user-456").Return(true, domain.RoleMember, nil)
-				cardRepo.On("GetByID", mock.Anything, "card-123").Return(&domain.Card{
+				cardRepo.On("GetByID", mock.Anything, "card-123", "board-123").Return(&domain.Card{
 					ID:        "card-123",
 					ColumnID:  "column-1",
 					Title:     "Test Card",
@@ -95,7 +93,6 @@ func TestDeleteCardUseCase_Execute(t *testing.T) {
 			setupMocks: func(cardRepo *MockCardRepository, boardRepo *MockBoardRepository, memberRepo *MockMembershipRepository, publisher *MockEventPublisher) {
 				memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").Return(true, domain.RoleOwner, nil)
 				cardRepo.On("BatchDelete", mock.Anything, "board-123", []string{"card-1", "card-2", "card-3"}).Return(nil)
-				boardRepo.On("TouchUpdatedAt", mock.Anything, "board-123").Return(nil)
 			},
 			wantErr: false,
 		},
@@ -106,7 +103,7 @@ func TestDeleteCardUseCase_Execute(t *testing.T) {
 			userID:  "user-456",
 			setupMocks: func(cardRepo *MockCardRepository, boardRepo *MockBoardRepository, memberRepo *MockMembershipRepository, publisher *MockEventPublisher) {
 				memberRepo.On("IsMember", mock.Anything, "board-123", "user-456").Return(true, domain.RoleMember, nil)
-				cardRepo.On("GetByID", mock.Anything, "card-999").Return(nil, domain.ErrCardNotFound)
+				cardRepo.On("GetByID", mock.Anything, "card-999", "board-123").Return(nil, domain.ErrCardNotFound)
 			},
 			wantErr:     true,
 			expectedErr: domain.ErrCardNotFound,
@@ -119,7 +116,6 @@ func TestDeleteCardUseCase_Execute(t *testing.T) {
 			setupMocks: func(cardRepo *MockCardRepository, boardRepo *MockBoardRepository, memberRepo *MockMembershipRepository, publisher *MockEventPublisher) {
 				memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").Return(true, domain.RoleOwner, nil)
 				cardRepo.On("BatchDelete", mock.Anything, "board-123", []string{}).Return(nil)
-				boardRepo.On("TouchUpdatedAt", mock.Anything, "board-123").Return(nil)
 			},
 			wantErr: false,
 		},

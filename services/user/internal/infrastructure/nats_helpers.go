@@ -8,7 +8,7 @@ import (
 
 	"github.com/nats-io/nats.go"
 
-	"github.com/romanlovesweed/yammi/pkg/events"
+	"github.com/RomaLytar/yammi/pkg/events"
 )
 
 const (

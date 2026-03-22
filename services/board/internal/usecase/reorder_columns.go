@@ -59,16 +59,14 @@ func (uc *ReorderColumnsUseCase) Execute(ctx context.Context, boardID, userID st
 		return nil, err
 	}
 
-	// 5. Обновляем updated_at доски
-	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
-
-	// 6. Публикуем событие
+	// 5. Обновляем updated_at доски + публикуем событие (async, non-blocking)
 	columnIDs := make([]string, len(columns))
 	for i, col := range columns {
 		columnIDs[i] = col.ID
 	}
 
 	go func() {
+		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
 		_ = uc.publisher.PublishColumnsReordered(context.Background(), ColumnsReordered{
 			EventID:      generateEventID(),
 			EventVersion: 1,

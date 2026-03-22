@@ -1,3 +1,3 @@
-module github.com/romanlovesweed/yammi/tests/integration
+module github.com/RomaLytar/yammi/tests/integration
 
 go 1.24

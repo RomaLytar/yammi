@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/romanlovesweed/yammi/services/auth/internal/domain"
+	"github.com/RomaLytar/yammi/services/auth/internal/domain"
 )
 
 func (uc *AuthUseCase) Register(ctx context.Context, email, password, name string) (userID, accessToken, refreshToken string, err error) {
@@ -33,9 +33,12 @@ func (uc *AuthUseCase) Register(ctx context.Context, email, password, name strin
 		return "", "", "", err
 	}
 
-	if err := uc.eventPublisher.PublishUserCreated(ctx, user.ID, user.Email, user.Name); err != nil {
-		log.Printf("WARNING: failed to publish UserCreated event for user %s: %v", user.ID, err)
-	}
+	// Публикуем событие (async, non-blocking — не задерживаем ответ клиенту)
+	go func() {
+		if err := uc.eventPublisher.PublishUserCreated(context.Background(), user.ID, user.Email, user.Name); err != nil {
+			log.Printf("WARNING: failed to publish UserCreated event for user %s: %v", user.ID, err)
+		}
+	}()
 
 	return user.ID, accessToken, rt.Token, nil
 }
@@ -45,9 +48,12 @@ func (uc *AuthUseCase) DeleteUser(ctx context.Context, userID string) error {
 		return err
 	}
 
-	if err := uc.eventPublisher.PublishUserDeleted(ctx, userID); err != nil {
-		log.Printf("WARNING: failed to publish UserDeleted event for user %s: %v", userID, err)
-	}
+	// Публикуем событие (async, non-blocking)
+	go func() {
+		if err := uc.eventPublisher.PublishUserDeleted(context.Background(), userID); err != nil {
+			log.Printf("WARNING: failed to publish UserDeleted event for user %s: %v", userID, err)
+		}
+	}()
 
 	return nil
 }

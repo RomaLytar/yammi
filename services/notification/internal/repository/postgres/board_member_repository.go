@@ -59,3 +59,30 @@ func (r *BoardMemberRepo) ListMemberIDs(ctx context.Context, boardID string) ([]
 	}
 	return ids, rows.Err()
 }
+
+func (r *BoardMemberRepo) ListBoardIDsByUser(ctx context.Context, userID string) ([]string, error) {
+	query := `SELECT board_id FROM board_members WHERE user_id = $1`
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list boards by user: %w", err)
+	}
+	defer rows.Close()
+
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan board id: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
+
+func (r *BoardMemberRepo) TruncateCache(ctx context.Context) error {
+	_, err := r.db.ExecContext(ctx, "DELETE FROM board_members")
+	if err != nil {
+		return fmt.Errorf("truncate board_members: %w", err)
+	}
+	return nil
+}

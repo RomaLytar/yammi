@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/romanlovesweed/yammi/services/notification/internal/domain"
-	"github.com/romanlovesweed/yammi/services/notification/internal/usecase"
+	"github.com/RomaLytar/yammi/services/notification/internal/domain"
+	"github.com/RomaLytar/yammi/services/notification/internal/usecase"
 )
 
 // SettingsCache — in-memory кеш настроек уведомлений.

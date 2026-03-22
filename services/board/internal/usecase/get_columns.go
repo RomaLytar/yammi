@@ -31,3 +31,9 @@ func (uc *GetColumnsUseCase) Execute(ctx context.Context, boardID, userID string
 	// 2. Загружаем колонки
 	return uc.columnRepo.ListByBoardID(ctx, boardID)
 }
+
+// ExecuteAuthorized загружает колонки без проверки доступа.
+// Вызывать только когда доступ уже проверен (например, в GetBoard handler после getBoard.Execute).
+func (uc *GetColumnsUseCase) ExecuteAuthorized(ctx context.Context, boardID string) ([]*domain.Column, error) {
+	return uc.columnRepo.ListByBoardID(ctx, boardID)
+}

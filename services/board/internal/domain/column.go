@@ -14,6 +14,7 @@ type Column struct {
 	Title     string
 	Position  int       // INT позиция (колонок обычно <= 20, reorder редкий)
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // NewColumn создает новую колонку с валидацией
@@ -30,12 +31,14 @@ func NewColumn(boardID, title string, position int) (*Column, error) {
 		return nil, ErrInvalidPosition
 	}
 
+	now := time.Now()
 	return &Column{
 		ID:        uuid.NewString(),
 		BoardID:   boardID,
 		Title:     title,
 		Position:  position,
-		CreatedAt: time.Now(),
+		CreatedAt: now,
+		UpdatedAt: now,
 	}, nil
 }
 
@@ -46,6 +49,7 @@ func (c *Column) Update(title string) error {
 	}
 
 	c.Title = title
+	c.UpdatedAt = time.Now()
 	return nil
 }
 

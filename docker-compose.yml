@@ -135,14 +135,11 @@ services:
       BOARD_GRPC_PORT: "50053"
       DATABASE_URL: "postgres://yammi:yammi@pgbouncer:6432/yammi_board?sslmode=disable"
       MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_board?sslmode=disable"
-      REDIS_URL: "redis://redis:6379/0"
       NATS_URL: "nats://nats:4222"
     ports:
       - "50053:50053"
     depends_on:
       pgbouncer:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       nats:
         condition: service_healthy
@@ -174,10 +171,13 @@ services:
       DATABASE_URL: "postgres://yammi:yammi@pgbouncer:6432/yammi_notification?sslmode=disable"
       MIGRATION_DATABASE_URL: "postgres://yammi:yammi@postgres:5432/yammi_notification?sslmode=disable"
       NATS_URL: "nats://nats:4222"
+      REDIS_URL: "redis://redis:6379/1"
     ports:
       - "50055:50055"
     depends_on:
       pgbouncer:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       nats:
         condition: service_healthy

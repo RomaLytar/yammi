@@ -38,18 +38,19 @@ func (s *BoardServiceServer) GetBoard(ctx context.Context, req *boardpb.GetBoard
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
+	// 1. Загружаем доску (включает проверку IsMember)
 	board, err := s.getBoard.Execute(ctx, req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
 
-	// Загружаем columns и members отдельно (granular API)
-	columns, err := s.getColumns.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	// 2. Доступ проверен — загружаем columns и members без повторного IsMember
+	columns, err := s.getColumns.ExecuteAuthorized(ctx, req.GetBoardId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
 
-	members, err := s.listMembers.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	members, err := s.listMembers.ExecuteAuthorized(ctx, req.GetBoardId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

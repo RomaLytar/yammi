@@ -1,6 +1,6 @@
 syntax = "proto3";
 package user.v1;
-option go_package = "github.com/romanlovesweed/yammi/services/user/api/proto/v1;userpb";
+option go_package = "github.com/RomaLytar/yammi/services/user/api/proto/v1;userpb";
 
 service UserService {
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);

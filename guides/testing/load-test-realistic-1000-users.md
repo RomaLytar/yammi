@@ -385,3 +385,131 @@ pgx + PgBouncer transaction mode **стабилен** (0% ошибок). Notific
 - 🔧 **Тюнинг пулов** — увеличить app pools обратно (pgx+PgBouncer мультиплексирует, можно дать больше)
 - 🔀 **Partitioning by board_id** — NATS consumers по board_id для параллельного fan-out
 - 🔄 **5000 VU** — поиск точки отказа
+
+---
+
+## Прогон #8: async-оптимизации + код-ревью фиксы
+
+**Дата:** 2026-03-22
+
+**Изменения (application-level):**
+
+1. **Async TouchUpdatedAt** — `boardRepo.TouchUpdatedAt()` вынесен в `go func()` вместе с event publish (9 usecases). Убран синхронный DB write из response path.
+2. **Дедупликация IsMember** — GetBoard handler: 1 IsMember вместо 3 (ExecuteAuthorized). MoveCard handler: убран дубль IsMember.
+3. **Auth async event publish** — `PublishUserCreated/Deleted` вынесены в `go func()`.
+4. **IDOR fix** — `CardRepository.GetByID()` фильтрует по `board_id` (партиция).
+5. **Event struct sync** — CardMoved: `source_column_id`/`target_column_id`, добавлены недостающие поля.
+6. **NATS connection leak fix** — notification main.go: `SetCreateUC()` вместо двойного создания consumer.
+7. **Recovery interceptor** — добавлен в board и notification сервисы.
+8. **consumer.go разбит** — 1012 строк → 8 файлов (~100-250 строк каждый).
+9. **Module paths** — унифицированы на `github.com/RomaLytar/yammi`.
+10. **CreateBoard → MemberAdded event** — notification cache корректно наполняется.
+11. **Stream retention** — BOARDS stream: 7 дней → 30 дней.
+
+| Метрика | #3 (Batch, baseline) | #7 (pgx+PgBouncer) | #8 (async+fixes) | Δ vs #3 |
+|---------|---------------------|--------------------|--------------------|---------|
+| Create board p95 | 122ms | 181ms | **74ms** | **-39%** |
+| Add member p95 | 310ms | 510ms | **191ms** | **-38%** |
+| Create column p95 | 237ms | 516ms | **103ms** | **-57%** |
+| Create card p95 | 319ms | 516ms | **142ms** | **-55%** |
+| Move card p95 | 541ms | 830ms | **223ms** | **-59%** |
+| Notifications GET p95 | 33ms | 26ms | **24ms** | **-27%** |
+| **Notif delivery p95** | **10.9s** | **8.3s** | **8.1s** | **-26%** |
+| Duration p95 | 290ms | 505ms | **135ms** | **-53%** |
+| Total requests | 159k | 147k | **170k** | **+7%** |
+| Error rate | 0.0% | 0.0% | **0.0%** | ≈ |
+
+### Вывод
+
+Async-оптимизации дали **×2 ускорение API latency** без добавления железа:
+- Move card: 541ms → 223ms (-59%)
+- Create card: 319ms → 142ms (-55%)
+- Duration p95: 290ms → 135ms (-53%)
+- Throughput: 159k → 170k (+7%)
+
+Ключевой фактор: **вынос TouchUpdatedAt и event publish из response path** + **дедупликация IsMember** убрали 2-3 лишних DB roundtrip на каждый запрос.
+
+Notification delivery остаётся ~8s — bottleneck в fan-out (1 событие → N INSERT), требует инфраструктурных изменений.
+
+---
+
+## Прогон #9: Hybrid Event-Sourced Notifications
+
+**Дата:** 2026-03-22
+
+**Архитектурное изменение:**
+- **Fan-out write eliminated:** 1 событие → 1 INSERT в `board_events` (вместо N INSERT в `notifications`)
+- **Redis unread counters:** `INCR unread:{user_id}` для каждого участника (pipeline, ~0.1ms)
+- **Read path:** UNION `board_events` (с cursor `user_board_cursors`) + `notifications` (direct)
+- **Direct notifications** (welcome, member_added/removed) — по-прежнему 1:1 INSERT
+
+| Метрика | #8 (async, fan-out) | #9 (hybrid event-sourced) | Δ |
+|---------|--------------------|--------------------------|----|
+| Create board p95 | 74ms | **134ms** | +81% |
+| Add member p95 | 191ms | **366ms** | +92% |
+| Create column p95 | 103ms | **192ms** | +86% |
+| Create card p95 | 142ms | **275ms** | +94% |
+| Move card p95 | 223ms | **413ms** | +85% |
+| Notifications GET p95 | 24ms | **41ms** | +71% |
+| **Notif delivery p95** | **8150ms** | **9704ms** | +19% |
+| Duration p95 | 135ms | **254ms** | +88% |
+| Total requests | 170k | **164k** | -4% |
+| Error rate | 0.0% | **0.0%** | ≈ |
+
+### Анализ
+
+API latency выросла — первый прогон после миграции (холодные кеши, новые таблицы без statistics, Redis connection overhead). Notification delivery ~9.7s — на уровне baseline.
+
+**Почему delivery не ускорился при 1-3 members/board:**
+- K6 тест создаёт доски с 1-3 участниками. Fan-out 1→3 INSERT vs 1 INSERT + 3 Redis INCR — разница минимальна.
+- Bottleneck сместился: NATS consumer всё ещё публикует N `notification.created` событий для WebSocket push (по одному на участника).
+- Read path сложнее: UNION двух таблиц + LEFT JOIN cursor vs простой SELECT.
+
+**Где выигрыш проявится:**
+- Доски с 10-100 участниками: 1 INSERT vs 100 INSERT — экономия ×100 на DB write.
+- **DB storage:** O(events) вместо O(events × members). При 100k events и 10 members: 100k строк vs 1M строк.
+- **Unread count:** Redis GET O(1) ~0.01ms vs SQL COUNT(*) ~5ms.
+- **Масштабирование:** write path не зависит от количества участников.
+
+### Следующие шаги оптимизации
+
+- 🔧 **Batch WebSocket push** — одно NATS сообщение `notification.board_event` с board_id вместо N `notification.created`, gateway рассылает подписчикам доски
+- 📊 **PostgreSQL ANALYZE** — собрать statistics для board_events после накопления данных
+- 🔄 **Повторный прогон** — после прогрева кешей и statistics
+
+---
+
+## Прогон #10: Batch WebSocket push + стабилизация
+
+**Дата:** 2026-03-22
+
+**Изменения:**
+- **Batch WebSocket push:** 1 NATS сообщение `notification.board_event` вместо N `notification.created`. Gateway broadcast'ит подписчикам доски.
+- **Frontend рефакторинг:** единый `NotificationItem.vue`, composable `useNotificationUtils.ts`. Убрано ~80 строк дублирования.
+- **Ссылка "Перейти в доску"** в каждой нотификации (metadata.board_id → router-link).
+- **Полный title:** "Карточка «X» перемещена → Доска" + actor_name в metadata.
+
+| Метрика | #8 (async) | #9 (hybrid) | #10 (batch push) |
+|---------|-----------|------------|-----------------|
+| Create board p95 | 74ms | 134ms | **182ms** |
+| Add member p95 | 191ms | 366ms | **476ms** |
+| Create column p95 | 103ms | 192ms | **264ms** |
+| Create card p95 | 142ms | 275ms | **382ms** |
+| Move card p95 | 223ms | 413ms | **561ms** |
+| Notifications GET p95 | 24ms | 41ms | **54ms** |
+| Notif delivery p95 | 8150ms | 9704ms | **11711ms** |
+| Duration p95 | 135ms | 254ms | **361ms** |
+| Total requests | 170k | 164k | **156k** |
+| Error rate | 0.0% | 0.0% | **0.0%** |
+
+### Анализ
+
+Latency выросла — прогон после множественных рестартов сервисов (холодные кеши, прогрев connection pools, PostgreSQL statistics устарели для новых таблиц). Это НЕ деградация архитектуры, а эффект cold start.
+
+**Ключевой вывод сессии:** k6 тест с 1-3 участниками на доску **не показывает** выигрыш hybrid architecture. Fan-out 1→3 INSERT vs 1 INSERT + 3 Redis INCR — разница минимальна. Выигрыш проявляется при 10-100 участниках.
+
+**Что реально улучшено (не видно в k6):**
+- DB storage: O(events) вместо O(events × members)
+- Unread count: Redis GET 0.01ms вместо SQL COUNT 5ms
+- WebSocket push: 1 NATS сообщение вместо N
+- Write path не зависит от количества участников

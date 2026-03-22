@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/romanlovesweed/yammi/services/notification/internal/domain"
+	"github.com/RomaLytar/yammi/services/notification/internal/domain"
 )
 
 type SettingsRepo struct {

@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/romanlovesweed/yammi/services/auth/internal/domain"
+	"github.com/RomaLytar/yammi/services/auth/internal/domain"
 )
 
 func (uc *AuthUseCase) RefreshToken(ctx context.Context, token string) (accessToken, newRefreshToken string, err error) {

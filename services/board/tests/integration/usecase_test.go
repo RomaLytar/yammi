@@ -297,7 +297,7 @@ func TestCreateCardUseCase_Integration(t *testing.T) {
 	}
 
 	// Verify in DB
-	loaded, err := cardRepo.GetByID(ctx, card.ID)
+	loaded, err := cardRepo.GetByID(ctx, card.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to load card: %v", err)
 	}
@@ -371,7 +371,7 @@ func TestMoveCardUseCase_Integration(t *testing.T) {
 	}
 
 	// Verify in DB
-	loaded, err := cardRepo.GetByID(ctx, card.ID)
+	loaded, err := cardRepo.GetByID(ctx, card.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to load card: %v", err)
 	}

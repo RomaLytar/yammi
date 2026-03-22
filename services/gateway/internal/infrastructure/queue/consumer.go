@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go"
-	ws "github.com/romanlovesweed/yammi/services/gateway/internal/delivery/websocket"
+	ws "github.com/RomaLytar/yammi/services/gateway/internal/delivery/websocket"
 )
 
 // Consumer подписывается на события NATS и маршрутизирует их через Hub.
@@ -128,13 +128,21 @@ func (c *Consumer) Start() error {
 		log.Printf("nats: subscribed to %s", subject)
 	}
 
-	// Notification events — персональная доставка пользователю.
+	// Notification events — персональная доставка пользователю (direct notifications).
 	if _, err := c.nc.Subscribe("notification.created", func(msg *nats.Msg) {
 		c.handleNotificationEvent(msg.Data)
 	}); err != nil {
 		return fmt.Errorf("subscribe to notification.created: %w", err)
 	}
 	log.Println("nats: subscribed to notification.created")
+
+	// Board event notifications — 1 событие, broadcast подписчикам доски.
+	if _, err := c.nc.Subscribe("notification.board_event", func(msg *nats.Msg) {
+		c.handleBoardEventNotification(msg.Data)
+	}); err != nil {
+		return fmt.Errorf("subscribe to notification.board_event: %w", err)
+	}
+	log.Println("nats: subscribed to notification.board_event")
 
 	return nil
 }
@@ -222,4 +230,30 @@ func (c *Consumer) handleNotificationEvent(data []byte) {
 	}
 
 	c.hub.SendToUser(evt.UserID, payload)
+}
+
+// handleBoardEventNotification — 1 событие → broadcast подписчикам доски.
+// Заменяет N отдельных notification.created (N = кол-во участников).
+func (c *Consumer) handleBoardEventNotification(data []byte) {
+	var evt boardEvent
+	if err := json.Unmarshal(data, &evt); err != nil {
+		log.Printf("nats: failed to parse notification.board_event: %v", err)
+		return
+	}
+
+	msg := wsMessage{
+		Type:    "notification",
+		EventID: evt.EventID,
+		BoardID: evt.BoardID,
+		Data:    json.RawMessage(data),
+	}
+
+	payload, err := json.Marshal(msg)
+	if err != nil {
+		log.Printf("nats: failed to marshal ws board event notification: %v", err)
+		return
+	}
+
+	// Broadcast подписчикам доски, исключая актора
+	c.hub.BroadcastToBoard(evt.BoardID, payload, evt.ActorID)
 }

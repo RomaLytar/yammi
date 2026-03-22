@@ -1,6 +1,7 @@
 package nats
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"math/rand"
@@ -8,8 +9,9 @@ import (
 
 	"github.com/nats-io/nats.go"
 
-	"github.com/romanlovesweed/yammi/pkg/events"
-	"github.com/romanlovesweed/yammi/services/notification/internal/infrastructure/metrics"
+	"github.com/RomaLytar/yammi/pkg/events"
+	"github.com/RomaLytar/yammi/services/notification/internal/domain"
+	"github.com/RomaLytar/yammi/services/notification/internal/infrastructure/metrics"
 )
 
 const (
@@ -65,5 +67,73 @@ func backoffDelay(attempt uint64) time.Duration {
 }
 
 func isStreamAlreadyExists(err error) bool {
-	return err != nil && err.Error() == "stream name already in use"
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return msg == "stream name already in use" ||
+		msg == "nats: stream name already in use" ||
+		err == nats.ErrStreamNameAlreadyInUse
+}
+
+// handleWithRetry обрабатывает сообщение с ретраями и DLQ.
+func (c *Consumer) handleWithRetry(msg *nats.Msg, subject, consumer string, handler func() error) {
+	start := time.Now()
+
+	if err := handler(); err != nil {
+		metrics.EventErrors.WithLabelValues(subject).Inc()
+		metrics.EventProcessingDuration.WithLabelValues(subject).Observe(time.Since(start).Seconds())
+
+		meta, metaErr := msg.Metadata()
+		numDelivered := uint64(1)
+		if metaErr == nil {
+			numDelivered = meta.NumDelivered
+		}
+
+		if numDelivered >= maxDeliveries {
+			log.Printf("max retries (%d) exhausted for %s, sending to DLQ: %v",
+				maxDeliveries, subject, err)
+			c.sendToDLQ(msg, subject, consumer, err.Error())
+			return
+		}
+
+		metrics.EventRetries.WithLabelValues(subject).Inc()
+		delay := backoffDelay(numDelivered)
+		log.Printf("retry %d/%d for %s in %s: %v",
+			numDelivered, maxDeliveries, subject, delay, err)
+		msg.NakWithDelay(delay)
+		return
+	}
+
+	metrics.EventsConsumed.WithLabelValues(subject).Inc()
+	metrics.EventProcessingDuration.WithLabelValues(subject).Observe(time.Since(start).Seconds())
+	msg.Ack()
+}
+
+// createNotification обёртка над createUC.Execute с метриками.
+// Используется для direct-уведомлений (welcome, member_added, member_removed).
+func (c *Consumer) createNotification(ctx context.Context, userID string, ntype domain.NotificationType, title, message string, metadata map[string]string) error {
+	err := c.createUC.Execute(ctx, userID, ntype, title, message, metadata)
+	if err == nil {
+		metrics.NotificationsCreated.WithLabelValues(string(ntype)).Inc()
+	}
+	return err
+}
+
+// notifyBoardMembers создаёт один board event и инкрементирует счётчики участников.
+// Event-sourcing: 1 event → 1 INSERT board_events + N Redis INCR.
+func (c *Consumer) notifyBoardMembers(ctx context.Context, boardID, actorID string, ntype domain.NotificationType, title, message string, metadata map[string]string) {
+	// Добавляем имя актора в metadata
+	if actorID != "" {
+		if actorName := c.nameCache.GetUserName(ctx, actorID); actorName != "" {
+			metadata["actor_name"] = actorName
+		}
+	}
+
+	if err := c.createUC.CreateBoardEvent(ctx, boardID, actorID, ntype, title, message, metadata); err != nil {
+		log.Printf("failed to create board event for board %s: %v", boardID, err)
+		return
+	}
+
+	metrics.BoardEventsCreated.WithLabelValues(string(ntype)).Inc()
 }

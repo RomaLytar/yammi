@@ -21,13 +21,16 @@ func NewUpdateBoardUseCase(boardRepo BoardRepository, memberRepo MembershipRepos
 }
 
 func (uc *UpdateBoardUseCase) Execute(ctx context.Context, boardID, userID, title, description string, version int) (*domain.Board, error) {
-	// 1. Проверка доступа
-	isMember, _, err := uc.memberRepo.IsMember(ctx, boardID, userID)
+	// 1. Проверка доступа (только owner может обновлять доску)
+	isMember, role, err := uc.memberRepo.IsMember(ctx, boardID, userID)
 	if err != nil {
 		return nil, err
 	}
 	if !isMember {
 		return nil, domain.ErrAccessDenied
+	}
+	if role != domain.RoleOwner {
+		return nil, domain.ErrNotOwner
 	}
 
 	// 2. Загружаем доску
@@ -36,7 +39,12 @@ func (uc *UpdateBoardUseCase) Execute(ctx context.Context, boardID, userID, titl
 		return nil, err
 	}
 
-	// 3. Обновляем
+	// 3. Проверка optimistic locking — клиент должен передать актуальную версию
+	if version > 0 && board.Version != version {
+		return nil, domain.ErrInvalidVersion
+	}
+
+	// 4. Обновляем
 	if err := board.Update(title, description); err != nil {
 		return nil, err
 	}

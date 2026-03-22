@@ -68,6 +68,5 @@ func main() {
 
 	log.Println("api-gateway shutting down")
 	shutdownLimiters()
-	clients.Close()
 	server.Close()
 }

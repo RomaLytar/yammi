@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/romanlovesweed/yammi/services/notification/internal/domain"
+	"github.com/RomaLytar/yammi/services/notification/internal/domain"
 )
 
 // NotificationRepository — интерфейс хранилища уведомлений.
@@ -29,12 +29,33 @@ type BoardMemberRepository interface {
 	RemoveMember(ctx context.Context, boardID, userID string) error
 	RemoveAllByBoard(ctx context.Context, boardID string) error
 	ListMemberIDs(ctx context.Context, boardID string) ([]string, error)
+	ListBoardIDsByUser(ctx context.Context, userID string) ([]string, error)
+	TruncateCache(ctx context.Context) error
+}
+
+// BoardEventRepository — хранилище board events (event-sourcing вместо fan-out).
+type BoardEventRepository interface {
+	Create(ctx context.Context, event *domain.BoardEvent) error
+	ListForUser(ctx context.Context, userID string, boardIDs []string, limit int, cursor, typeFilter, search string) ([]*domain.Notification, string, error)
+	MarkBoardRead(ctx context.Context, userID, boardID string) error
+	MarkAllBoardsRead(ctx context.Context, userID string, boardIDs []string) error
+	GetBoardIDByEventID(ctx context.Context, eventID string) (string, error)
+}
+
+// UnreadCounter — счётчик непрочитанных уведомлений в Redis (O(1) вместо SQL COUNT).
+type UnreadCounter interface {
+	Increment(ctx context.Context, userID string) error
+	IncrementMany(ctx context.Context, userIDs []string) error
+	Get(ctx context.Context, userID string) (int, error)
+	Reset(ctx context.Context, userID string) error
+	Decrement(ctx context.Context, userID string) error
 }
 
 // EventPublisher — публикация событий для WebSocket доставки.
 type EventPublisher interface {
 	PublishNotificationCreated(ctx context.Context, n *domain.Notification) error
 	PublishNotificationsBatch(ctx context.Context, notifications []*domain.Notification) error
+	PublishBoardEventNotification(ctx context.Context, event *domain.BoardEvent) error
 }
 
 // SettingsEventPublisher — публикация событий при изменении настроек.

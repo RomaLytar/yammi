@@ -22,6 +22,9 @@ func NewPublisher(natsURL string) (*Publisher, error) {
 	return &Publisher{conn: conn}, nil
 }
 
+// Publish публикует событие через plain NATS.
+// JetStream streams (BOARDS, USERS) автоматически захватывают сообщения на matching subjects.
+// Plain NATS гарантирует доставку и gateway (plain subscriber), и notification (JetStream consumer).
 func (p *Publisher) Publish(ctx context.Context, subject string, event interface{}) error {
 	data, err := json.Marshal(event)
 	if err != nil {

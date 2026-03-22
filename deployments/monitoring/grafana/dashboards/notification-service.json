@@ -273,6 +273,109 @@
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
+      "id": 105,
+      "title": "Hybrid Architecture",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 30 },
+      "id": 20,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+      },
+      "title": "Board Events (event-sourced)",
+      "description": "Board events: 1 INSERT на событие (вместо N INSERT fan-out). Показывает RPS по типу события",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(notification_board_events_created_total[1m])", "legendFormat": "{{ type }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 7, "w": 4, "x": 12, "y": 30 },
+      "id": 21,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Board Events",
+      "description": "Всего board events (event-sourcing). Сравни с 'Уведомлений создано' — при fan-out было бы в N раз больше",
+      "type": "stat",
+      "targets": [
+        { "expr": "sum(notification_board_events_created_total)", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 7, "w": 4, "x": 16, "y": 30 },
+      "id": 22,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Redis INCR",
+      "description": "Redis INCR для unread counters. Дешёвая in-memory операция вместо DB INSERT",
+      "type": "stat",
+      "targets": [
+        { "expr": "notification_redis_increments_total", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 30 }
+        }
+      },
+      "gridPos": { "h": 7, "w": 4, "x": 20, "y": 30 },
+      "id": 23,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Fan-out Efficiency",
+      "description": "Соотношение NATS events → DB writes. При старой архитектуре = N (количество участников). При hybrid = 1",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(notification_board_events_created_total[1m]))", "legendFormat": "board_events (1 per event)" },
+        { "expr": "sum(rate(notification_events_consumed_total[1m]))", "legendFormat": "NATS events consumed" }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 37 },
       "id": 103,
       "title": "Latency",
       "type": "row"

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
+	"runtime/debug"
 	"net/http"
 	"os"
 	"os/signal"
@@ -10,6 +12,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
 	delivery "github.com/RomaLytar/yammi/services/board/internal/delivery/grpc"
@@ -140,7 +144,10 @@ func main() {
 	)
 
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(metrics.UnaryServerInterceptor()),
+		grpc.ChainUnaryInterceptor(
+			recoveryInterceptor(),
+			metrics.UnaryServerInterceptor(),
+		),
 	)
 	boardpb.RegisterBoardServiceServer(grpcServer, handler)
 
@@ -162,4 +169,16 @@ func main() {
 
 	log.Println("board-service shutting down...")
 	grpcServer.GracefulStop()
+}
+
+func recoveryInterceptor() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("PANIC recovered in %s: %v\n%s", info.FullMethod, r, debug.Stack())
+				err = status.Errorf(codes.Internal, "internal server error")
+			}
+		}()
+		return handler(ctx, req)
+	}
 }

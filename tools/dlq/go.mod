@@ -1,4 +1,4 @@
-module github.com/romanlovesweed/yammi/tools/dlq
+module github.com/RomaLytar/yammi/tools/dlq
 
 go 1.24.0
 

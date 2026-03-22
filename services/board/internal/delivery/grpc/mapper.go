@@ -43,7 +43,7 @@ func mapColumnToProto(c *domain.Column) *boardpb.Column {
 		Position:  int32(c.Position),
 		Version:   0, // Column не имеет version в domain.Column, но есть в proto
 		CreatedAt: timestamppb.New(c.CreatedAt),
-		UpdatedAt: timestamppb.New(c.CreatedAt), // domain.Column не имеет UpdatedAt
+		UpdatedAt: timestamppb.New(c.UpdatedAt),
 	}
 }
 

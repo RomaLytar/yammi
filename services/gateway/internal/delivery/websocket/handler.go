@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/romanlovesweed/yammi/services/gateway/internal/infrastructure/auth"
+	"github.com/RomaLytar/yammi/services/gateway/internal/infrastructure/auth"
 )
 
 var upgrader = websocket.Upgrader{

@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/romanlovesweed/yammi/services/user/internal/domain"
+	"github.com/RomaLytar/yammi/services/user/internal/domain"
 )
 
 type UserUseCase struct {

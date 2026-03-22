@@ -214,6 +214,7 @@ func TestCreateBoardUseCase_Execute(t *testing.T) {
 
 			tt.setupMocks(boardRepo, memberRepo, publisher)
 			publisher.On("PublishBoardCreated", mock.Anything, mock.Anything).Return(nil).Maybe()
+			publisher.On("PublishMemberAdded", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 			useCase := NewCreateBoardUseCase(boardRepo, memberRepo, publisher)
 			board, err := useCase.Execute(context.Background(), tt.title, tt.description, tt.ownerID)

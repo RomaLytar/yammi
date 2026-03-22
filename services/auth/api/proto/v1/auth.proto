@@ -1,6 +1,6 @@
 syntax = "proto3";
 package auth.v1;
-option go_package = "github.com/romanlovesweed/yammi/services/auth/api/proto/v1;authpb";
+option go_package = "github.com/RomaLytar/yammi/services/auth/api/proto/v1;authpb";
 
 service AuthService {
   rpc Register(RegisterRequest) returns (RegisterResponse);

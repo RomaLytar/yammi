@@ -3,20 +3,20 @@ package usecase
 import (
 	"context"
 
-	"github.com/romanlovesweed/yammi/services/notification/internal/domain"
+	"github.com/RomaLytar/yammi/services/notification/internal/domain"
 )
 
 type GetUnreadCountUseCase struct {
-	repo NotificationRepository
+	unreadCounter UnreadCounter
 }
 
-func NewGetUnreadCountUseCase(repo NotificationRepository) *GetUnreadCountUseCase {
-	return &GetUnreadCountUseCase{repo: repo}
+func NewGetUnreadCountUseCase(unreadCounter UnreadCounter) *GetUnreadCountUseCase {
+	return &GetUnreadCountUseCase{unreadCounter: unreadCounter}
 }
 
 func (uc *GetUnreadCountUseCase) Execute(ctx context.Context, userID string) (int, error) {
 	if userID == "" {
 		return 0, domain.ErrEmptyUserID
 	}
-	return uc.repo.GetUnreadCount(ctx, userID)
+	return uc.unreadCounter.Get(ctx, userID)
 }

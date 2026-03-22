@@ -32,8 +32,8 @@ func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 		return nil, domain.ErrAccessDenied
 	}
 
-	// 2. Загружаем карточку
-	card, err := uc.cardRepo.GetByID(ctx, cardID)
+	// 2. Загружаем карточку (фильтр по boardID — IDOR protection)
+	card, err := uc.cardRepo.GetByID(ctx, cardID, boardID)
 	if err != nil {
 		return nil, err
 	}
@@ -48,17 +48,16 @@ func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 		return nil, err
 	}
 
-	// 5. Обновляем updated_at доски
-	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
-
-	// 6. Публикуем событие
+	// 5. Обновляем updated_at доски + публикуем событие (async, non-blocking)
 	go func() {
+		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
 		_ = uc.publisher.PublishCardUpdated(context.Background(), CardUpdated{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   card.UpdatedAt,
-			BoardID:      boardID,
 			CardID:       card.ID,
+			ColumnID:     card.ColumnID,
+			BoardID:      boardID,
 			ActorID:      userID,
 			Title:        card.Title,
 			Description:  card.Description,

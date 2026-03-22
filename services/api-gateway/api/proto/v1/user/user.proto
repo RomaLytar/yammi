@@ -2,7 +2,7 @@
 // Копия для генерации Go-клиента в api-gateway (отдельный Go module).
 syntax = "proto3";
 package user.v1;
-option go_package = "github.com/romanlovesweed/yammi/services/api-gateway/api/proto/v1/user;userpb";
+option go_package = "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/user;userpb";
 
 service UserService {
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);

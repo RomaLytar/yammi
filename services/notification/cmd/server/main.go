@@ -1,24 +1,29 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
-	notificationpb "github.com/romanlovesweed/yammi/services/notification/api/proto/v1"
-	delivery "github.com/romanlovesweed/yammi/services/notification/internal/delivery/grpc"
-	"github.com/romanlovesweed/yammi/services/notification/internal/infrastructure/cache"
-	"github.com/romanlovesweed/yammi/services/notification/internal/infrastructure/database"
-	"github.com/romanlovesweed/yammi/services/notification/internal/infrastructure/metrics"
-	natspkg "github.com/romanlovesweed/yammi/services/notification/internal/infrastructure/nats"
-	"github.com/romanlovesweed/yammi/services/notification/internal/repository/postgres"
-	"github.com/romanlovesweed/yammi/services/notification/internal/usecase"
+	notificationpb "github.com/RomaLytar/yammi/services/notification/api/proto/v1"
+	delivery "github.com/RomaLytar/yammi/services/notification/internal/delivery/grpc"
+	"github.com/RomaLytar/yammi/services/notification/internal/infrastructure/cache"
+	"github.com/RomaLytar/yammi/services/notification/internal/infrastructure/database"
+	"github.com/RomaLytar/yammi/services/notification/internal/infrastructure/metrics"
+	natspkg "github.com/RomaLytar/yammi/services/notification/internal/infrastructure/nats"
+	redispkg "github.com/RomaLytar/yammi/services/notification/internal/infrastructure/redis"
+	"github.com/RomaLytar/yammi/services/notification/internal/repository/postgres"
+	"github.com/RomaLytar/yammi/services/notification/internal/usecase"
 )
 
 func main() {
@@ -77,17 +82,30 @@ func main() {
 	}
 	migrationDB.Close()
 
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL == "" {
+		log.Fatal("REDIS_URL is required")
+	}
+
 	// Repositories
 	notificationRepo := postgres.NewNotificationRepo(db)
 	settingsRepo := postgres.NewSettingsRepo(db)
 	boardMemberRepo := postgres.NewBoardMemberRepo(db)
+	boardEventRepo := postgres.NewBoardEventRepo(db)
 	nameCacheRepo := postgres.NewNameCacheRepo(db)
+
+	// Redis unread counter
+	unreadCounter, err := redispkg.NewUnreadCounter(redisURL)
+	if err != nil {
+		log.Fatalf("failed to create unread counter: %v", err)
+	}
+	defer unreadCounter.Close()
 
 	// Settings cache (decorator над settingsRepo)
 	settingsCache := cache.NewSettingsCache(settingsRepo)
 
 	// NATS consumer (создаём до publisher, чтобы получить JetStream context)
-	createUC := usecase.NewCreateNotificationUseCase(notificationRepo, settingsCache, nil)
+	createUC := usecase.NewCreateNotificationUseCase(notificationRepo, settingsCache, nil, boardEventRepo, unreadCounter, boardMemberRepo)
 
 	consumer, err := natspkg.NewConsumer(natsURL, createUC, boardMemberRepo, nameCacheRepo, settingsCache)
 	if err != nil {
@@ -98,31 +116,28 @@ func main() {
 	// Создаём publisher из JetStream context consumer-а
 	publisher := natspkg.NewPublisher(consumer.JetStream())
 
-	// Пересоздаём createUC с publisher
-	createUC = usecase.NewCreateNotificationUseCase(notificationRepo, settingsCache, publisher)
-
-	// Обновляем consumer с новым createUC
-	consumer, err = natspkg.NewConsumer(natsURL, createUC, boardMemberRepo, nameCacheRepo, settingsCache)
-	if err != nil {
-		log.Fatalf("failed to recreate nats consumer: %v", err)
-	}
-	defer consumer.Close()
+	// Обновляем createUC с publisher (без пересоздания NATS-соединения)
+	createUC = usecase.NewCreateNotificationUseCase(notificationRepo, settingsCache, publisher, boardEventRepo, unreadCounter, boardMemberRepo)
+	consumer.SetCreateUC(createUC)
 
 	if err := consumer.Start(); err != nil {
 		log.Fatalf("failed to start nats consumer: %v", err)
 	}
 
 	// Usecases
-	listUC := usecase.NewListNotificationsUseCase(notificationRepo)
-	markReadUC := usecase.NewMarkReadUseCase(notificationRepo)
-	markAllUC := usecase.NewMarkAllReadUseCase(notificationRepo)
-	unreadUC := usecase.NewGetUnreadCountUseCase(notificationRepo)
+	listUC := usecase.NewListNotificationsUseCase(notificationRepo, boardEventRepo, boardMemberRepo, unreadCounter)
+	markReadUC := usecase.NewMarkReadUseCase(notificationRepo, boardEventRepo, unreadCounter)
+	markAllUC := usecase.NewMarkAllReadUseCase(notificationRepo, boardEventRepo, boardMemberRepo, unreadCounter)
+	unreadUC := usecase.NewGetUnreadCountUseCase(unreadCounter)
 	settingsUC := usecase.NewSettingsUseCase(settingsCache, publisher)
 
 	// gRPC server
 	handler := delivery.NewHandler(listUC, markReadUC, markAllUC, unreadUC, settingsUC)
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(metrics.UnaryServerInterceptor()),
+		grpc.ChainUnaryInterceptor(
+			recoveryInterceptor(),
+			metrics.UnaryServerInterceptor(),
+		),
 	)
 	notificationpb.RegisterNotificationServiceServer(grpcServer, handler)
 
@@ -144,4 +159,16 @@ func main() {
 
 	log.Println("notification-service shutting down...")
 	grpcServer.GracefulStop()
+}
+
+func recoveryInterceptor() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("PANIC recovered in %s: %v\n%s", info.FullMethod, r, debug.Stack())
+				err = status.Errorf(codes.Internal, "internal server error")
+			}
+		}()
+		return handler(ctx, req)
+	}
 }

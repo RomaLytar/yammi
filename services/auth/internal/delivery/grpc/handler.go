@@ -7,9 +7,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/romanlovesweed/yammi/services/auth/internal/domain"
-	"github.com/romanlovesweed/yammi/services/auth/internal/usecase"
-	authpb "github.com/romanlovesweed/yammi/services/auth/api/proto/v1"
+	"github.com/RomaLytar/yammi/services/auth/internal/domain"
+	"github.com/RomaLytar/yammi/services/auth/internal/usecase"
+	authpb "github.com/RomaLytar/yammi/services/auth/api/proto/v1"
 )
 
 type AuthHandler struct {

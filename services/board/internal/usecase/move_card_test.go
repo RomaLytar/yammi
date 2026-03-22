@@ -44,7 +44,7 @@ func TestMoveCardUseCase_Execute(t *testing.T) {
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
-				cardRepo.On("GetByID", mock.Anything, "card-123").Return(card, nil)
+				cardRepo.On("GetByID", mock.Anything, "card-123", "board-123").Return(card, nil)
 
 				cardRepo.On("Update", mock.Anything, mock.AnythingOfType("*domain.Card")).Return(nil)
 			},
@@ -70,7 +70,7 @@ func TestMoveCardUseCase_Execute(t *testing.T) {
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
-				cardRepo.On("GetByID", mock.Anything, "card-123").Return(card, nil)
+				cardRepo.On("GetByID", mock.Anything, "card-123", "board-123").Return(card, nil)
 
 				cardRepo.On("Update", mock.Anything, mock.AnythingOfType("*domain.Card")).Return(nil)
 			},
@@ -96,7 +96,7 @@ func TestMoveCardUseCase_Execute(t *testing.T) {
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
-				cardRepo.On("GetByID", mock.Anything, "card-123").Return(card, nil)
+				cardRepo.On("GetByID", mock.Anything, "card-123", "board-123").Return(card, nil)
 
 				cardRepo.On("Update", mock.Anything, mock.AnythingOfType("*domain.Card")).Return(nil)
 			},
@@ -122,7 +122,7 @@ func TestMoveCardUseCase_Execute(t *testing.T) {
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 				}
-				cardRepo.On("GetByID", mock.Anything, "card-123").Return(card, nil)
+				cardRepo.On("GetByID", mock.Anything, "card-123", "board-123").Return(card, nil)
 				cardRepo.On("Update", mock.Anything, mock.AnythingOfType("*domain.Card")).Return(nil)
 			},
 			wantErr: false,

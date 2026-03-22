@@ -23,13 +23,16 @@ func NewDeleteColumnUseCase(columnRepo ColumnRepository, boardRepo BoardReposito
 }
 
 func (uc *DeleteColumnUseCase) Execute(ctx context.Context, columnID, boardID, userID string) error {
-	// 1. Проверка доступа
-	isMember, _, err := uc.memberRepo.IsMember(ctx, boardID, userID)
+	// 1. Проверка доступа (только owner может удалять колонки)
+	isMember, role, err := uc.memberRepo.IsMember(ctx, boardID, userID)
 	if err != nil {
 		return err
 	}
 	if !isMember {
 		return domain.ErrAccessDenied
+	}
+	if role != domain.RoleOwner {
+		return domain.ErrNotOwner
 	}
 
 	// 2. Удаляем (CASCADE удалит cards)
@@ -37,11 +40,9 @@ func (uc *DeleteColumnUseCase) Execute(ctx context.Context, columnID, boardID, u
 		return err
 	}
 
-	// 3. Обновляем updated_at доски
-	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
-
-	// 4. Публикуем событие
+	// 3. Обновляем updated_at доски + публикуем событие (async, non-blocking)
 	go func() {
+		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
 		_ = uc.publisher.PublishColumnDeleted(context.Background(), ColumnDeleted{
 			EventID:      generateEventID(),
 			EventVersion: 1,

@@ -141,8 +141,8 @@ func (s *BoardServiceServer) MoveCard(ctx context.Context, req *boardpb.MoveCard
 		return nil, mapDomainError(err)
 	}
 
-	// Возвращаем обновленный список карточек в целевой колонке (для фронта)
-	cardsInColumn, err := s.getCards.Execute(ctx, req.GetToColumnId(), req.GetBoardId(), req.GetUserId())
+	// Доступ проверен в moveCard — загружаем карточки без повторного IsMember
+	cardsInColumn, err := s.getCards.ExecuteAuthorized(ctx, req.GetToColumnId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

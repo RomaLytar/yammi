@@ -5,17 +5,17 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/romanlovesweed/yammi/services/notification/internal/domain"
+	"github.com/RomaLytar/yammi/services/notification/internal/domain"
 )
 
 func TestGetUnreadCount_Success(t *testing.T) {
-	repo := &mockNotificationRepo{
-		unreadCountFn: func(ctx context.Context, userID string) (int, error) {
+	unreadCounter := &mockUnreadCounter{
+		getFn: func(ctx context.Context, userID string) (int, error) {
 			return 5, nil
 		},
 	}
 
-	uc := NewGetUnreadCountUseCase(repo)
+	uc := NewGetUnreadCountUseCase(unreadCounter)
 	count, err := uc.Execute(context.Background(), "user-1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -26,21 +26,21 @@ func TestGetUnreadCount_Success(t *testing.T) {
 }
 
 func TestGetUnreadCount_EmptyUserID(t *testing.T) {
-	uc := NewGetUnreadCountUseCase(&mockNotificationRepo{})
+	uc := NewGetUnreadCountUseCase(&mockUnreadCounter{})
 	_, err := uc.Execute(context.Background(), "")
 	if !errors.Is(err, domain.ErrEmptyUserID) {
 		t.Errorf("expected ErrEmptyUserID, got %v", err)
 	}
 }
 
-func TestGetUnreadCount_RepoError(t *testing.T) {
-	repo := &mockNotificationRepo{
-		unreadCountFn: func(ctx context.Context, userID string) (int, error) {
-			return 0, errors.New("db error")
+func TestGetUnreadCount_RedisError(t *testing.T) {
+	unreadCounter := &mockUnreadCounter{
+		getFn: func(ctx context.Context, userID string) (int, error) {
+			return 0, errors.New("redis error")
 		},
 	}
 
-	uc := NewGetUnreadCountUseCase(repo)
+	uc := NewGetUnreadCountUseCase(unreadCounter)
 	_, err := uc.Execute(context.Background(), "user-1")
 	if err == nil {
 		t.Fatal("expected error")

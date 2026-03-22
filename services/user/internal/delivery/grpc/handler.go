@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	userpb "github.com/romanlovesweed/yammi/services/user/api/proto/v1"
-	"github.com/romanlovesweed/yammi/services/user/internal/domain"
-	"github.com/romanlovesweed/yammi/services/user/internal/usecase"
+	userpb "github.com/RomaLytar/yammi/services/user/api/proto/v1"
+	"github.com/RomaLytar/yammi/services/user/internal/domain"
+	"github.com/RomaLytar/yammi/services/user/internal/usecase"
 )
 
 type UserHandler struct {

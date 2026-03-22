@@ -22,8 +22,8 @@ func (m *MockCardRepository) Create(ctx context.Context, card *domain.Card) erro
 	return args.Error(0)
 }
 
-func (m *MockCardRepository) GetByID(ctx context.Context, cardID string) (*domain.Card, error) {
-	args := m.Called(ctx, cardID)
+func (m *MockCardRepository) GetByID(ctx context.Context, cardID, boardID string) (*domain.Card, error) {
+	args := m.Called(ctx, cardID, boardID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

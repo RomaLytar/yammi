@@ -28,6 +28,6 @@ func (uc *GetCardUseCase) Execute(ctx context.Context, cardID, boardID, userID s
 		return nil, domain.ErrAccessDenied
 	}
 
-	// 2. Загружаем карточку
-	return uc.cardRepo.GetByID(ctx, cardID)
+	// 2. Загружаем карточку (фильтр по boardID — IDOR protection)
+	return uc.cardRepo.GetByID(ctx, cardID, boardID)
 }

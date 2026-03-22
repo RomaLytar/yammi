@@ -4,7 +4,7 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/romanlovesweed/yammi/services/auth/internal/domain"
+	"github.com/RomaLytar/yammi/services/auth/internal/domain"
 	"golang.org/x/crypto/bcrypt"
 )
 

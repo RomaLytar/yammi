@@ -57,11 +57,9 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 		return nil, err
 	}
 
-	// 5. Обновляем updated_at доски
-	_ = uc.boardRepo.TouchUpdatedAt(ctx, boardID)
-
-	// 6. Публикуем событие
+	// 5. Обновляем updated_at доски + публикуем событие (async, non-blocking)
 	go func() {
+		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
 		_ = uc.publisher.PublishCardCreated(context.Background(), CardCreated{
 			EventID:      generateEventID(),
 			EventVersion: 1,
@@ -73,6 +71,7 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 			Title:        card.Title,
 			Description:  card.Description,
 			Position:     card.Position,
+			AssigneeID:   card.AssigneeID,
 		})
 	}()
 

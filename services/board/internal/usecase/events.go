@@ -78,45 +78,48 @@ type CardCreated struct {
 	EventID      string    `json:"event_id"`
 	EventVersion int       `json:"event_version"`
 	OccurredAt   time.Time `json:"occurred_at"`
-	BoardID      string    `json:"board_id"`
-	ColumnID     string    `json:"column_id"`
 	CardID       string    `json:"card_id"`
+	ColumnID     string    `json:"column_id"`
+	BoardID      string    `json:"board_id"`
 	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description"`
 	Position     string    `json:"position"`
+	AssigneeID   *string   `json:"assignee_id,omitempty"`
 }
 
 type CardUpdated struct {
 	EventID      string    `json:"event_id"`
 	EventVersion int       `json:"event_version"`
 	OccurredAt   time.Time `json:"occurred_at"`
-	BoardID      string    `json:"board_id"`
 	CardID       string    `json:"card_id"`
+	ColumnID     string    `json:"column_id"`
+	BoardID      string    `json:"board_id"`
 	ActorID      string    `json:"actor_id"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description"`
-	AssigneeID   *string   `json:"assignee_id"`
+	AssigneeID   *string   `json:"assignee_id,omitempty"`
 }
 
 type CardMoved struct {
-	EventID      string    `json:"event_id"`
-	EventVersion int       `json:"event_version"`
-	OccurredAt   time.Time `json:"occurred_at"`
-	BoardID      string    `json:"board_id"`
-	CardID       string    `json:"card_id"`
-	ActorID      string    `json:"actor_id"`
-	FromColumnID string    `json:"from_column_id"`
-	ToColumnID   string    `json:"to_column_id"`
-	NewPosition  string    `json:"new_position"`
+	EventID        string    `json:"event_id"`
+	EventVersion   int       `json:"event_version"`
+	OccurredAt     time.Time `json:"occurred_at"`
+	CardID         string    `json:"card_id"`
+	BoardID        string    `json:"board_id"`
+	ActorID        string    `json:"actor_id"`
+	FromColumnID   string    `json:"from_column_id"`
+	ToColumnID     string    `json:"to_column_id"`
+	NewPosition    string    `json:"new_position"`
 }
 
 type CardDeleted struct {
 	EventID      string    `json:"event_id"`
 	EventVersion int       `json:"event_version"`
 	OccurredAt   time.Time `json:"occurred_at"`
-	BoardID      string    `json:"board_id"`
 	CardID       string    `json:"card_id"`
+	ColumnID     string    `json:"column_id"`
+	BoardID      string    `json:"board_id"`
 	ActorID      string    `json:"actor_id"`
 }
 

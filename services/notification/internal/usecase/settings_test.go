@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/romanlovesweed/yammi/services/notification/internal/domain"
+	"github.com/RomaLytar/yammi/services/notification/internal/domain"
 )
 
 func TestSettings_Get_Success(t *testing.T) {

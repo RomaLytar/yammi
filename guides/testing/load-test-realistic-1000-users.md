@@ -651,3 +651,54 @@ Lazy cache лучше чистого SQL (87ms vs 121ms GET), но хуже Redi
 > **Write O(1)** — стратегически правильно, масштабируется линейно.
 > **Read через lazy cache** — амортизированно O(1), cache hit rate определяет latency.
 > **Redis INCR O(N)** — быстрее на read, но O(N) на write не масштабируется.
+
+---
+
+## Ceiling Test: предел одной ноды
+
+**Дата:** 2026-03-22
+
+**Тест:** Step load 500 → 1000 → 1500 → 2000 → 2500 → 3000 VU. Микс: 40% read / 40% write / 20% heavy. 5 members/board.
+
+### Результат (1 notification instance, O(1) write path)
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║           CEILING TEST: step load → 3000 VU                     ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Members/board: 5                                               ║
+║                                                                  ║
+║  ── Latency p95 ──────────────────────────────────────────────  ║
+║  Create board:       1478 ms                                    ║
+║  Create column:      2470 ms                                    ║
+║  Create card:        3399 ms                                    ║
+║  Move card:          5154 ms                                    ║
+║  Get board:          4293 ms                                    ║
+║  List boards:        1466 ms                                    ║
+║  Unread count:         54 ms                                    ║
+║                                                                  ║
+║  ── Throughput ────────────────────────────────────────────────  ║
+║  Total requests:     710,697                                    ║
+║  RPS (avg):            1,177                                    ║
+║  Failed:               0.0%                                     ║
+║  Duration p95:       3,874 ms                                   ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+### Анализ
+
+- **Потолок одной ноды: ~1,200 RPS** при 0% ошибок
+- **Saturation** на 2000-3000 VU: latency растёт нелинейно (move card 5.1s)
+- **Unread count: 54ms** — lazy Redis cache работает (не bottleneck)
+- **Bottleneck:** PgBouncer connection pool (все сервисы конкурируют за 20 connections × databases)
+
+### Ключевые цифры для capacity planning
+
+| Метрика | Значение |
+|---------|----------|
+| Max sustained RPS | **~1,200** |
+| Total requests (10 min) | **710k** |
+| Error rate at ceiling | **0%** |
+| Saturation indicator | move_card p95 > 5s |
+| Real bottleneck | PgBouncer pool (не CPU, не Redis) |

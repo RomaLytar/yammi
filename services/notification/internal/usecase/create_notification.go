@@ -150,72 +150,20 @@ func (uc *CreateNotificationUseCase) BatchExecute(ctx context.Context, requests 
 	return len(notifications), nil
 }
 
-// CreateBoardEvent создаёт один board event и инкрементирует счётчики для всех участников доски.
-// Заменяет fan-out (1 event → N INSERT) на event-sourcing (1 event → 1 INSERT + N Redis INCR).
+// CreateBoardEvent создаёт один board event. ZERO fan-out.
+// 1 INSERT — всё. Без Redis INCR, без get members, без check settings.
+// Unread count вычисляется на read через event_seq diff.
 func (uc *CreateNotificationUseCase) CreateBoardEvent(ctx context.Context, boardID, actorID string, eventType domain.NotificationType, title, message string, metadata map[string]string) error {
-	// 1. Создаём board event
 	event := domain.NewBoardEvent(boardID, actorID, eventType, title, message, metadata)
 
-	// 2. Сохраняем в board_events (1 INSERT)
 	if err := uc.boardEventRepo.Create(ctx, event); err != nil {
 		return err
 	}
 
-	// 3. Получаем участников доски
-	memberIDs, err := uc.memberRepo.ListMemberIDs(ctx, boardID)
-	if err != nil {
-		log.Printf("failed to list members for board %s: %v", boardID, err)
-		return nil // event сохранён, ошибка не критична
-	}
-
-	// 4. Фильтруем актора
-	var recipientIDs []string
-	for _, id := range memberIDs {
-		if id == actorID {
-			continue
-		}
-		recipientIDs = append(recipientIDs, id)
-	}
-
-	if len(recipientIDs) == 0 {
-		return nil
-	}
-
-	// 5. Проверяем настройки (batch)
-	settingsMap, err := uc.settings.BatchGet(ctx, recipientIDs)
-	if err != nil {
-		log.Printf("failed to batch get settings, using defaults: %v", err)
-		settingsMap = make(map[string]*domain.NotificationSettings)
-	}
-
-	var enabledIDs []string
-	for _, uid := range recipientIDs {
-		s := settingsMap[uid]
-		if s == nil {
-			s = domain.DefaultSettings(uid)
-		}
-		if s.Enabled {
-			enabledIDs = append(enabledIDs, uid)
-		}
-	}
-
-	if len(enabledIDs) == 0 {
-		return nil
-	}
-
-	// 6. Инкрементируем Redis-счётчики (pipeline)
-	if uc.unreadCounter != nil {
-		if err := uc.unreadCounter.IncrementMany(ctx, enabledIDs); err != nil {
-			log.Printf("failed to increment unread counters for board %s: %v", boardID, err)
-		}
-	}
-
-	// 7. Публикуем ОДНО событие для WebSocket push (gateway разошлёт подписчикам board)
+	// WebSocket push — 1 NATS сообщение, gateway broadcast подписчикам board
 	if uc.publisher != nil {
 		go func() {
-			if err := uc.publisher.PublishBoardEventNotification(context.Background(), event); err != nil {
-				log.Printf("failed to publish board event notification for board %s: %v", boardID, err)
-			}
+			_ = uc.publisher.PublishBoardEventNotification(context.Background(), event)
 		}()
 	}
 

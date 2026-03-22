@@ -135,10 +135,10 @@ func main() {
 	}
 
 	// Usecases
-	listUC := usecase.NewListNotificationsUseCase(notificationRepo, boardEventRepo, boardMemberRepo, unreadCounter)
-	markReadUC := usecase.NewMarkReadUseCase(notificationRepo, boardEventRepo, unreadCounter)
-	markAllUC := usecase.NewMarkAllReadUseCase(notificationRepo, boardEventRepo, boardMemberRepo, unreadCounter)
-	unreadUC := usecase.NewGetUnreadCountUseCase(unreadCounter)
+	listUC := usecase.NewListNotificationsUseCase(notificationRepo, boardEventRepo, boardMemberRepo)
+	markReadUC := usecase.NewMarkReadUseCase(notificationRepo, boardEventRepo)
+	markAllUC := usecase.NewMarkAllReadUseCase(notificationRepo, boardEventRepo, boardMemberRepo)
+	unreadUC := usecase.NewGetUnreadCountUseCase(boardEventRepo, boardMemberRepo, notificationRepo)
 	settingsUC := usecase.NewSettingsUseCase(settingsCache, publisher)
 
 	// gRPC server

@@ -40,6 +40,7 @@ type BoardEventRepository interface {
 	MarkBoardRead(ctx context.Context, userID, boardID string) error
 	MarkAllBoardsRead(ctx context.Context, userID string, boardIDs []string) error
 	GetBoardIDByEventID(ctx context.Context, eventID string) (string, error)
+	GetUnreadCountBySeq(ctx context.Context, userID string, boardIDs []string) (int, error)
 }
 
 // UnreadCounter — счётчик непрочитанных уведомлений в Redis (O(1) вместо SQL COUNT).

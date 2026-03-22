@@ -12,20 +12,17 @@ type ListNotificationsUseCase struct {
 	repo           NotificationRepository
 	boardEventRepo BoardEventRepository
 	memberRepo     BoardMemberRepository
-	unreadCounter  UnreadCounter
 }
 
 func NewListNotificationsUseCase(
 	repo NotificationRepository,
 	boardEventRepo BoardEventRepository,
 	memberRepo BoardMemberRepository,
-	unreadCounter UnreadCounter,
 ) *ListNotificationsUseCase {
 	return &ListNotificationsUseCase{
 		repo:           repo,
 		boardEventRepo: boardEventRepo,
 		memberRepo:     memberRepo,
-		unreadCounter:  unreadCounter,
 	}
 }
 
@@ -92,12 +89,15 @@ func (uc *ListNotificationsUseCase) Execute(ctx context.Context, userID string, 
 		nextCursor = directCursor
 	}
 
-	// 5. Получаем unread count из Redis
-	unreadCount, err := uc.unreadCounter.Get(ctx, userID)
-	if err != nil {
-		log.Printf("failed to get unread count from Redis for user %s: %v", userID, err)
-		unreadCount = 0
+	// 5. Получаем unread count через event_seq diff (O(1) per board)
+	boardUnread := 0
+	if len(boardIDs) > 0 {
+		if count, err := uc.boardEventRepo.GetUnreadCountBySeq(ctx, userID, boardIDs); err == nil {
+			boardUnread = count
+		}
 	}
+	// + direct notifications unread
+	directUnread, _ := uc.repo.GetUnreadCount(ctx, userID)
 
-	return merged, nextCursor, unreadCount, nil
+	return merged, nextCursor, boardUnread + directUnread, nil
 }

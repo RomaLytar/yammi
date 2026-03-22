@@ -116,40 +116,32 @@ func (r *BoardEventRepo) ListForUser(ctx context.Context, userID string, boardID
 	return notifications, nextCursor, rows.Err()
 }
 
-// MarkBoardRead обновляет cursor для конкретной доски.
+// MarkBoardRead обновляет cursor + last_seen_seq для конкретной доски.
 func (r *BoardEventRepo) MarkBoardRead(ctx context.Context, userID, boardID string) error {
 	query := `
-		INSERT INTO user_board_cursors (user_id, board_id, read_at)
-		VALUES ($1, $2, NOW())
-		ON CONFLICT (user_id, board_id) DO UPDATE SET read_at = NOW()
+		INSERT INTO user_board_cursors (user_id, board_id, read_at, last_seen_seq)
+		VALUES ($1, $2, NOW(), COALESCE((SELECT MAX(event_seq) FROM board_events WHERE board_id = $2), 0))
+		ON CONFLICT (user_id, board_id) DO UPDATE SET
+			read_at = NOW(),
+			last_seen_seq = COALESCE((SELECT MAX(event_seq) FROM board_events WHERE board_id = $2), 0)
 	`
 	_, err := r.db.ExecContext(ctx, query, userID, boardID)
 	return err
 }
 
-// MarkAllBoardsRead обновляет cursors для всех досок пользователя.
+// MarkAllBoardsRead обновляет cursors + last_seen_seq для всех досок пользователя.
 func (r *BoardEventRepo) MarkAllBoardsRead(ctx context.Context, userID string, boardIDs []string) error {
 	if len(boardIDs) == 0 {
 		return nil
 	}
 
-	// Batch UPSERT
-	values := make([]string, len(boardIDs))
-	args := make([]interface{}, 0, len(boardIDs)+1)
-	args = append(args, userID)
-	for i, bid := range boardIDs {
-		values[i] = fmt.Sprintf("($1, $%d, NOW())", i+2)
-		args = append(args, bid)
+	// Обновляем каждую доску с её max(event_seq)
+	for _, boardID := range boardIDs {
+		if err := r.MarkBoardRead(ctx, userID, boardID); err != nil {
+			return err
+		}
 	}
-
-	query := fmt.Sprintf(`
-		INSERT INTO user_board_cursors (user_id, board_id, read_at)
-		VALUES %s
-		ON CONFLICT (user_id, board_id) DO UPDATE SET read_at = NOW()
-	`, strings.Join(values, ","))
-
-	_, err := r.db.ExecContext(ctx, query, args...)
-	return err
+	return nil
 }
 
 // GetBoardIDByEventID находит board_id по event ID (для mark specific as read).
@@ -160,4 +152,40 @@ func (r *BoardEventRepo) GetBoardIDByEventID(ctx context.Context, eventID string
 		return "", nil // not a board event
 	}
 	return boardID, err
+}
+
+// GetUnreadCountBySeq возвращает unread count через event_seq diff.
+// O(1) per board: max(event_seq) - COALESCE(last_seen_seq, 0).
+func (r *BoardEventRepo) GetUnreadCountBySeq(ctx context.Context, userID string, boardIDs []string) (int, error) {
+	if len(boardIDs) == 0 {
+		return 0, nil
+	}
+
+	placeholders := make([]string, len(boardIDs))
+	args := make([]interface{}, 0, len(boardIDs)+1)
+	args = append(args, userID)
+	for i, bid := range boardIDs {
+		placeholders[i] = fmt.Sprintf("$%d", i+2)
+		args = append(args, bid)
+	}
+
+	// O(1) per board: MAX(event_seq) - last_seen_seq. Без COUNT, без scan.
+	query := fmt.Sprintf(`
+		SELECT COALESCE(SUM(GREATEST(
+			COALESCE(max_seq, 0) - COALESCE(last_seen, 0), 0
+		)), 0)
+		FROM (
+			SELECT
+				(SELECT MAX(event_seq) FROM board_events WHERE board_id = b.id) AS max_seq,
+				(SELECT last_seen_seq FROM user_board_cursors WHERE board_id = b.id AND user_id = $1) AS last_seen
+			FROM unnest(ARRAY[%s]::uuid[]) AS b(id)
+		) diffs
+	`, strings.Join(placeholders, ","))
+
+	var count int
+	err := r.db.QueryRowContext(ctx, query, args...).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("get unread count by seq: %w", err)
+	}
+	return count, nil
 }

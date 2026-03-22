@@ -38,6 +38,7 @@ const errorRate = new Rate('error_rate');
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 const TOTAL_USERS = parseInt(__ENV.USERS || '1000');
+const MEMBERS_PER_BOARD = parseInt(__ENV.MEMBERS || '2');  // 2 default, 10-50 для big board test
 
 export const options = {
   scenarios: {
@@ -365,10 +366,11 @@ function workerScenario(me, allUsers, h) {
   if (!board) return;
   sleep(randomBetween(0.5, 1.5));
 
-  const members = pickRandomUsers(allUsers, me.id, Math.random() < 0.5 ? 1 : 2);
+  const memberCount = MEMBERS_PER_BOARD > 2 ? MEMBERS_PER_BOARD : (Math.random() < 0.5 ? 1 : 2);
+  const members = pickRandomUsers(allUsers, me.id, memberCount);
   for (const m of members) {
     addMember(h, board.id, m.id, 'member');
-    sleep(randomBetween(0.3, 0.8));
+    sleep(randomBetween(0.1, 0.3));
   }
 
   const col1 = createColumn(h, board.id, 'To Do');
@@ -424,10 +426,11 @@ function heavyUserScenario(me, allUsers, h) {
   if (boards.length === 0) return;
 
   for (const board of boards) {
-    const members = pickRandomUsers(allUsers, me.id, 3);
+    const heavyMemberCount = MEMBERS_PER_BOARD > 3 ? MEMBERS_PER_BOARD : 3;
+    const members = pickRandomUsers(allUsers, me.id, heavyMemberCount);
     for (const m of members) {
       addMember(h, board.id, m.id, 'member');
-      sleep(randomBetween(0.2, 0.5));
+      sleep(randomBetween(0.1, 0.3));
     }
 
     const cols = [];

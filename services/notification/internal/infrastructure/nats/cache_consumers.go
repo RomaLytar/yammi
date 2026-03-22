@@ -5,11 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/nats-io/nats.go"
 
 	"github.com/RomaLytar/yammi/pkg/events"
 )
+
+// instanceID возвращает hostname для уникальных имён cache-консьюмеров.
+// Каждый инстанс должен проигрывать всю историю (DeliverAll) независимо.
+func instanceID() string {
+	h, err := os.Hostname()
+	if err != nil {
+		return "unknown"
+	}
+	return h
+}
 
 // --- Cache-only consumers (DeliverAll — проигрывают историю для наполнения кешей) ---
 
@@ -23,7 +34,7 @@ func (c *Consumer) cacheUserNames() error {
 		_ = c.nameCache.SetUserName(context.Background(), event.UserID, event.Name)
 		msg.Ack()
 	},
-		nats.Durable("notification-cache-users-v1"),
+		nats.Durable(fmt.Sprintf("notification-cache-users-v1-%s", instanceID())),
 		nats.ManualAck(),
 		nats.DeliverAll(),
 		nats.MaxAckPending(maxAckPending),
@@ -47,7 +58,7 @@ func (c *Consumer) cacheBoardNames() error {
 		_ = c.nameCache.SetBoardName(context.Background(), event.BoardID, event.Title)
 		msg.Ack()
 	},
-		nats.Durable("notification-cache-board-created-v1"),
+		nats.Durable(fmt.Sprintf("notification-cache-board-created-v1-%s", instanceID())),
 		nats.ManualAck(),
 		nats.DeliverAll(),
 		nats.MaxAckPending(maxAckPending),
@@ -67,7 +78,7 @@ func (c *Consumer) cacheBoardNames() error {
 		_ = c.nameCache.SetBoardName(context.Background(), event.BoardID, event.Title)
 		msg.Ack()
 	},
-		nats.Durable("notification-cache-board-updated-v1"),
+		nats.Durable(fmt.Sprintf("notification-cache-board-updated-v1-%s", instanceID())),
 		nats.ManualAck(),
 		nats.DeliverAll(),
 		nats.MaxAckPending(maxAckPending),
@@ -92,7 +103,7 @@ func (c *Consumer) cacheBoardMembers() error {
 		_ = c.memberRepo.AddMember(context.Background(), event.BoardID, event.UserID)
 		msg.Ack()
 	},
-		nats.Durable("notification-cache-member-added-v1"),
+		nats.Durable(fmt.Sprintf("notification-cache-member-added-v1-%s", instanceID())),
 		nats.ManualAck(),
 		nats.DeliverAll(),
 		nats.MaxAckPending(maxAckPending),
@@ -112,7 +123,7 @@ func (c *Consumer) cacheBoardMembers() error {
 		_ = c.memberRepo.RemoveMember(context.Background(), event.BoardID, event.UserID)
 		msg.Ack()
 	},
-		nats.Durable("notification-cache-member-removed-v1"),
+		nats.Durable(fmt.Sprintf("notification-cache-member-removed-v1-%s", instanceID())),
 		nats.ManualAck(),
 		nats.DeliverAll(),
 		nats.MaxAckPending(maxAckPending),
@@ -136,7 +147,7 @@ func (c *Consumer) cacheColumnNames() error {
 		_ = c.nameCache.SetColumnName(context.Background(), event.ColumnID, event.Title)
 		msg.Ack()
 	},
-		nats.Durable("notification-cache-column-created-v1"),
+		nats.Durable(fmt.Sprintf("notification-cache-column-created-v1-%s", instanceID())),
 		nats.ManualAck(),
 		nats.DeliverAll(),
 		nats.MaxAckPending(maxAckPending),
@@ -155,7 +166,7 @@ func (c *Consumer) cacheColumnNames() error {
 		_ = c.nameCache.SetColumnName(context.Background(), event.ColumnID, event.Title)
 		msg.Ack()
 	},
-		nats.Durable("notification-cache-column-updated-v1"),
+		nats.Durable(fmt.Sprintf("notification-cache-column-updated-v1-%s", instanceID())),
 		nats.ManualAck(),
 		nats.DeliverAll(),
 		nats.MaxAckPending(maxAckPending),
@@ -179,7 +190,7 @@ func (c *Consumer) cacheCardNames() error {
 		_ = c.nameCache.SetCardName(context.Background(), event.CardID, event.Title)
 		msg.Ack()
 	},
-		nats.Durable("notification-cache-card-created-v1"),
+		nats.Durable(fmt.Sprintf("notification-cache-card-created-v1-%s", instanceID())),
 		nats.ManualAck(),
 		nats.DeliverAll(),
 		nats.MaxAckPending(maxAckPending),
@@ -198,7 +209,7 @@ func (c *Consumer) cacheCardNames() error {
 		_ = c.nameCache.SetCardName(context.Background(), event.CardID, event.Title)
 		msg.Ack()
 	},
-		nats.Durable("notification-cache-card-updated-v1"),
+		nats.Durable(fmt.Sprintf("notification-cache-card-updated-v1-%s", instanceID())),
 		nats.ManualAck(),
 		nats.DeliverAll(),
 		nats.MaxAckPending(maxAckPending),

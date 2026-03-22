@@ -73,4 +73,31 @@ var (
 		Name: "notification_redis_increments_total",
 		Help: "Redis INCR operations for unread counters",
 	})
+
+	// RedisLatency — гистограмма латенси Redis операций.
+	RedisLatency = promauto.NewHistogram(prometheus.HistogramOpts{
+		Name:    "notification_redis_latency_seconds",
+		Help:    "Redis operation latency in seconds",
+		Buckets: []float64{0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1},
+	})
+
+	// DBWaitDuration — время ожидания DB connection из пула.
+	DBWaitDuration = promauto.NewHistogram(prometheus.HistogramOpts{
+		Name:    "notification_db_wait_seconds",
+		Help:    "Time waiting for DB connection from pool",
+		Buckets: []float64{0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1},
+	})
+
+	// Goroutines — текущее количество горутин (gauge).
+	Goroutines = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "notification_goroutines",
+		Help: "Current number of goroutines",
+	})
+
+	// MembersPerEvent — сколько участников обрабатывается на 1 board event.
+	MembersPerEvent = promauto.NewHistogram(prometheus.HistogramOpts{
+		Name:    "notification_members_per_event",
+		Help:    "Number of board members notified per event",
+		Buckets: []float64{1, 2, 5, 10, 20, 50, 100},
+	})
 )

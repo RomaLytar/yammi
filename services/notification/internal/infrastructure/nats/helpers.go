@@ -120,6 +120,20 @@ func (c *Consumer) createNotification(ctx context.Context, userID string, ntype 
 	return err
 }
 
+func (c *Consumer) getMemberIDs(ctx context.Context, boardID, excludeID string) []string {
+	ids, err := c.memberRepo.ListMemberIDs(ctx, boardID)
+	if err != nil {
+		return nil
+	}
+	var filtered []string
+	for _, id := range ids {
+		if id != excludeID {
+			filtered = append(filtered, id)
+		}
+	}
+	return filtered
+}
+
 // notifyBoardMembers создаёт один board event и инкрементирует счётчики участников.
 // Event-sourcing: 1 event → 1 INSERT board_events + N Redis INCR.
 func (c *Consumer) notifyBoardMembers(ctx context.Context, boardID, actorID string, ntype domain.NotificationType, title, message string, metadata map[string]string) {
@@ -130,10 +144,12 @@ func (c *Consumer) notifyBoardMembers(ctx context.Context, boardID, actorID stri
 		}
 	}
 
+	memberCount := len(c.getMemberIDs(ctx, boardID, actorID))
 	if err := c.createUC.CreateBoardEvent(ctx, boardID, actorID, ntype, title, message, metadata); err != nil {
 		log.Printf("failed to create board event for board %s: %v", boardID, err)
 		return
 	}
 
 	metrics.BoardEventsCreated.WithLabelValues(string(ntype)).Inc()
+	metrics.MembersPerEvent.Observe(float64(memberCount))
 }

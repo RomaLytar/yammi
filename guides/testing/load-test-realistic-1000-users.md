@@ -513,3 +513,46 @@ Latency выросла — прогон после множественных р
 - Unread count: Redis GET 0.01ms вместо SQL COUNT 5ms
 - WebSocket push: 1 NATS сообщение вместо N
 - Write path не зависит от количества участников
+
+---
+
+## Прогон #11: Big Boards (20 members/board) + board_events partitioning
+
+**Дата:** 2026-03-22
+
+**Изменения:**
+- **board_events partitioned** по board_id (HASH, 8 партиций) — как cards в board service
+- **k6 тест:** `MEMBERS=20` — каждая доска получает 20 участников (было 1-3)
+- **Новые метрики:** goroutines, Redis latency, DB wait, members_per_event
+- Убраны преждевременные scaling (Redis Sentinel, NATS consumer groups, gateway replicas)
+
+| Метрика | #8 (2 members) | #10 (2 members) | #11 (20 members) |
+|---------|---------------|-----------------|-------------------|
+| Create board p95 | 74ms | 182ms | **237ms** |
+| Add member p95 | 191ms | 476ms | **592ms** |
+| Create column p95 | 103ms | 264ms | **360ms** |
+| Create card p95 | 142ms | 382ms | **491ms** |
+| Move card p95 | 223ms | 561ms | **704ms** |
+| Notifications GET p95 | 24ms | 54ms | **47ms** |
+| **Notif delivery p95** | **8.1s** | **11.7s** | **20.8s** |
+| Duration p95 | 135ms | 361ms | **557ms** |
+| Total requests | 170k | 156k | **198k** |
+| Error rate | 0.0% | 0.0% | **0.0%** |
+
+### Анализ
+
+С 20 members/board:
+- **198k requests** (+27% vs #10) — больше addMember вызовов
+- **Notif delivery 20.8s** — ×2 vs малые доски, bottleneck виден
+- **0% errors** — система стабильна под нагрузкой
+- **Notifications GET 47ms** — Redis unread count работает быстро даже с 20× больше данных
+
+### Bottleneck
+
+Notification delivery ~21s — это N Redis INCR на каждый board event. С 20 members: 1 event → 1 INSERT + ~19 Redis INCR + settings batch + member list. NATS consumer обрабатывает события последовательно.
+
+### Следующие шаги
+
+- 🔥 **NATS consumer groups** — когда NATS lag начнёт расти
+- 🔥 **Тест 2000/5000/10000 VU** — найти breaking point
+- 📊 **Grafana dashboard** с новыми метриками (goroutines, members_per_event)

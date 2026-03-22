@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"runtime/debug"
 	"syscall"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
@@ -46,6 +48,14 @@ func main() {
 	if natsURL == "" {
 		log.Fatal("NATS_URL is required")
 	}
+
+	// Goroutine count reporter
+	go func() {
+		for {
+			metrics.Goroutines.Set(float64(runtime.NumGoroutine()))
+			time.Sleep(5 * time.Second)
+		}
+	}()
 
 	// Metrics HTTP server
 	go func() {

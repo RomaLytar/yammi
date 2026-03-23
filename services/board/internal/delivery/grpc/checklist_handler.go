@@ -184,12 +184,12 @@ func (s *BoardServiceServer) ToggleChecklistItem(ctx context.Context, req *board
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.toggleChecklistItem.Execute(ctx, req.GetItemId(), req.GetBoardId(), req.GetUserId(), req.GetIsChecked())
+	isChecked, err := s.toggleChecklistItem.Execute(ctx, req.GetItemId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
 
 	return &boardpb.ToggleChecklistItemResponse{
-		IsChecked: req.GetIsChecked(),
+		IsChecked: isChecked,
 	}, nil
 }

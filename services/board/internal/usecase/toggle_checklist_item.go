@@ -21,22 +21,29 @@ func NewToggleChecklistItemUseCase(checklistRepo ChecklistRepository, memberRepo
 	}
 }
 
-func (uc *ToggleChecklistItemUseCase) Execute(ctx context.Context, itemID, boardID, userID string, isChecked bool) error {
+func (uc *ToggleChecklistItemUseCase) Execute(ctx context.Context, itemID, boardID, userID string) (bool, error) {
 	// 1. Проверка доступа (member может переключать элементы)
 	isMember, _, err := uc.memberRepo.IsMember(ctx, boardID, userID)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if !isMember {
-		return domain.ErrAccessDenied
+		return false, domain.ErrAccessDenied
 	}
 
-	// 2. Переключаем элемент
-	if err := uc.checklistRepo.ToggleItem(ctx, itemID, boardID, isChecked); err != nil {
-		return err
+	// 2. Получаем текущее состояние
+	item, err := uc.checklistRepo.GetItemByID(ctx, itemID, boardID)
+	if err != nil {
+		return false, err
 	}
 
-	// 3. Публикуем событие (async, non-blocking)
+	// 3. Инвертируем
+	newChecked := !item.IsChecked
+	if err := uc.checklistRepo.ToggleItem(ctx, itemID, boardID, newChecked); err != nil {
+		return false, err
+	}
+
+	// 4. Публикуем событие (async, non-blocking)
 	go func() {
 		_ = uc.publisher.PublishChecklistItemToggled(context.Background(), ChecklistItemToggled{
 			EventID:      generateEventID(),
@@ -45,9 +52,9 @@ func (uc *ToggleChecklistItemUseCase) Execute(ctx context.Context, itemID, board
 			ItemID:       itemID,
 			BoardID:      boardID,
 			ActorID:      userID,
-			IsChecked:    isChecked,
+			IsChecked:    newChecked,
 		})
 	}()
 
-	return nil
+	return newChecked, nil
 }

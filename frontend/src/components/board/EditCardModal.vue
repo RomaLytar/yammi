@@ -2338,13 +2338,17 @@ onMounted(() => {
   width: 20px;
   height: 20px;
   border-radius: 6px;
-  border: 2px solid var(--color-border, #d1d5db);
-  background: var(--color-surface, #fff);
+  border: 2px solid var(--color-text-tertiary, #9ca3af);
+  background: var(--color-input-bg, #f9fafb);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ecm-checklist-item:hover .ecm-checklist-item__check:not(.ecm-checklist-item__check--done) {
+  border-color: var(--color-primary, #7c5cfc);
 }
 
 .ecm-checklist-item__check--done {

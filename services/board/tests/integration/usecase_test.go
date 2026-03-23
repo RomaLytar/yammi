@@ -312,7 +312,7 @@ func TestCreateCardUseCase_Integration(t *testing.T) {
 
 	// Execute as member (assignee must be a board member)
 	assignee := memberID
-	card, err := uc.Execute(ctx, column.ID, board.ID, memberID, "Task 1", "Description", "", &assignee)
+	card, err := uc.Execute(ctx, column.ID, board.ID, memberID, "Task 1", "Description", "", &assignee, nil, "", "")
 	if err != nil {
 		t.Fatalf("Failed to create card: %v", err)
 	}
@@ -337,7 +337,7 @@ func TestCreateCardUseCase_Integration(t *testing.T) {
 
 	// Try as non-member (should fail)
 	nonMemberID := uuid.NewString()
-	_, err = uc.Execute(ctx, column.ID, board.ID, nonMemberID, "Task 2", "Desc", "", nil)
+	_, err = uc.Execute(ctx, column.ID, board.ID, nonMemberID, "Task 2", "Desc", "", nil, nil, "", "")
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
@@ -375,7 +375,7 @@ func TestMoveCardUseCase_Integration(t *testing.T) {
 	columnRepo.Create(ctx, column2)
 
 	// Create card in column1
-	card, _ := domain.NewCard(column1.ID, "Task", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column1.ID, "Task", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	// Add member

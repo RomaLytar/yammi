@@ -67,6 +67,9 @@ type cardResponse struct {
 	Version     int32  `json:"version"`
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
+	DueDate     string `json:"due_date,omitempty"`
+	Priority    string `json:"priority"`
+	TaskType    string `json:"task_type"`
 }
 
 type memberResponse struct {

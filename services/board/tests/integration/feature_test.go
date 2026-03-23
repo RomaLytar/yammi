@@ -507,7 +507,7 @@ func TestFeature_CreateCard_SetsCreatorID(t *testing.T) {
 	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Member creates card
-	card, err := uc.Execute(ctx, column.ID, board.ID, memberID, "My Task", "Description", "", nil)
+	card, err := uc.Execute(ctx, column.ID, board.ID, memberID, "My Task", "Description", "", nil, nil, "", "")
 	if err != nil {
 		t.Fatalf("Failed to create card: %v", err)
 	}
@@ -550,7 +550,7 @@ func TestFeature_CreateCard_NonMemberDenied(t *testing.T) {
 	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Non-member tries to create card → ErrAccessDenied
-	_, err = uc.Execute(ctx, column.ID, board.ID, nonMemberID, "Hacked Card", "Desc", "", nil)
+	_, err = uc.Execute(ctx, column.ID, board.ID, nonMemberID, "Hacked Card", "Desc", "", nil, nil, "", "")
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
@@ -584,7 +584,7 @@ func TestFeature_MoveCard_MemberCanMove(t *testing.T) {
 	col2, _ := domain.NewColumn(board.ID, "In Progress", 1)
 	columnRepo.Create(ctx, col2)
 
-	card, _ := domain.NewCard(col1.ID, "Task", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(col1.ID, "Task", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
@@ -642,7 +642,7 @@ func TestFeature_MoveCard_NonMemberDenied(t *testing.T) {
 	col2, _ := domain.NewColumn(board.ID, "Done", 1)
 	columnRepo.Create(ctx, col2)
 
-	card, _ := domain.NewCard(col1.ID, "Task", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(col1.ID, "Task", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
@@ -689,14 +689,14 @@ func TestFeature_UpdateCard_MemberCanUpdate(t *testing.T) {
 	columnRepo.Create(ctx, column)
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
-	card, _ := domain.NewCard(column.ID, "Original", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column.ID, "Original", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	uc := usecase.NewUpdateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Member updates card → success (assignee must be a board member)
 	assignee := memberID
-	updated, err := uc.Execute(ctx, card.ID, board.ID, memberID, "Updated Title", "Updated Desc", &assignee, 0)
+	updated, err := uc.Execute(ctx, card.ID, board.ID, memberID, "Updated Title", "Updated Desc", &assignee, 0, nil, "", "")
 	if err != nil {
 		t.Fatalf("Member should be able to update card: %v", err)
 	}
@@ -949,7 +949,7 @@ func TestFeature_AssignCard_MemberCanAssign(t *testing.T) {
 	memberRepo.AddMember(ctx, board.ID, memberA, domain.RoleMember)
 	memberRepo.AddMember(ctx, board.ID, memberB, domain.RoleMember)
 
-	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	uc := usecase.NewAssignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
@@ -998,7 +998,7 @@ func TestFeature_AssignCard_NonMemberAssigneeDenied(t *testing.T) {
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
-	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	uc := usecase.NewAssignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
@@ -1046,7 +1046,7 @@ func TestFeature_UnassignCard(t *testing.T) {
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
 	// Create card with assignee
-	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", &memberID, ownerID)
+	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", &memberID, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	// Verify assignee is set
@@ -1105,9 +1105,9 @@ func TestFeature_RemoveMember_UnassignsCards(t *testing.T) {
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
 	// Create two cards assigned to the member
-	card1, _ := domain.NewCard(column.ID, "Task 1", "Desc", "a", &memberID, ownerID)
+	card1, _ := domain.NewCard(column.ID, "Task 1", "Desc", "a", &memberID, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card1)
-	card2, _ := domain.NewCard(column.ID, "Task 2", "Desc", "b", &memberID, ownerID)
+	card2, _ := domain.NewCard(column.ID, "Task 2", "Desc", "b", &memberID, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card2)
 
 	// Remove member
@@ -1164,7 +1164,7 @@ func TestFeature_CardActivity_CreateCard(t *testing.T) {
 	createUC := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Create card
-	card, err := createUC.Execute(ctx, column.ID, board.ID, ownerID, "My Task", "Description", "", nil)
+	card, err := createUC.Execute(ctx, column.ID, board.ID, ownerID, "My Task", "Description", "", nil, nil, "", "")
 	if err != nil {
 		t.Fatalf("Failed to create card: %v", err)
 	}
@@ -1212,7 +1212,7 @@ func TestFeature_CardActivity_MoveCard(t *testing.T) {
 	col2, _ := domain.NewColumn(board.ID, "In Progress", 1)
 	columnRepo.Create(ctx, col2)
 
-	card, _ := domain.NewCard(col1.ID, "Task", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(col1.ID, "Task", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	moveUC := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)

@@ -38,7 +38,7 @@ func TestCardRepository_Create(t *testing.T) {
 
 	// Create card
 	assignee := uuid.NewString()
-	card, err := domain.NewCard(column.ID, "Task 1", "Description", "n", &assignee, ownerID)
+	card, err := domain.NewCard(column.ID, "Task 1", "Description", "n", &assignee, ownerID, nil, "", "")
 	if err != nil {
 		t.Fatalf("Failed to create domain card: %v", err)
 	}
@@ -97,7 +97,7 @@ func TestCardRepository_CreateWithoutAssignee(t *testing.T) {
 	columnRepo.Create(ctx, column)
 
 	// Create card without assignee
-	card, err := domain.NewCard(column.ID, "Task 1", "Description", "n", nil, ownerID)
+	card, err := domain.NewCard(column.ID, "Task 1", "Description", "n", nil, ownerID, nil, "", "")
 	if err != nil {
 		t.Fatalf("Failed to create domain card: %v", err)
 	}
@@ -163,7 +163,7 @@ func TestCardRepository_ListByColumnID(t *testing.T) {
 	// Create cards with lexorank positions
 	positions := []string{"a", "m", "z"}
 	for i, pos := range positions {
-		card, _ := domain.NewCard(column.ID, fmt.Sprintf("Task %d", i), "", pos, nil, ownerID)
+		card, _ := domain.NewCard(column.ID, fmt.Sprintf("Task %d", i), "", pos, nil, ownerID, nil, "", "")
 		cardRepo.Create(ctx, card)
 	}
 
@@ -224,7 +224,7 @@ func TestCardRepository_LexorankPositioning(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		card, _ := domain.NewCard(column.ID, tc.title, "", tc.position, nil, ownerID)
+		card, _ := domain.NewCard(column.ID, tc.title, "", tc.position, nil, ownerID, nil, "", "")
 		cardRepo.Create(ctx, card)
 	}
 
@@ -272,12 +272,12 @@ func TestCardRepository_Update(t *testing.T) {
 	columnRepo.Create(ctx, column)
 
 	// Create card
-	card, _ := domain.NewCard(column.ID, "Original Title", "Original Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column.ID, "Original Title", "Original Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	// Update card
 	newAssignee := uuid.NewString()
-	err = card.Update("Updated Title", "Updated Desc", &newAssignee)
+	err = card.Update("Updated Title", "Updated Desc", &newAssignee, nil, "", "")
 	if err != nil {
 		t.Fatalf("Failed to update domain card: %v", err)
 	}
@@ -331,7 +331,7 @@ func TestCardRepository_Move(t *testing.T) {
 	columnRepo.Create(ctx, column2)
 
 	// Create card in column1
-	card, _ := domain.NewCard(column1.ID, "Task", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column1.ID, "Task", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	// Move card to column2
@@ -381,7 +381,7 @@ func TestCardRepository_Delete(t *testing.T) {
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
-	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column.ID, "Task", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	// Delete card
@@ -425,7 +425,7 @@ func TestCardRepository_Partitioning(t *testing.T) {
 		columnRepo.Create(ctx, column)
 
 		for j := 0; j < 10; j++ {
-			card, _ := domain.NewCard(column.ID, fmt.Sprintf("Card %d", j), "", "n", nil, ownerID)
+			card, _ := domain.NewCard(column.ID, fmt.Sprintf("Card %d", j), "", "n", nil, ownerID, nil, "", "")
 			cardRepo.Create(ctx, card)
 			totalCards++
 		}

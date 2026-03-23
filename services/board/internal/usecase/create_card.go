@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -26,7 +27,7 @@ func NewCreateCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, me
 	}
 }
 
-func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, userID, title, description, position string, assigneeID *string) (*domain.Card, error) {
+func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, userID, title, description, position string, assigneeID *string, dueDate *time.Time, priority domain.Priority, taskType domain.TaskType) (*domain.Card, error) {
 	// 1. Проверка доступа
 	isMember, _, err := uc.memberRepo.IsMember(ctx, boardID, userID)
 	if err != nil {
@@ -61,7 +62,7 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 	}
 
 	// 4. Создаем карточку (валидация lexorank внутри)
-	card, err := domain.NewCard(columnID, title, description, position, assigneeID, userID)
+	card, err := domain.NewCard(columnID, title, description, position, assigneeID, userID, dueDate, priority, taskType)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +96,9 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 			Description:  card.Description,
 			Position:     card.Position,
 			AssigneeID:   card.AssigneeID,
+			DueDate:      card.DueDate,
+			Priority:     string(card.Priority),
+			TaskType:     string(card.TaskType),
 		})
 
 		// Если карточка создана сразу с assignee — отправляем событие

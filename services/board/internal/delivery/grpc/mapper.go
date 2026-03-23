@@ -73,7 +73,7 @@ func mapCardToProto(c *domain.Card, boardID string) *boardpb.Card {
 		assigneeID = *c.AssigneeID
 	}
 
-	return &boardpb.Card{
+	card := &boardpb.Card{
 		Id:          c.ID,
 		ColumnId:    c.ColumnID,
 		BoardId:     boardID,
@@ -85,7 +85,15 @@ func mapCardToProto(c *domain.Card, boardID string) *boardpb.Card {
 		CreatedAt:   timestamppb.New(c.CreatedAt),
 		UpdatedAt:   timestamppb.New(c.UpdatedAt),
 		CreatorId:   c.CreatorID,
+		Priority:    string(c.Priority),
+		TaskType:    string(c.TaskType),
 	}
+
+	if c.DueDate != nil {
+		card.DueDate = timestamppb.New(*c.DueDate)
+	}
+
+	return card
 }
 
 func mapCardsToProto(cards []*domain.Card, boardID string) []*boardpb.Card {
@@ -187,7 +195,9 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrCardNotInColumn) ||
 		errors.Is(err, domain.ErrAssigneeNotMember) ||
 		errors.Is(err, domain.ErrFileTooLarge) ||
-		errors.Is(err, domain.ErrEmptyFileName) {
+		errors.Is(err, domain.ErrEmptyFileName) ||
+		errors.Is(err, domain.ErrInvalidPriority) ||
+		errors.Is(err, domain.ErrInvalidTaskType) {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 

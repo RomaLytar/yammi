@@ -26,6 +26,8 @@ var (
 	ErrInvalidLexorank   = errors.New("invalid lexorank position")
 	ErrCardNotInColumn   = errors.New("card does not belong to this column")
 	ErrAssigneeNotMember = errors.New("assignee is not a board member")
+	ErrInvalidPriority   = errors.New("invalid priority")
+	ErrInvalidTaskType   = errors.New("invalid task type")
 )
 
 // Member errors

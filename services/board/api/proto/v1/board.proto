@@ -172,6 +172,9 @@ message CreateCardRequest {
   string description = 5;
   string position = 6;  // lexorank position (string, не int!)
   string assignee_id = 7;  // optional: назначить при создании
+  google.protobuf.Timestamp due_date = 8;  // optional: дедлайн
+  string priority = 9;    // low, medium, high, critical (default: medium)
+  string task_type = 10;   // bug, feature, task, improvement (default: task)
 }
 
 message CreateCardResponse {
@@ -206,6 +209,9 @@ message UpdateCardRequest {
   string description = 5;
   string assignee_id = 6;
   int32 version = 7;
+  google.protobuf.Timestamp due_date = 8;  // optional: дедлайн
+  string priority = 9;    // low, medium, high, critical
+  string task_type = 10;   // bug, feature, task, improvement
 }
 
 message UpdateCardResponse {
@@ -413,6 +419,9 @@ message Card {
   google.protobuf.Timestamp created_at = 9;
   google.protobuf.Timestamp updated_at = 10;
   string creator_id = 11;
+  google.protobuf.Timestamp due_date = 12;
+  string priority = 13;    // low, medium, high, critical
+  string task_type = 14;   // bug, feature, task, improvement
 }
 
 message BoardMember {

@@ -95,7 +95,7 @@ func TestNewCard(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			card, err := NewCard(tt.columnID, tt.title, tt.description, tt.position, tt.assigneeID, "test-creator")
+			card, err := NewCard(tt.columnID, tt.title, tt.description, tt.position, tt.assigneeID, "test-creator", nil, "", "")
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("NewCard() error = %v, wantErr %v", err, tt.wantErr)
@@ -163,6 +163,109 @@ func TestNewCard(t *testing.T) {
 	}
 }
 
+func TestNewCard_WithDueDate(t *testing.T) {
+	futureDate := time.Now().Add(24 * time.Hour)
+
+	card, err := NewCard("column-123", "Task with due date", "Description", "n", nil, "test-creator", &futureDate, PriorityHigh, TaskTypeFeature)
+	if err != nil {
+		t.Fatalf("NewCard() with due date returned error: %v", err)
+	}
+
+	if card.DueDate == nil {
+		t.Fatal("NewCard() DueDate is nil, want non-nil")
+	}
+
+	if !card.DueDate.Equal(futureDate) {
+		t.Errorf("NewCard() DueDate = %v, want %v", *card.DueDate, futureDate)
+	}
+
+	// Карточка без due date
+	card2, err := NewCard("column-123", "Task without due date", "Description", "n", nil, "test-creator", nil, "", "")
+	if err != nil {
+		t.Fatalf("NewCard() without due date returned error: %v", err)
+	}
+
+	if card2.DueDate != nil {
+		t.Errorf("NewCard() DueDate = %v, want nil", card2.DueDate)
+	}
+}
+
+func TestNewCard_WithPriority(t *testing.T) {
+	validPriorities := []Priority{PriorityLow, PriorityMedium, PriorityHigh, PriorityCritical}
+
+	for _, p := range validPriorities {
+		t.Run("valid_"+string(p), func(t *testing.T) {
+			card, err := NewCard("column-123", "Task", "Desc", "n", nil, "test-creator", nil, p, TaskTypeTask)
+			if err != nil {
+				t.Errorf("NewCard() with priority %q returned error: %v", p, err)
+			}
+			if card == nil {
+				t.Fatal("NewCard() returned nil card")
+			}
+			if card.Priority != p {
+				t.Errorf("NewCard() Priority = %v, want %v", card.Priority, p)
+			}
+		})
+	}
+
+	// Невалидный приоритет
+	t.Run("invalid_priority", func(t *testing.T) {
+		card, err := NewCard("column-123", "Task", "Desc", "n", nil, "test-creator", nil, Priority("urgent"), TaskTypeTask)
+		if !errors.Is(err, ErrInvalidPriority) {
+			t.Errorf("NewCard() with invalid priority error = %v, want ErrInvalidPriority", err)
+		}
+		if card != nil {
+			t.Error("NewCard() returned non-nil card for invalid priority")
+		}
+	})
+}
+
+func TestNewCard_WithTaskType(t *testing.T) {
+	validTaskTypes := []TaskType{TaskTypeBug, TaskTypeFeature, TaskTypeTask, TaskTypeImprovement}
+
+	for _, tt := range validTaskTypes {
+		t.Run("valid_"+string(tt), func(t *testing.T) {
+			card, err := NewCard("column-123", "Task", "Desc", "n", nil, "test-creator", nil, PriorityMedium, tt)
+			if err != nil {
+				t.Errorf("NewCard() with task type %q returned error: %v", tt, err)
+			}
+			if card == nil {
+				t.Fatal("NewCard() returned nil card")
+			}
+			if card.TaskType != tt {
+				t.Errorf("NewCard() TaskType = %v, want %v", card.TaskType, tt)
+			}
+		})
+	}
+
+	// Невалидный тип задачи
+	t.Run("invalid_task_type", func(t *testing.T) {
+		card, err := NewCard("column-123", "Task", "Desc", "n", nil, "test-creator", nil, PriorityMedium, TaskType("story"))
+		if !errors.Is(err, ErrInvalidTaskType) {
+			t.Errorf("NewCard() with invalid task type error = %v, want ErrInvalidTaskType", err)
+		}
+		if card != nil {
+			t.Error("NewCard() returned non-nil card for invalid task type")
+		}
+	})
+}
+
+func TestNewCard_DefaultPriorityAndTaskType(t *testing.T) {
+	// Пустые значения → дефолты (medium, task)
+	card, err := NewCard("column-123", "Task", "Desc", "n", nil, "test-creator", nil, "", "")
+	if err != nil {
+		t.Fatalf("NewCard() returned error: %v", err)
+	}
+
+	if card.Priority != PriorityMedium {
+		t.Errorf("NewCard() default Priority = %v, want %v", card.Priority, PriorityMedium)
+	}
+
+	if card.TaskType != TaskTypeTask {
+		t.Errorf("NewCard() default TaskType = %v, want %v", card.TaskType, TaskTypeTask)
+	}
+}
+
 func TestCard_Update(t *testing.T) {
 	assignee1 := "user-123"
 	assignee2 := "user-456"
@@ -215,7 +318,7 @@ func TestCard_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Создаем тестовую карточку
 			originalAssignee := "original-user"
-			card, err := NewCard("column-123", "Original Task", "Original description", "n", &originalAssignee, "test-creator")
+			card, err := NewCard("column-123", "Original Task", "Original description", "n", &originalAssignee, "test-creator", nil, "", "")
 			if err != nil {
 				t.Fatalf("Failed to create test card: %v", err)
 			}
@@ -224,7 +327,7 @@ func TestCard_Update(t *testing.T) {
 			time.Sleep(10 * time.Millisecond)
 
 			// Обновляем карточку
-			err = card.Update(tt.title, tt.description, tt.assigneeID)
+			err = card.Update(tt.title, tt.description, tt.assigneeID, nil, PriorityMedium, TaskTypeTask)
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("Card.Update() error = %v, wantErr %v", err, tt.wantErr)
@@ -278,12 +381,51 @@ func TestCard_Update(t *testing.T) {
 	}
 }
 
+func TestCard_Update_WithMetadata(t *testing.T) {
+	card, err := NewCard("column-123", "Task", "Description", "n", nil, "test-creator", nil, PriorityLow, TaskTypeBug)
+	if err != nil {
+		t.Fatalf("Failed to create test card: %v", err)
+	}
+
+	// Обновляем с due date, новый приоритет, новый тип
+	dueDate := time.Now().Add(48 * time.Hour)
+	err = card.Update("Updated Task", "Updated Description", nil, &dueDate, PriorityCritical, TaskTypeFeature)
+	if err != nil {
+		t.Fatalf("Card.Update() returned error: %v", err)
+	}
+
+	if card.DueDate == nil {
+		t.Fatal("Card.Update() DueDate is nil, want non-nil")
+	}
+	if !card.DueDate.Equal(dueDate) {
+		t.Errorf("Card.Update() DueDate = %v, want %v", *card.DueDate, dueDate)
+	}
+	if card.Priority != PriorityCritical {
+		t.Errorf("Card.Update() Priority = %v, want %v", card.Priority, PriorityCritical)
+	}
+	if card.TaskType != TaskTypeFeature {
+		t.Errorf("Card.Update() TaskType = %v, want %v", card.TaskType, TaskTypeFeature)
+	}
+
+	// Обновляем с невалидным приоритетом
+	err = card.Update("Task", "Desc", nil, nil, Priority("invalid"), TaskTypeTask)
+	if !errors.Is(err, ErrInvalidPriority) {
+		t.Errorf("Card.Update() with invalid priority error = %v, want ErrInvalidPriority", err)
+	}
+
+	// Обновляем с невалидным типом задачи
+	err = card.Update("Task", "Desc", nil, nil, PriorityMedium, TaskType("invalid"))
+	if !errors.Is(err, ErrInvalidTaskType) {
+		t.Errorf("Card.Update() with invalid task type error = %v, want ErrInvalidTaskType", err)
+	}
+}
+
 func TestCard_Move(t *testing.T) {
 	tests := []struct {
-		name            string
-		targetColumnID  string
-		newPosition     string
-		wantErr         error
+		name           string
+		targetColumnID string
+		newPosition    string
+		wantErr        error
 	}{
 		{
 			name:           "valid move to different column",
@@ -320,7 +462,7 @@ func TestCard_Move(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Создаем тестовую карточку
-			card, err := NewCard("column-123", "Test Task", "Description", "n", nil, "test-creator")
+			card, err := NewCard("column-123", "Test Task", "Description", "n", nil, "test-creator", nil, "", "")
 			if err != nil {
 				t.Fatalf("Failed to create test card: %v", err)
 			}
@@ -412,7 +554,7 @@ func TestCard_Reorder(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Создаем тестовую карточку
-			card, err := NewCard("column-123", "Test Task", "Description", "n", nil, "test-creator")
+			card, err := NewCard("column-123", "Test Task", "Description", "n", nil, "test-creator", nil, "", "")
 			if err != nil {
 				t.Fatalf("Failed to create test card: %v", err)
 			}
@@ -468,7 +610,7 @@ func TestCard_LexorankValidation(t *testing.T) {
 
 	for _, pos := range validPositions {
 		t.Run("valid_"+pos, func(t *testing.T) {
-			card, err := NewCard("column-123", "Task", "Desc", pos, nil, "test-creator")
+			card, err := NewCard("column-123", "Task", "Desc", pos, nil, "test-creator", nil, "", "")
 			if err != nil {
 				t.Errorf("NewCard() with valid position %q returned error: %v", pos, err)
 			}
@@ -480,7 +622,7 @@ func TestCard_LexorankValidation(t *testing.T) {
 
 	for _, pos := range invalidPositions {
 		t.Run("invalid_"+pos, func(t *testing.T) {
-			card, err := NewCard("column-123", "Task", "Desc", pos, nil, "test-creator")
+			card, err := NewCard("column-123", "Task", "Desc", pos, nil, "test-creator", nil, "", "")
 			if !errors.Is(err, ErrInvalidLexorank) {
 				t.Errorf("NewCard() with invalid position %q error = %v, want ErrInvalidLexorank", pos, err)
 			}

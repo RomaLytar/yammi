@@ -1,0 +1,36 @@
+CREATE TABLE IF NOT EXISTS checklists (
+    id UUID NOT NULL,
+    card_id UUID NOT NULL,
+    board_id UUID NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    position INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (board_id, id)
+) PARTITION BY HASH (board_id);
+
+CREATE TABLE IF NOT EXISTS checklists_p0 PARTITION OF checklists FOR VALUES WITH (MODULUS 4, REMAINDER 0);
+CREATE TABLE IF NOT EXISTS checklists_p1 PARTITION OF checklists FOR VALUES WITH (MODULUS 4, REMAINDER 1);
+CREATE TABLE IF NOT EXISTS checklists_p2 PARTITION OF checklists FOR VALUES WITH (MODULUS 4, REMAINDER 2);
+CREATE TABLE IF NOT EXISTS checklists_p3 PARTITION OF checklists FOR VALUES WITH (MODULUS 4, REMAINDER 3);
+
+CREATE INDEX IF NOT EXISTS idx_checklists_card ON checklists(card_id, board_id, position);
+
+CREATE TABLE IF NOT EXISTS checklist_items (
+    id UUID NOT NULL,
+    checklist_id UUID NOT NULL,
+    board_id UUID NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    is_checked BOOLEAN NOT NULL DEFAULT FALSE,
+    position INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (board_id, id)
+) PARTITION BY HASH (board_id);
+
+CREATE TABLE IF NOT EXISTS checklist_items_p0 PARTITION OF checklist_items FOR VALUES WITH (MODULUS 4, REMAINDER 0);
+CREATE TABLE IF NOT EXISTS checklist_items_p1 PARTITION OF checklist_items FOR VALUES WITH (MODULUS 4, REMAINDER 1);
+CREATE TABLE IF NOT EXISTS checklist_items_p2 PARTITION OF checklist_items FOR VALUES WITH (MODULUS 4, REMAINDER 2);
+CREATE TABLE IF NOT EXISTS checklist_items_p3 PARTITION OF checklist_items FOR VALUES WITH (MODULUS 4, REMAINDER 3);
+
+CREATE INDEX IF NOT EXISTS idx_checklist_items_checklist ON checklist_items(checklist_id, board_id, position);

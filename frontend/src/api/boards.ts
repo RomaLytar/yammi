@@ -577,11 +577,11 @@ export async function deleteChecklistItem(boardId: string, itemId: string): Prom
   await api.delete(`/v1/boards/${boardId}/checklist-items/${itemId}`)
 }
 
-export async function toggleChecklistItem(boardId: string, itemId: string): Promise<ChecklistItem> {
-  const { data } = await api.put<{ item: ChecklistItemResponse }>(
+export async function toggleChecklistItem(boardId: string, itemId: string): Promise<boolean> {
+  const { data } = await api.put<{ is_checked: boolean }>(
     `/v1/boards/${boardId}/checklist-items/${itemId}/toggle`,
   )
-  return mapChecklistItem(data.item)
+  return data.is_checked
 }
 
 // --- Card Links ---

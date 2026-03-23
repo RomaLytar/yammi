@@ -635,11 +635,11 @@ async function addChecklistItem(checklistId: string) {
 async function toggleItem(checklistId: string, itemId: string) {
   if (!boardStore.boardId) return
   try {
-    const updated = await boardsApi.toggleChecklistItem(boardStore.boardId, itemId)
+    const isChecked = await boardsApi.toggleChecklistItem(boardStore.boardId, itemId)
     const cl = checklists.value.find(c => c.id === checklistId)
     if (cl) {
-      const idx = cl.items.findIndex(i => i.id === itemId)
-      if (idx !== -1) cl.items[idx] = updated
+      const item = cl.items.find(i => i.id === itemId)
+      if (item) item.isChecked = isChecked
       cl.progress = calcProgress(cl.items)
     }
   } catch (err) {

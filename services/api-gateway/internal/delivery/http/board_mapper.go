@@ -280,6 +280,44 @@ func mapAutomationExecutionsFromProto(pbs []*boardpb.AutomationExecution) []auto
 	return execs
 }
 
+func mapChecklistFromProto(pb *boardpb.Checklist) checklistResponse {
+	items := make([]checklistItemResponse, 0, len(pb.GetItems()))
+	for _, item := range pb.GetItems() {
+		items = append(items, mapChecklistItemFromProto(item))
+	}
+	return checklistResponse{
+		ID:        pb.GetId(),
+		CardID:    pb.GetCardId(),
+		BoardID:   pb.GetBoardId(),
+		Title:     pb.GetTitle(),
+		Position:  pb.GetPosition(),
+		Items:     items,
+		Progress:  pb.GetProgress(),
+		CreatedAt: pb.GetCreatedAt().AsTime().Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt: pb.GetUpdatedAt().AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+func mapChecklistsFromProto(pbs []*boardpb.Checklist) []checklistResponse {
+	result := make([]checklistResponse, 0, len(pbs))
+	for _, pb := range pbs {
+		result = append(result, mapChecklistFromProto(pb))
+	}
+	return result
+}
+
+func mapChecklistItemFromProto(pb *boardpb.ChecklistItem) checklistItemResponse {
+	return checklistItemResponse{
+		ID:          pb.GetId(),
+		ChecklistID: pb.GetChecklistId(),
+		Title:       pb.GetTitle(),
+		IsChecked:   pb.GetIsChecked(),
+		Position:    pb.GetPosition(),
+		CreatedAt:   pb.GetCreatedAt().AsTime().Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt:   pb.GetUpdatedAt().AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
 func parseIntQueryParam(r *http.Request, key string, defaultValue int) int {
 	val := r.URL.Query().Get(key)
 	if val == "" {

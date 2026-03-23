@@ -136,6 +136,30 @@ type labelResponse struct {
 	CreatedAt string `json:"created_at"`
 }
 
+// --- Checklist responses ---
+
+type checklistResponse struct {
+	ID        string                  `json:"id"`
+	CardID    string                  `json:"card_id"`
+	BoardID   string                  `json:"board_id"`
+	Title     string                  `json:"title"`
+	Position  int32                   `json:"position"`
+	Items     []checklistItemResponse `json:"items"`
+	Progress  int32                   `json:"progress"`
+	CreatedAt string                  `json:"created_at"`
+	UpdatedAt string                  `json:"updated_at"`
+}
+
+type checklistItemResponse struct {
+	ID          string `json:"id"`
+	ChecklistID string `json:"checklist_id"`
+	Title       string `json:"title"`
+	IsChecked   bool   `json:"is_checked"`
+	Position    int32  `json:"position"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+}
+
 // --- Card Link responses ---
 
 type cardLinkResponse struct {

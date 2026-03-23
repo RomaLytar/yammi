@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
+
 	"github.com/RomaLytar/yammi/services/notification/internal/domain"
 )
 
@@ -131,19 +133,24 @@ func (r *BoardEventRepo) MarkBoardRead(ctx context.Context, userID, boardID stri
 	return err
 }
 
-// MarkAllBoardsRead обновляет cursors + last_seen_seq для всех досок пользователя.
+// MarkAllBoardsRead обновляет cursors + last_seen_seq для всех досок пользователя (один запрос).
 func (r *BoardEventRepo) MarkAllBoardsRead(ctx context.Context, userID string, boardIDs []string) error {
 	if len(boardIDs) == 0 {
 		return nil
 	}
 
-	// Обновляем каждую доску с её max(event_seq)
-	for _, boardID := range boardIDs {
-		if err := r.MarkBoardRead(ctx, userID, boardID); err != nil {
-			return err
-		}
-	}
-	return nil
+	query := `
+		INSERT INTO user_board_cursors (user_id, board_id, read_at, last_seen_seq)
+		SELECT $1, be.board_id, NOW(), COALESCE(MAX(be.event_seq), 0)
+		FROM board_events be
+		WHERE be.board_id = ANY($2)
+		GROUP BY be.board_id
+		ON CONFLICT (user_id, board_id) DO UPDATE SET
+			read_at = NOW(),
+			last_seen_seq = EXCLUDED.last_seen_seq
+	`
+	_, err := r.db.ExecContext(ctx, query, userID, pgtype.FlatArray[string](boardIDs))
+	return err
 }
 
 // GetBoardIDByEventID находит board_id по event ID (для mark specific as read).

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import * as boardsApi from '@/api/boards'
-import type { MemberResponse } from '@/types/api'
 
 interface Props {
   boardId: string
@@ -19,27 +18,22 @@ const emit = defineEmits<{ (e: 'close'): void }>()
 
 const loading = ref(true)
 const columnStats = ref<ColumnStat[]>([])
-const members = ref<MemberResponse[]>([])
+const memberCount = ref(0)
 const totalCards = ref(0)
 
 onMounted(async () => {
   try {
-    const [columnsData, membersData] = await Promise.all([
-      boardsApi.getColumns(props.boardId),
-      boardsApi.getMembers(props.boardId),
-    ])
+    // Один запрос — GetBoard возвращает columns (с card_count) + members
+    const { data } = await boardsApi.getBoardRaw(props.boardId)
 
-    members.value = membersData
+    memberCount.value = data.members?.length ?? 0
 
-    const stats: ColumnStat[] = []
     let total = 0
-
-    for (const col of columnsData) {
-      const cards = await boardsApi.getCards(col.id, props.boardId)
-      stats.push({ id: col.id, title: col.title, cardCount: cards.length })
-      total += cards.length
+    const stats: ColumnStat[] = []
+    for (const col of data.columns) {
+      stats.push({ id: col.id, title: col.title, cardCount: col.card_count })
+      total += col.card_count
     }
-
     columnStats.value = stats
     totalCards.value = total
   } catch (err) {
@@ -72,7 +66,7 @@ function handleBackdrop(e: MouseEvent) {
           </div>
           <div class="stat-row stat-row--summary">
             <span>Участников</span>
-            <span class="stat-value">{{ members.length }}</span>
+            <span class="stat-value">{{ memberCount }}</span>
           </div>
         </div>
 

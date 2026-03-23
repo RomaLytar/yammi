@@ -385,7 +385,7 @@ func TestCardRepository_Delete(t *testing.T) {
 	cardRepo.Create(ctx, card)
 
 	// Delete card
-	err = cardRepo.Delete(ctx, card.ID)
+	err = cardRepo.Delete(ctx, card.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete card: %v", err)
 	}

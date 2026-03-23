@@ -1,9 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Board, Column, Card, UserProfile } from '@/types/domain'
+import type { Board, Column, Card } from '@/types/domain'
 import type { MemberResponse } from '@/types/api'
 import * as boardsApi from '@/api/boards'
-import * as usersApi from '@/api/users'
 import { ApiError } from '@/api/client'
 import { generatePosition } from '@/utils/lexorank'
 
@@ -33,9 +32,9 @@ export const useBoardStore = defineStore('board', () => {
       board.value = result.board
       columns.value = result.columns
 
-      // Загружаем участников доски и их профили
+      // Загружаем участников доски (профили уже включены в ответ)
       members.value = await boardsApi.getMembers(id)
-      await fetchMemberProfiles()
+      buildMemberProfiles()
 
       // Загружаем карточки для каждой колонки
       await Promise.all(
@@ -274,30 +273,17 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  // Загружаем профили всех участников доски (имя, email)
-  async function fetchMemberProfiles(): Promise<void> {
+  // Строим кеш профилей из обогащённого ответа API
+  function buildMemberProfiles(): void {
     const profiles = new Map<string, MemberWithProfile>()
-    await Promise.all(
-      members.value.map(async (m) => {
-        try {
-          const profile = await usersApi.getProfile(m.user_id)
-          profiles.set(m.user_id, {
-            userId: m.user_id,
-            role: m.role,
-            name: profile.name || profile.email,
-            email: profile.email,
-          })
-        } catch {
-          // Профиль не найден — показываем ID
-          profiles.set(m.user_id, {
-            userId: m.user_id,
-            role: m.role,
-            name: m.user_id.slice(0, 8),
-            email: '',
-          })
-        }
-      }),
-    )
+    for (const m of members.value) {
+      profiles.set(m.user_id, {
+        userId: m.user_id,
+        role: m.role,
+        name: m.name || m.email || m.user_id.slice(0, 8),
+        email: m.email || '',
+      })
+    }
     memberProfiles.value = profiles
   }
 

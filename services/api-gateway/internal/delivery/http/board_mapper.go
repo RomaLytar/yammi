@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	boardpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board"
+	userpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/user"
 )
 
 func mapBoardFromProto(pb *boardpb.Board) boardResponse {
@@ -27,6 +28,19 @@ func mapBoardsFromProto(pbs []*boardpb.Board) []boardResponse {
 	return boards
 }
 
+func mapBoardsWithOwners(pbs []*boardpb.Board, owners map[string]*userpb.UserInfo) []boardResponse {
+	boards := make([]boardResponse, len(pbs))
+	for i, pb := range pbs {
+		b := mapBoardFromProto(pb)
+		if owner, ok := owners[pb.OwnerId]; ok {
+			b.OwnerName = owner.Name
+			b.OwnerAvatarURL = owner.AvatarUrl
+		}
+		boards[i] = b
+	}
+	return boards
+}
+
 func mapColumnFromProto(pb *boardpb.Column) columnResponse {
 	return columnResponse{
 		ID:        pb.Id,
@@ -36,6 +50,7 @@ func mapColumnFromProto(pb *boardpb.Column) columnResponse {
 		Version:   pb.Version,
 		CreatedAt: pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt: pb.UpdatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+		CardCount: pb.CardCount,
 	}
 }
 
@@ -84,6 +99,20 @@ func mapMembersFromProto(pbs []*boardpb.BoardMember) []memberResponse {
 	members := make([]memberResponse, len(pbs))
 	for i, pb := range pbs {
 		members[i] = mapMemberFromProto(pb)
+	}
+	return members
+}
+
+func mapMembersWithProfiles(pbs []*boardpb.BoardMember, profiles map[string]*userpb.UserInfo) []memberResponse {
+	members := make([]memberResponse, len(pbs))
+	for i, pb := range pbs {
+		m := mapMemberFromProto(pb)
+		if profile, ok := profiles[pb.UserId]; ok {
+			m.Name = profile.Name
+			m.Email = profile.Email
+			m.AvatarURL = profile.AvatarUrl
+		}
+		members[i] = m
 	}
 	return members
 }

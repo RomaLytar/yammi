@@ -104,10 +104,16 @@ func (r *ColumnRepository) Update(ctx context.Context, column *domain.Column) er
 	return nil
 }
 
-// Delete удаляет колонку (каскадно удалит все карточки через ON DELETE CASCADE)
-func (r *ColumnRepository) Delete(ctx context.Context, columnID string) error {
-	query := `DELETE FROM columns WHERE id = $1`
-	result, err := r.db.ExecContext(ctx, query, columnID)
+// Delete удаляет колонку и все её карточки
+func (r *ColumnRepository) Delete(ctx context.Context, columnID, boardID string) error {
+	// Сначала удаляем карточки колонки (с board_id для partition pruning)
+	_, err := r.db.ExecContext(ctx, `DELETE FROM cards WHERE column_id = $1 AND board_id = $2`, columnID, boardID)
+	if err != nil {
+		return fmt.Errorf("delete column cards: %w", err)
+	}
+
+	// Потом удаляем саму колонку
+	result, err := r.db.ExecContext(ctx, `DELETE FROM columns WHERE id = $1`, columnID)
 	if err != nil {
 		return fmt.Errorf("delete column: %w", err)
 	}

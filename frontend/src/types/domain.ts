@@ -18,6 +18,8 @@ export interface Board {
   ownerId: string
   version: number
   createdAt: string
+  ownerName?: string
+  ownerAvatarUrl?: string
 }
 
 export interface Column {

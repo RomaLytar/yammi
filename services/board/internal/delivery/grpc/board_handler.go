@@ -55,9 +55,12 @@ func (s *BoardServiceServer) GetBoard(ctx context.Context, req *boardpb.GetBoard
 		return nil, mapDomainError(err)
 	}
 
+	// 3. Подсчёт карточек по колонкам (один запрос)
+	cardCounts, _ := s.cardRepo.CountByBoard(ctx, req.GetBoardId())
+
 	return &boardpb.GetBoardResponse{
 		Board:   mapBoardToProto(board),
-		Columns: mapColumnsToProto(columns),
+		Columns: mapColumnsWithCountsToProto(columns, cardCounts),
 		Members: mapMembersToProto(members),
 	}, nil
 }

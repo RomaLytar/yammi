@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	boardpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board"
+	userpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/user"
 )
 
 // AddMember POST /api/v1/boards/{id}/members
@@ -102,7 +103,25 @@ func (h *BoardHandler) ListMembers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Собираем user_id всех участников и загружаем профили за один запрос
+	userIDs := make([]string, len(resp.Members))
+	for i, m := range resp.Members {
+		userIDs[i] = m.UserId
+	}
+
+	profileMap := make(map[string]*userpb.UserInfo)
+	if len(userIDs) > 0 {
+		usersResp, err := h.userClient.GetUsersByIDs(r.Context(), &userpb.GetUsersByIDsRequest{
+			UserIds: userIDs,
+		})
+		if err == nil {
+			for _, u := range usersResp.Users {
+				profileMap[u.Id] = u
+			}
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"members": mapMembersFromProto(resp.Members),
+		"members": mapMembersWithProfiles(resp.Members, profileMap),
 	})
 }

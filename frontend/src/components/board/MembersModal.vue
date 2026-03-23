@@ -2,6 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import * as boardsApi from '@/api/boards'
 import * as usersApi from '@/api/users'
+import type { MemberResponse } from '@/types/api'
 import BaseModal from '@/components/shared/BaseModal.vue'
 
 interface Props {
@@ -67,28 +68,13 @@ async function loadMembers() {
     loading.value = true
     const members = await boardsApi.getMembers(props.boardId)
 
-    const infos: MemberInfo[] = []
-    for (const m of members) {
-      try {
-        const profile = await usersApi.getProfile(m.user_id)
-        infos.push({
-          userId: m.user_id,
-          role: m.role,
-          name: profile.name,
-          email: profile.email,
-          avatarUrl: profile.avatarUrl,
-        })
-      } catch {
-        infos.push({
-          userId: m.user_id,
-          role: m.role,
-          name: 'Неизвестный',
-          email: '',
-          avatarUrl: '',
-        })
-      }
-    }
-    membersList.value = infos
+    membersList.value = members.map((m: MemberResponse) => ({
+      userId: m.user_id,
+      role: m.role,
+      name: m.name || 'Неизвестный',
+      email: m.email || '',
+      avatarUrl: m.avatar_url || '',
+    }))
   } finally {
     loading.value = false
   }

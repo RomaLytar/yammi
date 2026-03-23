@@ -174,10 +174,10 @@ func (r *CardRepository) Update(ctx context.Context, card *domain.Card) error {
 	return nil
 }
 
-// Delete удаляет карточку
-func (r *CardRepository) Delete(ctx context.Context, cardID string) error {
-	query := `DELETE FROM cards WHERE id = $1`
-	result, err := r.db.ExecContext(ctx, query, cardID)
+// Delete удаляет карточку (boardID для partition pruning)
+func (r *CardRepository) Delete(ctx context.Context, cardID, boardID string) error {
+	query := `DELETE FROM cards WHERE id = $1 AND board_id = $2`
+	result, err := r.db.ExecContext(ctx, query, cardID, boardID)
 	if err != nil {
 		return fmt.Errorf("delete card: %w", err)
 	}
@@ -199,6 +199,28 @@ func (r *CardRepository) UnassignByUser(ctx context.Context, boardID, userID str
 	}
 	rows, _ := result.RowsAffected()
 	return int(rows), nil
+}
+
+// CountByBoard возвращает количество карточек по колонкам доски (один запрос)
+func (r *CardRepository) CountByBoard(ctx context.Context, boardID string) (map[string]int, error) {
+	query := `SELECT column_id, COUNT(*) FROM cards WHERE board_id = $1 GROUP BY column_id`
+
+	rows, err := r.db.QueryContext(ctx, query, boardID)
+	if err != nil {
+		return nil, fmt.Errorf("count cards by board: %w", err)
+	}
+	defer rows.Close()
+
+	counts := make(map[string]int)
+	for rows.Next() {
+		var columnID string
+		var count int
+		if err := rows.Scan(&columnID, &count); err != nil {
+			return nil, fmt.Errorf("scan card count: %w", err)
+		}
+		counts[columnID] = count
+	}
+	return counts, rows.Err()
 }
 
 // BatchDelete удаляет несколько карточек по ID в рамках одной доски (partition key)

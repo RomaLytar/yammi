@@ -53,7 +53,7 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("GET /api/v1/users/search", rateLimit(requireAuth(http.HandlerFunc(user.SearchByEmail))))
 
 	// Board routes — все требуют auth
-	board := NewBoardHandler(clients.BoardClient)
+	board := NewBoardHandler(clients.BoardClient, clients.UserClient)
 	mux.Handle("POST /api/v1/boards", rateLimit(requireAuth(http.HandlerFunc(board.CreateBoard))))
 	mux.Handle("GET /api/v1/boards/{id}", rateLimit(requireAuth(http.HandlerFunc(board.GetBoard))))
 	mux.Handle("GET /api/v1/boards", rateLimit(requireAuth(http.HandlerFunc(board.ListBoards))))

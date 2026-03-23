@@ -51,14 +51,22 @@ func (m *MockCardRepository) Update(ctx context.Context, card *domain.Card) erro
 	return args.Error(0)
 }
 
-func (m *MockCardRepository) Delete(ctx context.Context, cardID string) error {
-	args := m.Called(ctx, cardID)
+func (m *MockCardRepository) Delete(ctx context.Context, cardID, boardID string) error {
+	args := m.Called(ctx, cardID, boardID)
 	return args.Error(0)
 }
 
 func (m *MockCardRepository) BatchDelete(ctx context.Context, boardID string, cardIDs []string) error {
 	args := m.Called(ctx, boardID, cardIDs)
 	return args.Error(0)
+}
+
+func (m *MockCardRepository) CountByBoard(ctx context.Context, boardID string) (map[string]int, error) {
+	args := m.Called(ctx, boardID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[string]int), args.Error(1)
 }
 
 func (m *MockCardRepository) UnassignByUser(ctx context.Context, boardID, userID string) (int, error) {

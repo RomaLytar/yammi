@@ -71,6 +71,8 @@ export interface BoardResponse {
   version: number
   created_at: string
   updated_at: string
+  owner_name?: string
+  owner_avatar_url?: string
 }
 
 export interface ListBoardsResponse {
@@ -100,6 +102,7 @@ export interface ColumnResponse {
   position: number
   created_at: string
   updated_at: string
+  card_count: number
 }
 
 export interface CreateCardRequest {
@@ -152,6 +155,9 @@ export interface MemberResponse {
   user_id: string
   role: 'owner' | 'member'
   added_at: string
+  name: string
+  email: string
+  avatar_url: string
 }
 
 // --- User Search ---

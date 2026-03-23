@@ -33,13 +33,15 @@ type profileResponse struct {
 // --- Board responses ---
 
 type boardResponse struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	OwnerID     string `json:"owner_id"`
-	Version     int32  `json:"version"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
+	ID             string `json:"id"`
+	Title          string `json:"title"`
+	Description    string `json:"description"`
+	OwnerID        string `json:"owner_id"`
+	Version        int32  `json:"version"`
+	CreatedAt      string `json:"created_at"`
+	UpdatedAt      string `json:"updated_at"`
+	OwnerName      string `json:"owner_name,omitempty"`
+	OwnerAvatarURL string `json:"owner_avatar_url,omitempty"`
 }
 
 type columnResponse struct {
@@ -50,6 +52,7 @@ type columnResponse struct {
 	Version   int32  `json:"version"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
+	CardCount int32  `json:"card_count"`
 }
 
 type cardResponse struct {
@@ -67,10 +70,13 @@ type cardResponse struct {
 }
 
 type memberResponse struct {
-	UserID   string `json:"user_id"`
-	Role     string `json:"role"`
-	Version  int32  `json:"version"`
-	JoinedAt string `json:"joined_at"`
+	UserID    string `json:"user_id"`
+	Role      string `json:"role"`
+	Version   int32  `json:"version"`
+	JoinedAt  string `json:"joined_at"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	AvatarURL string `json:"avatar_url"`
 }
 
 // --- Attachment responses ---

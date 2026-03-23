@@ -42,8 +42,8 @@ func (m *MockColumnRepository) Update(ctx context.Context, column *domain.Column
 	return args.Error(0)
 }
 
-func (m *MockColumnRepository) Delete(ctx context.Context, columnID string) error {
-	args := m.Called(ctx, columnID)
+func (m *MockColumnRepository) Delete(ctx context.Context, columnID, boardID string) error {
+	args := m.Called(ctx, columnID, boardID)
 	return args.Error(0)
 }
 

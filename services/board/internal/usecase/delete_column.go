@@ -35,8 +35,8 @@ func (uc *DeleteColumnUseCase) Execute(ctx context.Context, columnID, boardID, u
 		return domain.ErrNotOwner
 	}
 
-	// 2. Удаляем (CASCADE удалит cards)
-	if err := uc.columnRepo.Delete(ctx, columnID); err != nil {
+	// 2. Удаляем карточки и колонку
+	if err := uc.columnRepo.Delete(ctx, columnID, boardID); err != nil {
 		return err
 	}
 

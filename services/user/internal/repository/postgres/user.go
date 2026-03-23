@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/RomaLytar/yammi/services/user/internal/domain"
 )
@@ -44,6 +47,30 @@ func (r *UserRepo) GetByID(ctx context.Context, id string) (*domain.User, error)
 		return nil, err
 	}
 	return user, nil
+}
+
+func (r *UserRepo) GetByIDs(ctx context.Context, ids []string) ([]*domain.User, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	query := `SELECT id, email, name, avatar_url FROM profiles WHERE id = ANY($1)`
+
+	rows, err := r.db.QueryContext(ctx, query, pgtype.FlatArray[string](ids))
+	if err != nil {
+		return nil, fmt.Errorf("select users by ids: %w", err)
+	}
+	defer rows.Close()
+
+	var users []*domain.User
+	for rows.Next() {
+		u := &domain.User{}
+		if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.AvatarURL); err != nil {
+			return nil, fmt.Errorf("scan user: %w", err)
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
 }
 
 func (r *UserRepo) SearchByEmail(ctx context.Context, query string, limit int) ([]*domain.User, error) {

@@ -39,6 +39,9 @@ type BoardServiceServer struct {
 	removeMember *usecase.RemoveMemberUseCase
 	listMembers  *usecase.ListMembersUseCase
 
+	// Card Repository (для CountByBoard в GetBoard)
+	cardRepo usecase.CardRepository
+
 	// Attachment Use Cases
 	uploadAttachment *usecase.UploadAttachmentUseCase
 	confirmUpload    *usecase.ConfirmUploadUseCase
@@ -71,6 +74,7 @@ func NewBoardServiceServer(
 	addMember *usecase.AddMemberUseCase,
 	removeMember *usecase.RemoveMemberUseCase,
 	listMembers *usecase.ListMembersUseCase,
+	cardRepo usecase.CardRepository,
 	uploadAttachment *usecase.UploadAttachmentUseCase,
 	confirmUpload *usecase.ConfirmUploadUseCase,
 	getDownloadURL *usecase.GetDownloadURLUseCase,
@@ -100,6 +104,7 @@ func NewBoardServiceServer(
 		addMember:        addMember,
 		removeMember:     removeMember,
 		listMembers:      listMembers,
+		cardRepo:         cardRepo,
 		uploadAttachment: uploadAttachment,
 		confirmUpload:    confirmUpload,
 		getDownloadURL:   getDownloadURL,

@@ -40,6 +40,10 @@ func (uc *UserUseCase) UpdateProfile(ctx context.Context, userID, name, avatarUR
 	return user, nil
 }
 
+func (uc *UserUseCase) GetProfilesByIDs(ctx context.Context, ids []string) ([]*domain.User, error) {
+	return uc.userRepo.GetByIDs(ctx, ids)
+}
+
 func (uc *UserUseCase) SearchByEmail(ctx context.Context, query string, limit int) ([]*domain.User, error) {
 	return uc.userRepo.SearchByEmail(ctx, query, limit)
 }

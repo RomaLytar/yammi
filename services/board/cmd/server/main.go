@@ -180,6 +180,7 @@ func main() {
 		addMemberUC,
 		removeMemberUC,
 		listMembersUC,
+		cardRepo,
 		uploadAttachmentUC,
 		confirmUploadUC,
 		getDownloadURLUC,

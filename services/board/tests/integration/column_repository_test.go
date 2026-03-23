@@ -223,7 +223,7 @@ func TestColumnRepository_Delete(t *testing.T) {
 	columnRepo.Create(ctx, column)
 
 	// Delete column
-	err = columnRepo.Delete(ctx, column.ID)
+	err = columnRepo.Delete(ctx, column.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete column: %v", err)
 	}
@@ -235,7 +235,7 @@ func TestColumnRepository_Delete(t *testing.T) {
 	}
 
 	// Try to delete again
-	err = columnRepo.Delete(ctx, column.ID)
+	err = columnRepo.Delete(ctx, column.ID, board.ID)
 	if err != domain.ErrColumnNotFound {
 		t.Errorf("Expected ErrColumnNotFound on second delete, got %v", err)
 	}

@@ -4,8 +4,17 @@ option go_package = "github.com/RomaLytar/yammi/services/user/api/proto/v1;userp
 
 service UserService {
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc GetUsersByIDs(GetUsersByIDsRequest) returns (GetUsersByIDsResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
   rpc SearchByEmail(SearchByEmailRequest) returns (SearchByEmailResponse);
+}
+
+message GetUsersByIDsRequest {
+  repeated string user_ids = 1;
+}
+
+message GetUsersByIDsResponse {
+  repeated UserInfo users = 1;
 }
 
 message SearchByEmailRequest {

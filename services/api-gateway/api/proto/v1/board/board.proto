@@ -396,6 +396,7 @@ message Column {
   int32 version = 5;
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp updated_at = 7;
+  int32 card_count = 8;
 }
 
 message Card {

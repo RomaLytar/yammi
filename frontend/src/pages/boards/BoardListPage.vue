@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBoardsStore } from '@/stores/boards'
 import { useAuthStore } from '@/stores/auth'
 import { registerHandler, unregisterHandler } from '@/services/realtimeService'
-import * as usersApi from '@/api/users'
 import type { Board } from '@/types/domain'
 import type { BoardDeletedData, MemberAddedData, MemberRemovedData } from '@/types/events'
 import CreateBoardModal from '@/components/board/CreateBoardModal.vue'
@@ -65,16 +64,12 @@ function toggleSelectAll() {
   toggleSelectAllRaw(boardsStore.boards.map(b => b.id))
 }
 
-// Owner profiles cache
-const ownerProfiles = reactive<Record<string, { name: string; avatarUrl: string }>>({})
-
 function isOwner(board: Board): boolean {
   return board.ownerId === authStore.userId
 }
 
 async function reload() {
   await boardsStore.fetchBoards(true)
-  fetchOwnerProfiles()
 }
 
 function toggleOwnerOnly() {
@@ -110,7 +105,7 @@ function onMemberAdded(data: unknown) {
   const d = data as MemberAddedData
   if (d.user_id === authStore.userId) {
     // Current user was added to a board — refresh the list
-    boardsStore.fetchBoards(true).then(() => fetchOwnerProfiles())
+    boardsStore.fetchBoards(true)
   }
 }
 
@@ -130,7 +125,6 @@ const listRealtimeHandlers: Array<[string, (data: unknown) => void]> = [
 
 onMounted(async () => {
   await boardsStore.fetchBoards(true)
-  fetchOwnerProfiles()
   document.addEventListener('click', closeMenu)
 
   // Register real-time handlers
@@ -150,19 +144,6 @@ onUnmounted(() => {
 
 function closeMenu() {
   activeMenu.value = null
-}
-
-async function fetchOwnerProfiles() {
-  const ownerIds = [...new Set(boardsStore.boards.map(b => b.ownerId))]
-  for (const id of ownerIds) {
-    if (ownerProfiles[id]) continue
-    try {
-      const profile = await usersApi.getProfile(id)
-      ownerProfiles[id] = { name: profile.name, avatarUrl: profile.avatarUrl }
-    } catch {
-      ownerProfiles[id] = { name: 'Неизвестный', avatarUrl: '' }
-    }
-  }
 }
 
 function getInitials(name: string): string {
@@ -190,7 +171,6 @@ function openBoard(boardId: string) {
 async function loadMore() {
   if (!boardsStore.loading && boardsStore.hasMore) {
     await boardsStore.fetchBoards(false)
-    fetchOwnerProfiles()
   }
 }
 
@@ -366,9 +346,9 @@ async function handleDeleteBoard() {
 
           <div class="board-item__footer">
             <span class="board-item__date">{{ new Date(board.createdAt).toLocaleDateString('ru-RU') }}</span>
-            <div v-if="ownerProfiles[board.ownerId]" class="owner-avatar" :title="ownerProfiles[board.ownerId].name">
-              <img v-if="ownerProfiles[board.ownerId].avatarUrl" :src="ownerProfiles[board.ownerId].avatarUrl" :alt="ownerProfiles[board.ownerId].name" />
-              <span v-else class="avatar-initials">{{ getInitials(ownerProfiles[board.ownerId].name) }}</span>
+            <div v-if="board.ownerName" class="owner-avatar" :title="board.ownerName">
+              <img v-if="board.ownerAvatarUrl" :src="board.ownerAvatarUrl" :alt="board.ownerName" />
+              <span v-else class="avatar-initials">{{ getInitials(board.ownerName) }}</span>
             </div>
           </div>
         </div>
@@ -403,7 +383,7 @@ async function handleDeleteBoard() {
     />
 
     <BoardDetailsModal v-if="detailsTarget" :board-id="detailsTarget.id" :board-title="detailsTarget.title" @close="detailsTarget = null" />
-    <MembersModal v-if="membersTarget" :board-id="membersTarget.id" :is-owner="membersTarget.ownerId === authStore.userId" @close="membersTarget = null" @updated="fetchOwnerProfiles()" />
+    <MembersModal v-if="membersTarget" :board-id="membersTarget.id" :is-owner="membersTarget.ownerId === authStore.userId" @close="membersTarget = null" @updated="reload()" />
   </div>
 </template>
 

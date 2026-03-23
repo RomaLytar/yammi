@@ -32,6 +32,8 @@ function mapBoard(dto: BoardResponse): Board {
     ownerId: dto.owner_id,
     version: dto.version,
     createdAt: dto.created_at,
+    ownerName: dto.owner_name,
+    ownerAvatarUrl: dto.owner_avatar_url,
   }
 }
 
@@ -82,6 +84,10 @@ export async function getBoards(
     boards: data.boards.map(mapBoard),
     nextCursor: data.next_cursor,
   }
+}
+
+export async function getBoardRaw(boardId: string) {
+  return api.get<GetBoardResponse>(`/v1/boards/${boardId}`)
 }
 
 export async function getBoard(boardId: string): Promise<{ board: Board; columns: Column[] }> {

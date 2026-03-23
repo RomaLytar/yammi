@@ -34,9 +34,9 @@ var defaultDialOpts = []grpc.DialOption{
 	grpc.WithTransportCredentials(insecure.NewCredentials()),
 	grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`),
 	grpc.WithKeepaliveParams(keepalive.ClientParameters{
-		Time:                10 * time.Second,
-		Timeout:             3 * time.Second,
-		PermitWithoutStream: true,
+		Time:                5 * time.Minute,
+		Timeout:             10 * time.Second,
+		PermitWithoutStream: false,
 	}),
 	grpc.WithConnectParams(grpc.ConnectParams{
 		MinConnectTimeout: 5 * time.Second,

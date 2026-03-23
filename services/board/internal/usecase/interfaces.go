@@ -44,8 +44,8 @@ type ColumnRepository interface {
 	// Update обновляет колонку
 	Update(ctx context.Context, column *domain.Column) error
 
-	// Delete удаляет колонку по ID
-	Delete(ctx context.Context, columnID string) error
+	// Delete удаляет колонку по ID (сначала удаляет карточки колонки)
+	Delete(ctx context.Context, columnID, boardID string) error
 }
 
 // CardRepository определяет интерфейс для работы с карточками
@@ -65,8 +65,11 @@ type CardRepository interface {
 	// Update обновляет карточку
 	Update(ctx context.Context, card *domain.Card) error
 
-	// Delete удаляет карточку по ID
-	Delete(ctx context.Context, cardID string) error
+	// Delete удаляет карточку по ID (boardID для partition pruning)
+	Delete(ctx context.Context, cardID, boardID string) error
+
+	// CountByBoard возвращает количество карточек по колонкам доски
+	CountByBoard(ctx context.Context, boardID string) (map[string]int, error)
 
 	// BatchDelete удаляет несколько карточек по ID в рамках одной доски
 	BatchDelete(ctx context.Context, boardID string, cardIDs []string) error

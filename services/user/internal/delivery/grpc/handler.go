@@ -43,6 +43,29 @@ func (h *UserHandler) GetProfile(ctx context.Context, req *userpb.GetProfileRequ
 	}, nil
 }
 
+func (h *UserHandler) GetUsersByIDs(ctx context.Context, req *userpb.GetUsersByIDsRequest) (*userpb.GetUsersByIDsResponse, error) {
+	if len(req.GetUserIds()) == 0 {
+		return &userpb.GetUsersByIDsResponse{}, nil
+	}
+
+	users, err := h.uc.GetProfilesByIDs(ctx, req.GetUserIds())
+	if err != nil {
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	result := make([]*userpb.UserInfo, 0, len(users))
+	for _, u := range users {
+		result = append(result, &userpb.UserInfo{
+			Id:        u.ID,
+			Email:     u.Email,
+			Name:      u.Name,
+			AvatarUrl: u.AvatarURL,
+		})
+	}
+
+	return &userpb.GetUsersByIDsResponse{Users: result}, nil
+}
+
 func (h *UserHandler) UpdateProfile(ctx context.Context, req *userpb.UpdateProfileRequest) (*userpb.UpdateProfileResponse, error) {
 	if req.GetUserId() == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")

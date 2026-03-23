@@ -24,7 +24,7 @@ export const useBoardsStore = defineStore('boards', () => {
       error.value = null
 
       const cursor = reset ? undefined : nextCursor.value
-      const result = await boardsApi.getBoards(20, cursor, ownerOnly.value, search.value, sortBy.value)
+      const result = await boardsApi.getBoards(50, cursor, ownerOnly.value, search.value, sortBy.value)
 
       if (reset) {
         boards.value = result.boards

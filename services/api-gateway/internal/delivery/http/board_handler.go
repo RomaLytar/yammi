@@ -5,14 +5,16 @@ import (
 	"net/http"
 
 	boardpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board"
+	userpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/user"
 )
 
 type BoardHandler struct {
-	client boardpb.BoardServiceClient
+	client     boardpb.BoardServiceClient
+	userClient userpb.UserServiceClient
 }
 
-func NewBoardHandler(client boardpb.BoardServiceClient) *BoardHandler {
-	return &BoardHandler{client: client}
+func NewBoardHandler(client boardpb.BoardServiceClient, userClient userpb.UserServiceClient) *BoardHandler {
+	return &BoardHandler{client: client, userClient: userClient}
 }
 
 // CreateBoard POST /api/v1/boards
@@ -70,10 +72,27 @@ func (h *BoardHandler) GetBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Обогащаем участников профилями пользователей
+	userIDs := make([]string, len(resp.Members))
+	for i, m := range resp.Members {
+		userIDs[i] = m.UserId
+	}
+	profileMap := make(map[string]*userpb.UserInfo)
+	if len(userIDs) > 0 {
+		usersResp, err := h.userClient.GetUsersByIDs(r.Context(), &userpb.GetUsersByIDsRequest{
+			UserIds: userIDs,
+		})
+		if err == nil {
+			for _, u := range usersResp.Users {
+				profileMap[u.Id] = u
+			}
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"board":   mapBoardFromProto(resp.Board),
 		"columns": mapColumnsFromProto(resp.Columns),
-		"members": mapMembersFromProto(resp.Members),
+		"members": mapMembersWithProfiles(resp.Members, profileMap),
 	})
 }
 
@@ -85,7 +104,7 @@ func (h *BoardHandler) ListBoards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit := parseIntQueryParam(r, "limit", 20)
+	limit := parseIntQueryParam(r, "limit", 50)
 	cursor := r.URL.Query().Get("cursor")
 	ownerOnly := r.URL.Query().Get("owner_only") == "true"
 	search := r.URL.Query().Get("search")
@@ -104,8 +123,30 @@ func (h *BoardHandler) ListBoards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Собираем уникальные owner_id и загружаем профили за один запрос
+	ownerIDSet := make(map[string]struct{})
+	for _, b := range resp.Boards {
+		ownerIDSet[b.OwnerId] = struct{}{}
+	}
+	ownerIDs := make([]string, 0, len(ownerIDSet))
+	for id := range ownerIDSet {
+		ownerIDs = append(ownerIDs, id)
+	}
+
+	ownerMap := make(map[string]*userpb.UserInfo)
+	if len(ownerIDs) > 0 {
+		usersResp, err := h.userClient.GetUsersByIDs(r.Context(), &userpb.GetUsersByIDsRequest{
+			UserIds: ownerIDs,
+		})
+		if err == nil {
+			for _, u := range usersResp.Users {
+				ownerMap[u.Id] = u
+			}
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"boards":      mapBoardsFromProto(resp.Boards),
+		"boards":      mapBoardsWithOwners(resp.Boards, ownerMap),
 		"next_cursor": resp.NextCursor,
 	})
 }

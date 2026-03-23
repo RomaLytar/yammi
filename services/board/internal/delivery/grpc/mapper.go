@@ -55,6 +55,18 @@ func mapColumnsToProto(columns []*domain.Column) []*boardpb.Column {
 	return result
 }
 
+func mapColumnsWithCountsToProto(columns []*domain.Column, counts map[string]int) []*boardpb.Column {
+	result := make([]*boardpb.Column, len(columns))
+	for i, c := range columns {
+		col := mapColumnToProto(c)
+		if counts != nil {
+			col.CardCount = int32(counts[c.ID])
+		}
+		result[i] = col
+	}
+	return result
+}
+
 func mapCardToProto(c *domain.Card, boardID string) *boardpb.Card {
 	assigneeID := ""
 	if c.AssigneeID != nil {

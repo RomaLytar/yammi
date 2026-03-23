@@ -11,6 +11,8 @@ import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSearchSelect from '@/components/shared/BaseSearchSelect.vue'
 import RichTextEditor from '@/components/shared/RichTextEditor.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
 import { useBoardStore } from '@/stores/board'
 import { useUserStore } from '@/stores/user'
@@ -896,15 +898,12 @@ onMounted(() => {
                 <div class="ecm-checklist__bar-fill" :style="{ width: calcProgress(cl.items) + '%' }" />
               </div>
               <div class="ecm-checklist__items">
-                <div v-for="item in cl.items" :key="item.id" class="ecm-checklist-item">
-                  <input
-                    type="checkbox"
-                    :checked="item.isChecked"
-                    class="ecm-checklist-item__check"
-                    @change="toggleItem(cl.id, item.id)"
-                  />
+                <div v-for="item in cl.items" :key="item.id" class="ecm-checklist-item" @click="toggleItem(cl.id, item.id)">
+                  <div class="ecm-checklist-item__check" :class="{ 'ecm-checklist-item__check--done': item.isChecked }">
+                    <svg v-if="item.isChecked" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
                   <span class="ecm-checklist-item__title" :class="{ 'ecm-checklist-item__title--done': item.isChecked }">{{ item.title }}</span>
-                  <button class="ecm-checklist-item__remove" @click="removeChecklistItem(cl.id, item.id)">
+                  <button class="ecm-checklist-item__remove" @click.stop="removeChecklistItem(cl.id, item.id)">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 </div>
@@ -1221,10 +1220,16 @@ onMounted(() => {
             <!-- Дедлайн -->
             <div class="ecm-field">
               <span class="ecm-field__label">Дедлайн</span>
-              <input
+              <VueDatePicker
                 v-model="selectedDueDate"
-                type="date"
-                class="ecm-date-input"
+                :enable-time-picker="false"
+                auto-apply
+                :clearable="true"
+                placeholder="Выберите дату..."
+                locale="ru"
+                format="dd.MM.yyyy"
+                :dark="document.documentElement.getAttribute('data-theme') === 'dark'"
+                input-class-name="ecm-datepicker-input"
               />
             </div>
 
@@ -2317,22 +2322,41 @@ onMounted(() => {
 .ecm-checklist-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 0;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ecm-checklist-item:hover {
+  background: var(--color-primary-soft, rgba(99, 102, 241, 0.06));
 }
 
 .ecm-checklist-item__check {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--color-primary, #7c5cfc);
-  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--color-border, #d1d5db);
+  background: var(--color-surface, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ecm-checklist-item__check--done {
+  background: var(--color-primary, #7c5cfc);
+  border-color: var(--color-primary, #7c5cfc);
+  color: white;
 }
 
 .ecm-checklist-item__title {
   flex: 1;
   font-size: 13px;
   color: var(--color-text, #111827);
+  transition: all 0.15s;
 }
 
 .ecm-checklist-item__title--done {
@@ -2625,5 +2649,35 @@ onMounted(() => {
   text-align: center;
   font-size: 13px;
   color: var(--color-text-tertiary, #9ca3af);
+}
+</style>
+
+<style>
+/* VueDatePicker theme overrides */
+.ecm-datepicker-input {
+  padding: 8px 12px !important;
+  border: 1.5px solid var(--color-input-border) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--color-input-bg) !important;
+  color: var(--color-text) !important;
+  font-size: 13px !important;
+  font-family: inherit !important;
+}
+
+.ecm-datepicker-input:focus {
+  border-color: var(--color-input-focus) !important;
+  box-shadow: var(--shadow-focus) !important;
+}
+
+.dp__theme_light,
+.dp__theme_dark {
+  --dp-primary-color: var(--color-primary);
+  --dp-border-color: var(--color-border);
+  --dp-menu-border-color: var(--color-border-light);
+  --dp-background-color: var(--color-surface);
+  --dp-text-color: var(--color-text);
+  --dp-hover-color: var(--color-primary-soft);
+  --dp-hover-text-color: var(--color-text);
+  --dp-border-color-hover: var(--color-primary);
 }
 </style>

@@ -1,0 +1,7 @@
+ALTER TABLE cards DROP CONSTRAINT IF EXISTS chk_task_type;
+ALTER TABLE cards DROP CONSTRAINT IF EXISTS chk_priority;
+DROP INDEX IF EXISTS idx_cards_priority;
+DROP INDEX IF EXISTS idx_cards_due_date;
+ALTER TABLE cards DROP COLUMN IF EXISTS task_type;
+ALTER TABLE cards DROP COLUMN IF EXISTS priority;
+ALTER TABLE cards DROP COLUMN IF EXISTS due_date;

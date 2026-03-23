@@ -132,9 +132,9 @@ func TestDeleteBoard_CascadeDeletesCards(t *testing.T) {
 	boardRepo.Create(ctx, board)
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
-	card1, _ := domain.NewCard(column.ID, "Card 1", "Desc", "a", nil, ownerID)
+	card1, _ := domain.NewCard(column.ID, "Card 1", "Desc", "a", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card1)
-	card2, _ := domain.NewCard(column.ID, "Card 2", "Desc", "b", nil, ownerID)
+	card2, _ := domain.NewCard(column.ID, "Card 2", "Desc", "b", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card2)
 
 	uc := usecase.NewDeleteBoardUseCase(boardRepo, memberRepo, publisher)
@@ -173,7 +173,7 @@ func TestDeleteCard_CreatorCanDelete(t *testing.T) {
 	columnRepo.Create(ctx, column)
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
-	card, _ := domain.NewCard(column.ID, "My Card", "Desc", "n", nil, memberID)
+	card, _ := domain.NewCard(column.ID, "My Card", "Desc", "n", nil, memberID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	uc := usecase.NewDeleteCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
@@ -211,7 +211,7 @@ func TestDeleteCard_OwnerCanDeleteAnyCard(t *testing.T) {
 	columnRepo.Create(ctx, column)
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
-	card, _ := domain.NewCard(column.ID, "Member Card", "Desc", "n", nil, memberID)
+	card, _ := domain.NewCard(column.ID, "Member Card", "Desc", "n", nil, memberID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	uc := usecase.NewDeleteCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
@@ -251,7 +251,7 @@ func TestDeleteCard_MemberCannotDeleteOthersCard(t *testing.T) {
 	memberRepo.AddMember(ctx, board.ID, memberA, domain.RoleMember)
 	memberRepo.AddMember(ctx, board.ID, memberB, domain.RoleMember)
 
-	card, _ := domain.NewCard(column.ID, "A's Card", "Desc", "n", nil, memberA)
+	card, _ := domain.NewCard(column.ID, "A's Card", "Desc", "n", nil, memberA, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	uc := usecase.NewDeleteCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
@@ -290,7 +290,7 @@ func TestDeleteCard_BatchDelete(t *testing.T) {
 
 	var cardIDs []string
 	for _, pos := range []string{"a", "b", "c"} {
-		card, _ := domain.NewCard(column.ID, "Card", "Desc", pos, nil, ownerID)
+		card, _ := domain.NewCard(column.ID, "Card", "Desc", pos, nil, ownerID, nil, "", "")
 		cardRepo.Create(ctx, card)
 		cardIDs = append(cardIDs, card.ID)
 	}
@@ -331,7 +331,7 @@ func TestDeleteCard_NonMemberCannotDelete(t *testing.T) {
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
-	card, _ := domain.NewCard(column.ID, "Card", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column.ID, "Card", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	uc := usecase.NewDeleteCardUseCase(cardRepo, boardRepo, memberRepo, publisher)

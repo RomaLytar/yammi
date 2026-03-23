@@ -3,8 +3,10 @@ package http
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	boardpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // CreateCard POST /api/v1/columns/{id}/cards
@@ -22,18 +24,21 @@ func (h *BoardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		BoardID     string `json:"board_id"`
-		Title       string `json:"title"`
-		Description string `json:"description"`
-		Position    string `json:"position"`
-		AssigneeID  string `json:"assignee_id"`
+		BoardID     string  `json:"board_id"`
+		Title       string  `json:"title"`
+		Description string  `json:"description"`
+		Position    string  `json:"position"`
+		AssigneeID  string  `json:"assignee_id"`
+		DueDate     *string `json:"due_date"`
+		Priority    string  `json:"priority"`
+		TaskType    string  `json:"task_type"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	resp, err := h.client.CreateCard(r.Context(), &boardpb.CreateCardRequest{
+	grpcReq := &boardpb.CreateCardRequest{
 		ColumnId:    columnID,
 		BoardId:     req.BoardID,
 		UserId:      userID,
@@ -41,7 +46,19 @@ func (h *BoardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
 		Description: req.Description,
 		Position:    req.Position,
 		AssigneeId:  req.AssigneeID,
-	})
+		Priority:    req.Priority,
+		TaskType:    req.TaskType,
+	}
+	if req.DueDate != nil && *req.DueDate != "" {
+		t, err := time.Parse(time.RFC3339, *req.DueDate)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid due_date format, expected RFC3339")
+			return
+		}
+		grpcReq.DueDate = timestamppb.New(t)
+	}
+
+	resp, err := h.client.CreateCard(r.Context(), grpcReq)
 	if err != nil {
 		writeGRPCError(w, err)
 		return
@@ -137,18 +154,21 @@ func (h *BoardHandler) UpdateCard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		BoardID     string `json:"board_id"`
-		Title       string `json:"title"`
-		Description string `json:"description"`
-		AssigneeID  string `json:"assignee_id"`
-		Version     int32  `json:"version"`
+		BoardID     string  `json:"board_id"`
+		Title       string  `json:"title"`
+		Description string  `json:"description"`
+		AssigneeID  string  `json:"assignee_id"`
+		Version     int32   `json:"version"`
+		DueDate     *string `json:"due_date"`
+		Priority    string  `json:"priority"`
+		TaskType    string  `json:"task_type"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	resp, err := h.client.UpdateCard(r.Context(), &boardpb.UpdateCardRequest{
+	grpcReq := &boardpb.UpdateCardRequest{
 		CardId:      cardID,
 		BoardId:     req.BoardID,
 		UserId:      userID,
@@ -156,7 +176,19 @@ func (h *BoardHandler) UpdateCard(w http.ResponseWriter, r *http.Request) {
 		Description: req.Description,
 		AssigneeId:  req.AssigneeID,
 		Version:     req.Version,
-	})
+		Priority:    req.Priority,
+		TaskType:    req.TaskType,
+	}
+	if req.DueDate != nil && *req.DueDate != "" {
+		t, err := time.Parse(time.RFC3339, *req.DueDate)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid due_date format, expected RFC3339")
+			return
+		}
+		grpcReq.DueDate = timestamppb.New(t)
+	}
+
+	resp, err := h.client.UpdateCard(r.Context(), grpcReq)
 	if err != nil {
 		writeGRPCError(w, err)
 		return

@@ -75,30 +75,36 @@ type ColumnsReordered struct {
 }
 
 type CardCreated struct {
-	EventID      string    `json:"event_id"`
-	EventVersion int       `json:"event_version"`
-	OccurredAt   time.Time `json:"occurred_at"`
-	CardID       string    `json:"card_id"`
-	ColumnID     string    `json:"column_id"`
-	BoardID      string    `json:"board_id"`
-	ActorID      string    `json:"actor_id"`
-	Title        string    `json:"title"`
-	Description  string    `json:"description"`
-	Position     string    `json:"position"`
-	AssigneeID   *string   `json:"assignee_id,omitempty"`
+	EventID      string     `json:"event_id"`
+	EventVersion int        `json:"event_version"`
+	OccurredAt   time.Time  `json:"occurred_at"`
+	CardID       string     `json:"card_id"`
+	ColumnID     string     `json:"column_id"`
+	BoardID      string     `json:"board_id"`
+	ActorID      string     `json:"actor_id"`
+	Title        string     `json:"title"`
+	Description  string     `json:"description"`
+	Position     string     `json:"position"`
+	AssigneeID   *string    `json:"assignee_id,omitempty"`
+	DueDate      *time.Time `json:"due_date,omitempty"`
+	Priority     string     `json:"priority"`
+	TaskType     string     `json:"task_type"`
 }
 
 type CardUpdated struct {
-	EventID      string    `json:"event_id"`
-	EventVersion int       `json:"event_version"`
-	OccurredAt   time.Time `json:"occurred_at"`
-	CardID       string    `json:"card_id"`
-	ColumnID     string    `json:"column_id"`
-	BoardID      string    `json:"board_id"`
-	ActorID      string    `json:"actor_id"`
-	Title        string    `json:"title"`
-	Description  string    `json:"description"`
-	AssigneeID   *string   `json:"assignee_id,omitempty"`
+	EventID      string     `json:"event_id"`
+	EventVersion int        `json:"event_version"`
+	OccurredAt   time.Time  `json:"occurred_at"`
+	CardID       string     `json:"card_id"`
+	ColumnID     string     `json:"column_id"`
+	BoardID      string     `json:"board_id"`
+	ActorID      string     `json:"actor_id"`
+	Title        string     `json:"title"`
+	Description  string     `json:"description"`
+	AssigneeID   *string    `json:"assignee_id,omitempty"`
+	DueDate      *time.Time `json:"due_date,omitempty"`
+	Priority     string     `json:"priority"`
+	TaskType     string     `json:"task_type"`
 }
 
 type CardMoved struct {

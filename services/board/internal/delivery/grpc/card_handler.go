@@ -2,12 +2,14 @@ package grpc
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
+	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
 
 // CreateCard создает новую карточку
@@ -34,7 +36,14 @@ func (s *BoardServiceServer) CreateCard(ctx context.Context, req *boardpb.Create
 		assigneeID = stringPtr(req.GetAssigneeId())
 	}
 
-	card, err := s.createCard.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), req.GetPosition(), assigneeID)
+	// Преобразуем due_date из proto timestamp
+	var dueDate *time.Time
+	if req.GetDueDate() != nil {
+		t := req.GetDueDate().AsTime()
+		dueDate = &t
+	}
+
+	card, err := s.createCard.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), req.GetPosition(), assigneeID, dueDate, domain.Priority(req.GetPriority()), domain.TaskType(req.GetTaskType()))
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -109,7 +118,14 @@ func (s *BoardServiceServer) UpdateCard(ctx context.Context, req *boardpb.Update
 		assigneeID = stringPtr(req.GetAssigneeId())
 	}
 
-	card, err := s.updateCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), assigneeID, int(req.GetVersion()))
+	// Преобразуем due_date из proto timestamp
+	var dueDate *time.Time
+	if req.GetDueDate() != nil {
+		t := req.GetDueDate().AsTime()
+		dueDate = &t
+	}
+
+	card, err := s.updateCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), assigneeID, int(req.GetVersion()), dueDate, domain.Priority(req.GetPriority()), domain.TaskType(req.GetTaskType()))
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

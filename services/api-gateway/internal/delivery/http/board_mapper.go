@@ -63,7 +63,7 @@ func mapColumnsFromProto(pbs []*boardpb.Column) []columnResponse {
 }
 
 func mapCardFromProto(pb *boardpb.Card) cardResponse {
-	return cardResponse{
+	resp := cardResponse{
 		ID:          pb.Id,
 		ColumnID:    pb.ColumnId,
 		BoardID:     pb.BoardId,
@@ -75,7 +75,13 @@ func mapCardFromProto(pb *boardpb.Card) cardResponse {
 		Version:     pb.Version,
 		CreatedAt:   pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt:   pb.UpdatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+		Priority:    pb.Priority,
+		TaskType:    pb.TaskType,
 	}
+	if pb.DueDate != nil {
+		resp.DueDate = pb.DueDate.AsTime().Format("2006-01-02T15:04:05Z07:00")
+	}
+	return resp
 }
 
 func mapCardsFromProto(pbs []*boardpb.Card) []cardResponse {

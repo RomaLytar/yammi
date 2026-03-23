@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -26,7 +27,7 @@ func NewUpdateCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, me
 	}
 }
 
-func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userID, title, description string, assigneeID *string, version int) (*domain.Card, error) {
+func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userID, title, description string, assigneeID *string, version int, dueDate *time.Time, priority domain.Priority, taskType domain.TaskType) (*domain.Card, error) {
 	// 1. Проверка доступа
 	isMember, _, err := uc.memberRepo.IsMember(ctx, boardID, userID)
 	if err != nil {
@@ -59,7 +60,7 @@ func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 	prevDescription := card.Description
 
 	// 5. Обновляем
-	if err := card.Update(title, description, assigneeID); err != nil {
+	if err := card.Update(title, description, assigneeID, dueDate, priority, taskType); err != nil {
 		return nil, err
 	}
 
@@ -102,6 +103,9 @@ func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 			Title:        card.Title,
 			Description:  card.Description,
 			AssigneeID:   card.AssigneeID,
+			DueDate:      card.DueDate,
+			Priority:     string(card.Priority),
+			TaskType:     string(card.TaskType),
 		})
 
 		// Детектим изменение assignee и публикуем отдельное событие

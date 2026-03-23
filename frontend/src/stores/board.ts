@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Board, Column, Card } from '@/types/domain'
+import type { Board, Column, Card, Label } from '@/types/domain'
 import type { MemberResponse } from '@/types/api'
 import * as boardsApi from '@/api/boards'
 import { ApiError } from '@/api/client'
@@ -18,6 +18,7 @@ export const useBoardStore = defineStore('board', () => {
   const columns = ref<Column[]>([])
   const members = ref<MemberResponse[]>([])
   const memberProfiles = ref<Map<string, MemberWithProfile>>(new Map())
+  const labels = ref<Label[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -35,6 +36,9 @@ export const useBoardStore = defineStore('board', () => {
       // Загружаем участников доски (профили уже включены в ответ)
       members.value = await boardsApi.getMembers(id)
       buildMemberProfiles()
+
+      // Загружаем метки доски
+      await fetchLabels(id)
 
       // Загружаем карточки для каждой колонки
       await Promise.all(
@@ -110,7 +114,21 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  async function createCard(columnId: string, title: string, description: string): Promise<void> {
+  async function fetchLabels(id: string): Promise<void> {
+    try {
+      labels.value = await boardsApi.listLabels(id)
+    } catch (err) {
+      console.error('Failed to load labels:', err)
+      labels.value = []
+    }
+  }
+
+  async function createCard(
+    columnId: string,
+    title: string,
+    description: string,
+    opts?: { dueDate?: string; priority?: string; taskType?: string },
+  ): Promise<void> {
     if (!boardId.value) return
 
     try {
@@ -128,6 +146,9 @@ export const useBoardStore = defineStore('board', () => {
         title,
         description,
         position,
+        due_date: opts?.dueDate,
+        priority: opts?.priority,
+        task_type: opts?.taskType,
       })
 
       column.cards.push(card)
@@ -137,7 +158,12 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  async function updateCard(cardId: string, title: string, description: string): Promise<void> {
+  async function updateCard(
+    cardId: string,
+    title: string,
+    description: string,
+    opts?: { dueDate?: string; priority?: string; taskType?: string },
+  ): Promise<void> {
     if (!boardId.value) return
     try {
       error.value = null
@@ -152,6 +178,9 @@ export const useBoardStore = defineStore('board', () => {
         title,
         description,
         assignee_id: currentAssignee,
+        due_date: opts?.dueDate,
+        priority: opts?.priority,
+        task_type: opts?.taskType,
       })
 
       // Обновляем карточку в store
@@ -303,6 +332,7 @@ export const useBoardStore = defineStore('board', () => {
     columns.value = []
     members.value = []
     memberProfiles.value = new Map()
+    labels.value = []
     error.value = null
   }
 
@@ -311,10 +341,12 @@ export const useBoardStore = defineStore('board', () => {
     columns,
     members,
     memberProfiles,
+    labels,
     loading,
     error,
     boardId,
     fetchBoard,
+    fetchLabels,
     updateBoardInfo,
     createColumn,
     updateColumn,

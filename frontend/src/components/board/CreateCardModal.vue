@@ -7,9 +7,14 @@ import BaseSearchSelect from '@/components/shared/BaseSearchSelect.vue'
 import RichTextEditor from '@/components/shared/RichTextEditor.vue'
 import { useBoardStore } from '@/stores/board'
 
+import type { Priority, TaskType } from '@/types/domain'
+
 interface Emits {
   (e: 'close'): void
-  (e: 'create', data: { title: string; description: string; assigneeId?: string; files?: File[] }): void
+  (e: 'create', data: {
+    title: string; description: string; assigneeId?: string; files?: File[];
+    dueDate?: string; priority?: string; taskType?: string
+  }): void
 }
 
 const emit = defineEmits<Emits>()
@@ -18,6 +23,9 @@ const boardStore = useBoardStore()
 const title = ref('')
 const description = ref('')
 const selectedAssignee = ref('')
+const selectedPriority = ref<Priority>('medium')
+const selectedTaskType = ref<TaskType>('task')
+const selectedDueDate = ref('')
 const loading = ref(false)
 const isDragging = ref(false)
 
@@ -83,6 +91,9 @@ function handleCreate() {
     description: description.value,
     assigneeId: selectedAssignee.value || undefined,
     files: pendingFiles.value.length ? pendingFiles.value.map(pf => pf.file) : undefined,
+    dueDate: selectedDueDate.value || undefined,
+    priority: selectedPriority.value,
+    taskType: selectedTaskType.value,
   })
 }
 
@@ -150,6 +161,111 @@ function handleClose() {
             placeholder="Выберите участника..."
             :disabled="loading"
             clearable
+          />
+        </div>
+      </div>
+
+      <!-- Metadata: Priority, Type, Due date -->
+      <div class="ccm-meta-row">
+        <div class="ccm-meta-group">
+          <span class="ccm-meta-label">Приоритет</span>
+          <div class="ccm-priority-btns">
+            <button
+              class="ccm-priority-btn"
+              :class="{ 'ccm-priority-btn--active': selectedPriority === 'low' }"
+              style="--btn-color: var(--color-success, #10b981)"
+              :disabled="loading"
+              @click="selectedPriority = 'low'"
+            >
+              <span class="ccm-priority-dot" style="background: var(--color-success, #10b981)" />
+              Низкий
+            </button>
+            <button
+              class="ccm-priority-btn"
+              :class="{ 'ccm-priority-btn--active': selectedPriority === 'medium' }"
+              style="--btn-color: var(--color-primary, #7c5cfc)"
+              :disabled="loading"
+              @click="selectedPriority = 'medium'"
+            >
+              <span class="ccm-priority-dot" style="background: var(--color-primary, #7c5cfc)" />
+              Средний
+            </button>
+            <button
+              class="ccm-priority-btn"
+              :class="{ 'ccm-priority-btn--active': selectedPriority === 'high' }"
+              style="--btn-color: #f59e0b"
+              :disabled="loading"
+              @click="selectedPriority = 'high'"
+            >
+              <span class="ccm-priority-dot" style="background: #f59e0b" />
+              Высокий
+            </button>
+            <button
+              class="ccm-priority-btn"
+              :class="{ 'ccm-priority-btn--active': selectedPriority === 'critical' }"
+              style="--btn-color: var(--color-danger, #ef4444)"
+              :disabled="loading"
+              @click="selectedPriority = 'critical'"
+            >
+              <span class="ccm-priority-dot" style="background: var(--color-danger, #ef4444)" />
+              Крит.
+            </button>
+          </div>
+        </div>
+
+        <div class="ccm-meta-group">
+          <span class="ccm-meta-label">Тип</span>
+          <div class="ccm-type-btns">
+            <button
+              class="ccm-type-btn"
+              :class="{ 'ccm-type-btn--active': selectedTaskType === 'task' }"
+              :disabled="loading"
+              title="Задача"
+              @click="selectedTaskType = 'task'"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            <button
+              class="ccm-type-btn"
+              :class="{ 'ccm-type-btn--active': selectedTaskType === 'bug' }"
+              :disabled="loading"
+              title="Баг"
+              @click="selectedTaskType = 'bug'"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 2l1.88 1.88M14.12 3.88L16 2M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/>
+                <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/>
+                <path d="M12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M6 17l-4 1M17.47 9c1.93-.2 3.53-1.9 3.53-4M18 13h4M18 17l4 1"/>
+              </svg>
+            </button>
+            <button
+              class="ccm-type-btn"
+              :class="{ 'ccm-type-btn--active': selectedTaskType === 'feature' }"
+              :disabled="loading"
+              title="Фича"
+              @click="selectedTaskType = 'feature'"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+            <button
+              class="ccm-type-btn"
+              :class="{ 'ccm-type-btn--active': selectedTaskType === 'improvement' }"
+              :disabled="loading"
+              title="Улучшение"
+              @click="selectedTaskType = 'improvement'"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="ccm-meta-group">
+          <span class="ccm-meta-label">Дедлайн</span>
+          <input
+            v-model="selectedDueDate"
+            type="date"
+            class="ccm-date-input"
+            :disabled="loading"
           />
         </div>
       </div>
@@ -524,6 +640,111 @@ function handleClose() {
 .ccm-fileitem__remove:hover {
   color: var(--color-danger);
   background: var(--color-danger-soft);
+}
+
+/* Metadata row */
+.ccm-meta-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ccm-meta-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ccm-meta-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+}
+
+.ccm-priority-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.ccm-priority-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.ccm-priority-btn:hover {
+  border-color: var(--btn-color);
+}
+
+.ccm-priority-btn--active {
+  border-color: var(--btn-color);
+  background: color-mix(in srgb, var(--btn-color) 8%, transparent);
+  color: var(--color-text);
+}
+
+.ccm-priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ccm-type-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.ccm-type-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ccm-type-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.ccm-type-btn--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.ccm-date-input {
+  padding: 6px 10px;
+  border: 1.5px solid var(--color-input-border);
+  border-radius: 6px;
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.ccm-date-input:focus {
+  border-color: var(--color-input-focus);
 }
 </style>
 

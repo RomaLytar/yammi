@@ -1,6 +1,9 @@
 // Доменные сущности фронтенда (camelCase).
 // Используются в stores, composables и компонентах.
 
+export type Priority = 'low' | 'medium' | 'high' | 'critical'
+export type TaskType = 'bug' | 'feature' | 'task' | 'improvement'
+
 export interface UserProfile {
   id: string
   email: string
@@ -39,6 +42,90 @@ export interface Card {
   creatorId: string
   version: number  // optimistic locking version
   createdAt: string
+  dueDate?: string       // ISO date string
+  priority: Priority
+  taskType: TaskType
+  labels?: Label[]
+  checklistStats?: { checked: number; total: number }
+}
+
+export interface Label {
+  id: string
+  boardId: string
+  name: string
+  color: string
+  createdAt: string
+}
+
+export interface Checklist {
+  id: string
+  cardId: string
+  boardId: string
+  title: string
+  position: number
+  items: ChecklistItem[]
+  progress: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ChecklistItem {
+  id: string
+  checklistId: string
+  title: string
+  isChecked: boolean
+  position: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CardLink {
+  id: string
+  parentId: string
+  childId: string
+  boardId: string
+  linkType: string
+  childTitle?: string
+  childColumnName?: string
+  createdAt: string
+}
+
+export interface CustomFieldDefinition {
+  id: string
+  boardId: string
+  name: string
+  fieldType: 'text' | 'number' | 'date' | 'dropdown'
+  options?: string[]
+  position: number
+  required: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CustomFieldValue {
+  id: string
+  cardId: string
+  boardId: string
+  fieldId: string
+  valueText?: string
+  valueNumber?: number
+  valueDate?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AutomationRule {
+  id: string
+  boardId: string
+  name: string
+  enabled: boolean
+  triggerType: string
+  triggerConfig: Record<string, string>
+  actionType: string
+  actionConfig: Record<string, string>
+  createdBy: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Comment {

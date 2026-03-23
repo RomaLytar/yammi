@@ -100,6 +100,8 @@ function onCardCreated(data: unknown) {
     creatorId: d.actor_id,
     version: 1,
     createdAt: new Date().toISOString(),
+    priority: 'medium',
+    taskType: 'task',
   })
   column.cards.sort((a, b) => a.position.localeCompare(b.position))
 }
@@ -286,11 +288,18 @@ function handleAddCard(columnId: string) {
   showCreateCardModal.value = true
 }
 
-async function handleCreateCard(data: { title: string; description: string; assigneeId?: string; files?: File[] }) {
+async function handleCreateCard(data: {
+  title: string; description: string; assigneeId?: string; files?: File[];
+  dueDate?: string; priority?: string; taskType?: string
+}) {
   if (!activeColumnId.value) return
 
   try {
-    await boardStore.createCard(activeColumnId.value, data.title, data.description)
+    await boardStore.createCard(activeColumnId.value, data.title, data.description, {
+      dueDate: data.dueDate,
+      priority: data.priority,
+      taskType: data.taskType,
+    })
     showCreateCardModal.value = false
 
     // Находим только что созданную карточку
@@ -335,7 +344,10 @@ function handleCardClick(card: Card) {
   showEditCardModal.value = true
 }
 
-async function handleUpdateCard(data: { title: string; description: string; assigneeId?: string }) {
+async function handleUpdateCard(data: {
+  title: string; description: string; assigneeId?: string;
+  dueDate?: string; priority?: string; taskType?: string
+}) {
   if (!activeCard.value) return
 
   try {
@@ -343,6 +355,9 @@ async function handleUpdateCard(data: { title: string; description: string; assi
     const newAssignee = data.assigneeId || ''
     const titleChanged = data.title !== activeCard.value.title
     const descChanged = data.description !== activeCard.value.description
+    const metaChanged = data.dueDate !== activeCard.value.dueDate
+      || data.priority !== activeCard.value.priority
+      || data.taskType !== activeCard.value.taskType
 
     // 1. Assign/unassign если изменился
     if (oldAssignee !== newAssignee) {
@@ -353,9 +368,13 @@ async function handleUpdateCard(data: { title: string; description: string; assi
       }
     }
 
-    // 2. Update title/description только если изменились
-    if (titleChanged || descChanged) {
-      await boardStore.updateCard(activeCard.value.id, data.title, data.description)
+    // 2. Update title/description/metadata только если изменились
+    if (titleChanged || descChanged || metaChanged) {
+      await boardStore.updateCard(activeCard.value.id, data.title, data.description, {
+        dueDate: data.dueDate,
+        priority: data.priority,
+        taskType: data.taskType,
+      })
     }
 
     showEditCardModal.value = false

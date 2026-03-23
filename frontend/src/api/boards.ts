@@ -19,8 +19,19 @@ import type {
   CommentResponse,
   AttachmentResponse,
   ActivityEntryResponse,
+  LabelResponse,
+  ChecklistResponse,
+  ChecklistItemResponse,
+  CardLinkResponse,
+  CustomFieldDefinitionResponse,
+  CustomFieldValueResponse,
+  AutomationRuleResponse,
 } from '@/types/api'
-import type { Board, Column, Card, Comment, Attachment, ActivityEntry } from '@/types/domain'
+import type {
+  Board, Column, Card, Comment, Attachment, ActivityEntry,
+  Label, Checklist, ChecklistItem, CardLink,
+  CustomFieldDefinition, CustomFieldValue, AutomationRule,
+} from '@/types/domain'
 
 // --- Mappers: snake_case (API) -> camelCase (Domain) ---
 
@@ -56,6 +67,102 @@ function mapCard(dto: CardResponse): Card {
     creatorId: dto.creator_id,
     version: dto.version,
     createdAt: dto.created_at,
+    dueDate: dto.due_date,
+    priority: (dto.priority as Card['priority']) || 'medium',
+    taskType: (dto.task_type as Card['taskType']) || 'task',
+  }
+}
+
+function mapLabel(dto: LabelResponse): Label {
+  return {
+    id: dto.id,
+    boardId: dto.board_id,
+    name: dto.name,
+    color: dto.color,
+    createdAt: dto.created_at,
+  }
+}
+
+function mapChecklistItem(dto: ChecklistItemResponse): ChecklistItem {
+  return {
+    id: dto.id,
+    checklistId: dto.checklist_id,
+    title: dto.title,
+    isChecked: dto.is_checked,
+    position: dto.position,
+    createdAt: dto.created_at,
+    updatedAt: dto.updated_at,
+  }
+}
+
+function mapChecklist(dto: ChecklistResponse): Checklist {
+  return {
+    id: dto.id,
+    cardId: dto.card_id,
+    boardId: dto.board_id,
+    title: dto.title,
+    position: dto.position,
+    items: (dto.items || []).map(mapChecklistItem),
+    progress: dto.progress,
+    createdAt: dto.created_at,
+    updatedAt: dto.updated_at,
+  }
+}
+
+function mapCardLink(dto: CardLinkResponse): CardLink {
+  return {
+    id: dto.id,
+    parentId: dto.parent_id,
+    childId: dto.child_id,
+    boardId: dto.board_id,
+    linkType: dto.link_type,
+    childTitle: dto.child_title,
+    childColumnName: dto.child_column_name,
+    createdAt: dto.created_at,
+  }
+}
+
+function mapCustomFieldDefinition(dto: CustomFieldDefinitionResponse): CustomFieldDefinition {
+  return {
+    id: dto.id,
+    boardId: dto.board_id,
+    name: dto.name,
+    fieldType: dto.field_type,
+    options: dto.options,
+    position: dto.position,
+    required: dto.required,
+    createdAt: dto.created_at,
+    updatedAt: dto.updated_at,
+  }
+}
+
+function mapCustomFieldValue(dto: CustomFieldValueResponse): CustomFieldValue {
+  return {
+    id: dto.id,
+    cardId: dto.card_id,
+    boardId: dto.board_id,
+    fieldId: dto.field_id,
+    valueText: dto.value_text,
+    valueNumber: dto.value_number,
+    valueDate: dto.value_date,
+    createdAt: dto.created_at,
+    updatedAt: dto.updated_at,
+  }
+}
+
+function mapAutomationRule(dto: AutomationRuleResponse): AutomationRule {
+  return {
+    id: dto.id,
+    boardId: dto.board_id,
+    name: dto.name,
+    enabled: dto.enabled,
+    triggerType: dto.trigger_type,
+    triggerConfig: dto.trigger_config,
+    actionType: dto.action_type,
+    actionConfig: dto.action_config,
+    createdBy: dto.created_by,
+    createdAt: dto.created_at,
+    updatedAt: dto.updated_at,
   }
 }
 
@@ -375,6 +482,245 @@ export async function uploadFileToPresignedUrl(
       }
     },
   })
+}
+
+// --- Labels ---
+
+export async function createLabel(boardId: string, name: string, color: string): Promise<Label> {
+  const { data } = await api.post<{ label: LabelResponse }>(
+    `/v1/boards/${boardId}/labels`,
+    { name, color },
+  )
+  return mapLabel(data.label)
+}
+
+export async function listLabels(boardId: string): Promise<Label[]> {
+  const { data } = await api.get<{ labels: LabelResponse[] }>(
+    `/v1/boards/${boardId}/labels`,
+  )
+  return (data.labels || []).map(mapLabel)
+}
+
+export async function updateLabel(boardId: string, labelId: string, name: string, color: string): Promise<Label> {
+  const { data } = await api.put<{ label: LabelResponse }>(
+    `/v1/boards/${boardId}/labels/${labelId}`,
+    { name, color },
+  )
+  return mapLabel(data.label)
+}
+
+export async function deleteLabel(boardId: string, labelId: string): Promise<void> {
+  await api.delete(`/v1/boards/${boardId}/labels/${labelId}`)
+}
+
+export async function addLabelToCard(boardId: string, cardId: string, labelId: string): Promise<void> {
+  await api.post(`/v1/boards/${boardId}/cards/${cardId}/labels`, { label_id: labelId })
+}
+
+export async function removeLabelFromCard(boardId: string, cardId: string, labelId: string): Promise<void> {
+  await api.delete(`/v1/boards/${boardId}/cards/${cardId}/labels/${labelId}`)
+}
+
+export async function getCardLabels(boardId: string, cardId: string): Promise<Label[]> {
+  const { data } = await api.get<{ labels: LabelResponse[] }>(
+    `/v1/boards/${boardId}/cards/${cardId}/labels`,
+  )
+  return (data.labels || []).map(mapLabel)
+}
+
+// --- Checklists ---
+
+export async function createChecklist(boardId: string, cardId: string, title: string): Promise<Checklist> {
+  const { data } = await api.post<{ checklist: ChecklistResponse }>(
+    `/v1/boards/${boardId}/cards/${cardId}/checklists`,
+    { title },
+  )
+  return mapChecklist(data.checklist)
+}
+
+export async function getChecklists(boardId: string, cardId: string): Promise<Checklist[]> {
+  const { data } = await api.get<{ checklists: ChecklistResponse[] }>(
+    `/v1/boards/${boardId}/cards/${cardId}/checklists`,
+  )
+  return (data.checklists || []).map(mapChecklist)
+}
+
+export async function updateChecklist(boardId: string, checklistId: string, title: string): Promise<Checklist> {
+  const { data } = await api.put<{ checklist: ChecklistResponse }>(
+    `/v1/boards/${boardId}/checklists/${checklistId}`,
+    { title },
+  )
+  return mapChecklist(data.checklist)
+}
+
+export async function deleteChecklist(boardId: string, checklistId: string): Promise<void> {
+  await api.delete(`/v1/boards/${boardId}/checklists/${checklistId}`)
+}
+
+export async function createChecklistItem(boardId: string, checklistId: string, title: string): Promise<ChecklistItem> {
+  const { data } = await api.post<{ item: ChecklistItemResponse }>(
+    `/v1/boards/${boardId}/checklists/${checklistId}/items`,
+    { title },
+  )
+  return mapChecklistItem(data.item)
+}
+
+export async function updateChecklistItem(boardId: string, itemId: string, title: string): Promise<ChecklistItem> {
+  const { data } = await api.put<{ item: ChecklistItemResponse }>(
+    `/v1/boards/${boardId}/checklist-items/${itemId}`,
+    { title },
+  )
+  return mapChecklistItem(data.item)
+}
+
+export async function deleteChecklistItem(boardId: string, itemId: string): Promise<void> {
+  await api.delete(`/v1/boards/${boardId}/checklist-items/${itemId}`)
+}
+
+export async function toggleChecklistItem(boardId: string, itemId: string): Promise<ChecklistItem> {
+  const { data } = await api.post<{ item: ChecklistItemResponse }>(
+    `/v1/boards/${boardId}/checklist-items/${itemId}/toggle`,
+  )
+  return mapChecklistItem(data.item)
+}
+
+// --- Card Links ---
+
+export async function linkCards(boardId: string, parentCardId: string, childCardId: string): Promise<CardLink> {
+  const { data } = await api.post<{ link: CardLinkResponse }>(
+    `/v1/boards/${boardId}/card-links`,
+    { parent_id: parentCardId, child_id: childCardId },
+  )
+  return mapCardLink(data.link)
+}
+
+export async function unlinkCards(boardId: string, linkId: string): Promise<void> {
+  await api.delete(`/v1/boards/${boardId}/card-links/${linkId}`)
+}
+
+export async function getCardChildren(boardId: string, cardId: string): Promise<CardLink[]> {
+  const { data } = await api.get<{ links: CardLinkResponse[] }>(
+    `/v1/boards/${boardId}/cards/${cardId}/children`,
+  )
+  return (data.links || []).map(mapCardLink)
+}
+
+export async function getCardParents(boardId: string, cardId: string): Promise<CardLink[]> {
+  const { data } = await api.get<{ links: CardLinkResponse[] }>(
+    `/v1/boards/${boardId}/cards/${cardId}/parents`,
+  )
+  return (data.links || []).map(mapCardLink)
+}
+
+// --- Custom Fields ---
+
+export async function createCustomField(
+  boardId: string,
+  data_: { name: string; field_type: string; options?: string[]; required?: boolean },
+): Promise<CustomFieldDefinition> {
+  const { data } = await api.post<{ field: CustomFieldDefinitionResponse }>(
+    `/v1/boards/${boardId}/custom-fields`,
+    data_,
+  )
+  return mapCustomFieldDefinition(data.field)
+}
+
+export async function listCustomFields(boardId: string): Promise<CustomFieldDefinition[]> {
+  const { data } = await api.get<{ fields: CustomFieldDefinitionResponse[] }>(
+    `/v1/boards/${boardId}/custom-fields`,
+  )
+  return (data.fields || []).map(mapCustomFieldDefinition)
+}
+
+export async function updateCustomField(
+  boardId: string,
+  fieldId: string,
+  data_: { name?: string; options?: string[]; required?: boolean },
+): Promise<CustomFieldDefinition> {
+  const { data } = await api.put<{ field: CustomFieldDefinitionResponse }>(
+    `/v1/boards/${boardId}/custom-fields/${fieldId}`,
+    data_,
+  )
+  return mapCustomFieldDefinition(data.field)
+}
+
+export async function deleteCustomField(boardId: string, fieldId: string): Promise<void> {
+  await api.delete(`/v1/boards/${boardId}/custom-fields/${fieldId}`)
+}
+
+export async function setCustomFieldValue(
+  boardId: string,
+  cardId: string,
+  fieldId: string,
+  value: { value_text?: string; value_number?: number; value_date?: string },
+): Promise<void> {
+  await api.put(
+    `/v1/boards/${boardId}/cards/${cardId}/custom-fields/${fieldId}`,
+    value,
+  )
+}
+
+export async function getCardCustomFields(boardId: string, cardId: string): Promise<CustomFieldValue[]> {
+  const { data } = await api.get<{ values: CustomFieldValueResponse[] }>(
+    `/v1/boards/${boardId}/cards/${cardId}/custom-fields`,
+  )
+  return (data.values || []).map(mapCustomFieldValue)
+}
+
+// --- Automation ---
+
+export async function createAutomationRule(
+  boardId: string,
+  data_: {
+    name: string
+    trigger_type: string
+    trigger_config: Record<string, string>
+    action_type: string
+    action_config: Record<string, string>
+  },
+): Promise<AutomationRule> {
+  const { data } = await api.post<{ rule: AutomationRuleResponse }>(
+    `/v1/boards/${boardId}/automations`,
+    data_,
+  )
+  return mapAutomationRule(data.rule)
+}
+
+export async function listAutomationRules(boardId: string): Promise<AutomationRule[]> {
+  const { data } = await api.get<{ rules: AutomationRuleResponse[] }>(
+    `/v1/boards/${boardId}/automations`,
+  )
+  return (data.rules || []).map(mapAutomationRule)
+}
+
+export async function updateAutomationRule(
+  boardId: string,
+  ruleId: string,
+  data_: {
+    name?: string
+    enabled?: boolean
+    trigger_type?: string
+    trigger_config?: Record<string, string>
+    action_type?: string
+    action_config?: Record<string, string>
+  },
+): Promise<AutomationRule> {
+  const { data } = await api.put<{ rule: AutomationRuleResponse }>(
+    `/v1/boards/${boardId}/automations/${ruleId}`,
+    data_,
+  )
+  return mapAutomationRule(data.rule)
+}
+
+export async function deleteAutomationRule(boardId: string, ruleId: string): Promise<void> {
+  await api.delete(`/v1/boards/${boardId}/automations/${ruleId}`)
+}
+
+export async function getAutomationHistory(boardId: string, ruleId: string): Promise<any[]> {
+  const { data } = await api.get<{ history: any[] }>(
+    `/v1/boards/${boardId}/automations/${ruleId}/history`,
+  )
+  return data.history || []
 }
 
 // --- Activity ---

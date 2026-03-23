@@ -112,6 +112,9 @@ export interface CreateCardRequest {
   description: string
   position: string
   assignee_id?: string
+  due_date?: string
+  priority?: string
+  task_type?: string
 }
 
 export interface UpdateCardRequest {
@@ -119,6 +122,9 @@ export interface UpdateCardRequest {
   title: string
   description: string
   assignee_id?: string
+  due_date?: string
+  priority?: string
+  task_type?: string
 }
 
 export interface MoveCardRequest {
@@ -143,6 +149,98 @@ export interface CardResponse {
   assignee_id?: string
   creator_id: string
   version: number
+  created_at: string
+  updated_at: string
+  due_date?: string
+  priority?: string
+  task_type?: string
+}
+
+// --- Labels ---
+
+export interface LabelResponse {
+  id: string
+  board_id: string
+  name: string
+  color: string
+  created_at: string
+}
+
+// --- Checklists ---
+
+export interface ChecklistItemResponse {
+  id: string
+  checklist_id: string
+  title: string
+  is_checked: boolean
+  position: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ChecklistResponse {
+  id: string
+  card_id: string
+  board_id: string
+  title: string
+  position: number
+  items: ChecklistItemResponse[]
+  progress: number
+  created_at: string
+  updated_at: string
+}
+
+// --- Card Links ---
+
+export interface CardLinkResponse {
+  id: string
+  parent_id: string
+  child_id: string
+  board_id: string
+  link_type: string
+  child_title?: string
+  child_column_name?: string
+  created_at: string
+}
+
+// --- Custom Fields ---
+
+export interface CustomFieldDefinitionResponse {
+  id: string
+  board_id: string
+  name: string
+  field_type: 'text' | 'number' | 'date' | 'dropdown'
+  options?: string[]
+  position: number
+  required: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CustomFieldValueResponse {
+  id: string
+  card_id: string
+  board_id: string
+  field_id: string
+  value_text?: string
+  value_number?: number
+  value_date?: string
+  created_at: string
+  updated_at: string
+}
+
+// --- Automation ---
+
+export interface AutomationRuleResponse {
+  id: string
+  board_id: string
+  name: string
+  enabled: boolean
+  trigger_type: string
+  trigger_config: Record<string, string>
+  action_type: string
+  action_config: Record<string, string>
+  created_by: string
   created_at: string
   updated_at: string
 }

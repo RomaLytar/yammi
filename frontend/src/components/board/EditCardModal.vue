@@ -11,6 +11,7 @@ import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSearchSelect from '@/components/shared/BaseSearchSelect.vue'
 import RichTextEditor from '@/components/shared/RichTextEditor.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
+import { DatePicker } from 'v-calendar'
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
 import { useBoardStore } from '@/stores/board'
 import { useUserStore } from '@/stores/user'
@@ -50,6 +51,12 @@ const selectedAssignee = ref(props.card.assigneeId || '')
 const selectedPriority = ref<Priority>(props.card.priority || 'medium')
 const selectedTaskType = ref<TaskType>(props.card.taskType || 'task')
 const selectedDueDate = ref(props.card.dueDate || '')
+const dueDateObj = ref<Date | null>(selectedDueDate.value ? new Date(selectedDueDate.value) : null)
+const isDarkTheme = computed(() => document.documentElement.getAttribute('data-theme') === 'dark')
+
+watch(dueDateObj, (val) => {
+  selectedDueDate.value = val ? val.toISOString().split('T')[0] : ''
+})
 const loading = ref(false)
 
 const showConfirmDelete = ref(false)
@@ -68,8 +75,12 @@ const newChecklistTitle = ref('')
 const newItemTitles = ref<Record<string, string>>({})
 
 // --- Subtasks (Card Links) ---
-const childLinks = ref<CardLink[]>([])
-const parentLinks = ref<CardLink[]>([])
+interface EnrichedCardLink extends CardLink {
+  assigneeId?: string
+  assigneeName?: string
+}
+const childLinks = ref<EnrichedCardLink[]>([])
+const parentLinks = ref<EnrichedCardLink[]>([])
 const subtasksLoading = ref(false)
 const subtasksLoaded = ref(false)
 const showSubtaskSearch = ref(false)
@@ -673,29 +684,41 @@ async function loadSubtasks() {
       boardsApi.getCardChildren(boardStore.boardId, props.card.id),
       boardsApi.getCardParents(boardStore.boardId, props.card.id),
     ])
-    // Enrich links with card titles and column names from store
-    for (const link of children) {
+    // Enrich links with card titles, column names, and assignee from store
+    const enriched: EnrichedCardLink[] = children.map(link => {
+      const enrichedLink: EnrichedCardLink = { ...link }
       for (const col of boardStore.columns) {
         const card = col.cards.find(c => c.id === link.childId)
         if (card) {
-          link.childTitle = card.title
-          link.childColumnName = col.title
+          enrichedLink.childTitle = card.title
+          enrichedLink.childColumnName = col.title
+          if (card.assigneeId) {
+            enrichedLink.assigneeId = card.assigneeId
+            enrichedLink.assigneeName = boardStore.getMemberName(card.assigneeId)
+          }
           break
         }
       }
-    }
-    for (const link of parents) {
+      return enrichedLink
+    })
+    const enrichedParents: EnrichedCardLink[] = parents.map(link => {
+      const enrichedLink: EnrichedCardLink = { ...link }
       for (const col of boardStore.columns) {
         const card = col.cards.find(c => c.id === link.parentId)
         if (card) {
-          link.childTitle = card.title
-          link.childColumnName = col.title
+          enrichedLink.childTitle = card.title
+          enrichedLink.childColumnName = col.title
+          if (card.assigneeId) {
+            enrichedLink.assigneeId = card.assigneeId
+            enrichedLink.assigneeName = boardStore.getMemberName(card.assigneeId)
+          }
           break
         }
       }
-    }
-    childLinks.value = children
-    parentLinks.value = parents
+      return enrichedLink
+    })
+    childLinks.value = enriched
+    parentLinks.value = enrichedParents
     subtasksLoaded.value = true
   } catch (err) {
     console.error('Failed to load subtasks:', err)
@@ -988,6 +1011,15 @@ onMounted(() => {
                   <span class="ecm-subtask-item__title">{{ link.childTitle || 'Без названия' }}</span>
                   <span v-if="link.childColumnName" class="ecm-subtask-item__column">{{ link.childColumnName }}</span>
                 </div>
+                <div class="ecm-subtask-item__assignee">
+                  <span v-if="link.assigneeName" class="ecm-subtask-item__assignee-name">{{ link.assigneeName }}</span>
+                  <div v-if="link.assigneeId" class="ecm-subtask-item__avatar ecm-subtask-item__avatar--assigned" :title="link.assigneeName">
+                    {{ (link.assigneeName || '?').charAt(0).toUpperCase() }}
+                  </div>
+                  <div v-else class="ecm-subtask-item__avatar ecm-subtask-item__avatar--empty" title="Не назначен">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                </div>
                 <button class="ecm-subtask-item__unlink" title="Отвязать" @click="unlinkSubtask(link.id)">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -1244,17 +1276,30 @@ onMounted(() => {
             <div class="ecm-field">
               <span class="ecm-field__label">Дедлайн</span>
               <div class="ecm-date-wrap">
-                <input
-                  v-model="selectedDueDate"
-                  type="date"
-                  class="ecm-date-input"
-                />
+                <DatePicker
+                  v-model="dueDateObj"
+                  mode="date"
+                  locale="ru"
+                  :popover="{ placement: 'bottom-start' }"
+                  :is-dark="isDarkTheme"
+                  color="purple"
+                >
+                  <template #default="{ inputValue, inputEvents }">
+                    <input
+                      class="ecm-date-input"
+                      :value="inputValue"
+                      v-on="inputEvents"
+                      placeholder="Выберите дату..."
+                      readonly
+                    />
+                  </template>
+                </DatePicker>
                 <button
                   v-if="selectedDueDate"
                   class="ecm-date-clear"
                   type="button"
                   title="Убрать дедлайн"
-                  @click="selectedDueDate = ''"
+                  @click="selectedDueDate = ''; dueDateObj = null"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -2561,6 +2606,42 @@ onMounted(() => {
 .ecm-subtask-item__column {
   font-size: 11px;
   color: var(--color-text-tertiary, #9ca3af);
+}
+
+.ecm-subtask-item__assignee {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ecm-subtask-item__assignee-name {
+  font-size: 12px;
+  color: var(--color-text-secondary, #6b7280);
+  white-space: nowrap;
+}
+
+.ecm-subtask-item__avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ecm-subtask-item__avatar--assigned {
+  background: var(--gradient-primary);
+  color: white;
+}
+
+.ecm-subtask-item__avatar--empty {
+  background: var(--color-input-bg, #f3f4f6);
+  color: var(--color-text-tertiary, #9ca3af);
+  border: 1.5px dashed var(--color-border, #d1d5db);
 }
 
 .ecm-subtask-item__unlink {

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import BaseModal from '@/components/shared/BaseModal.vue'
 import BaseInput from '@/components/shared/BaseInput.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSearchSelect from '@/components/shared/BaseSearchSelect.vue'
 import RichTextEditor from '@/components/shared/RichTextEditor.vue'
+import { DatePicker } from 'v-calendar'
 import { useBoardStore } from '@/stores/board'
 
 import type { Priority, TaskType } from '@/types/domain'
@@ -26,6 +27,12 @@ const selectedAssignee = ref('')
 const selectedPriority = ref<Priority>('medium')
 const selectedTaskType = ref<TaskType>('task')
 const selectedDueDate = ref('')
+const dueDateObj = ref<Date | null>(null)
+const isDarkTheme = computed(() => document.documentElement.getAttribute('data-theme') === 'dark')
+
+watch(dueDateObj, (val) => {
+  selectedDueDate.value = val ? val.toISOString().split('T')[0] : ''
+})
 const loading = ref(false)
 const isDragging = ref(false)
 
@@ -265,17 +272,30 @@ function handleClose() {
             Дедлайн
           </span>
           <div class="ccm-date-wrap">
-            <input
-              v-model="selectedDueDate"
-              type="date"
-              class="ccm-date-input"
-              :disabled="loading"
-            />
+            <DatePicker
+              v-model="dueDateObj"
+              mode="date"
+              locale="ru"
+              :popover="{ placement: 'bottom-start' }"
+              :is-dark="isDarkTheme"
+              color="purple"
+            >
+              <template #default="{ inputValue, inputEvents }">
+                <input
+                  class="ccm-date-input"
+                  :value="inputValue"
+                  v-on="inputEvents"
+                  placeholder="Выберите дату..."
+                  :disabled="loading"
+                  readonly
+                />
+              </template>
+            </DatePicker>
             <button
               v-if="selectedDueDate"
               class="ccm-date-clear"
               type="button"
-              @click="selectedDueDate = ''"
+              @click="selectedDueDate = ''; dueDateObj = null"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>

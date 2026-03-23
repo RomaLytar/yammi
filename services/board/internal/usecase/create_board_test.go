@@ -230,6 +230,46 @@ func (m *MockEventPublisher) PublishChecklistItemToggled(ctx context.Context, ev
 	return args.Error(0)
 }
 
+func (m *MockEventPublisher) PublishCustomFieldCreated(ctx context.Context, event CustomFieldCreated) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishCustomFieldUpdated(ctx context.Context, event CustomFieldUpdated) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishCustomFieldDeleted(ctx context.Context, event CustomFieldDeleted) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishCustomFieldValueSet(ctx context.Context, event CustomFieldValueSet) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishAutomationRuleCreated(ctx context.Context, event AutomationRuleCreated) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishAutomationRuleUpdated(ctx context.Context, event AutomationRuleUpdated) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishAutomationRuleDeleted(ctx context.Context, event AutomationRuleDeleted) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishAutomationExecuted(ctx context.Context, event AutomationExecuted) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
 func TestCreateBoardUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name        string

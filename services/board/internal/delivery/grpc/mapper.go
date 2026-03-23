@@ -250,6 +250,105 @@ func mapChecklistItemToProto(item *domain.ChecklistItem) *boardpb.ChecklistItem 
 	}
 }
 
+func mapCustomFieldDefToProto(d *domain.CustomFieldDefinition) *boardpb.CustomFieldDefinition {
+	return &boardpb.CustomFieldDefinition{
+		Id:        d.ID,
+		BoardId:   d.BoardID,
+		Name:      d.Name,
+		FieldType: string(d.FieldType),
+		Options:   d.Options,
+		Position:  int32(d.Position),
+		Required:  d.Required,
+		CreatedAt: timestamppb.New(d.CreatedAt),
+		UpdatedAt: timestamppb.New(d.UpdatedAt),
+	}
+}
+
+func mapCustomFieldDefsToProto(defs []*domain.CustomFieldDefinition) []*boardpb.CustomFieldDefinition {
+	result := make([]*boardpb.CustomFieldDefinition, len(defs))
+	for i, d := range defs {
+		result[i] = mapCustomFieldDefToProto(d)
+	}
+	return result
+}
+
+func mapCustomFieldValueToProto(v *domain.CustomFieldValue) *boardpb.CustomFieldValue {
+	pbv := &boardpb.CustomFieldValue{
+		Id:        v.ID,
+		CardId:    v.CardID,
+		BoardId:   v.BoardID,
+		FieldId:   v.FieldID,
+		CreatedAt: timestamppb.New(v.CreatedAt),
+		UpdatedAt: timestamppb.New(v.UpdatedAt),
+	}
+	if v.ValueText != nil {
+		pbv.ValueText = *v.ValueText
+		pbv.HasText = true
+	}
+	if v.ValueNumber != nil {
+		pbv.ValueNumber = *v.ValueNumber
+		pbv.HasNumber = true
+	}
+	if v.ValueDate != nil {
+		pbv.ValueDate = timestamppb.New(*v.ValueDate)
+		pbv.HasDate = true
+	}
+	return pbv
+}
+
+func mapCustomFieldValuesToProto(values []*domain.CustomFieldValue) []*boardpb.CustomFieldValue {
+	result := make([]*boardpb.CustomFieldValue, len(values))
+	for i, v := range values {
+		result[i] = mapCustomFieldValueToProto(v)
+	}
+	return result
+}
+
+func mapAutomationRuleToProto(r *domain.AutomationRule) *boardpb.AutomationRule {
+	return &boardpb.AutomationRule{
+		Id:            r.ID,
+		BoardId:       r.BoardID,
+		Name:          r.Name,
+		Enabled:       r.Enabled,
+		TriggerType:   string(r.TriggerType),
+		TriggerConfig: r.TriggerConfig,
+		ActionType:    string(r.ActionType),
+		ActionConfig:  r.ActionConfig,
+		CreatedBy:     r.CreatedBy,
+		CreatedAt:     timestamppb.New(r.CreatedAt),
+		UpdatedAt:     timestamppb.New(r.UpdatedAt),
+	}
+}
+
+func mapAutomationRulesToProto(rules []*domain.AutomationRule) []*boardpb.AutomationRule {
+	result := make([]*boardpb.AutomationRule, len(rules))
+	for i, r := range rules {
+		result[i] = mapAutomationRuleToProto(r)
+	}
+	return result
+}
+
+func mapAutomationExecutionToProto(e *domain.AutomationExecution) *boardpb.AutomationExecution {
+	return &boardpb.AutomationExecution{
+		Id:             e.ID,
+		RuleId:         e.RuleID,
+		BoardId:        e.BoardID,
+		CardId:         e.CardID,
+		TriggerEventId: e.TriggerEventID,
+		Status:         e.Status,
+		ErrorMessage:   e.ErrorMessage,
+		ExecutedAt:     timestamppb.New(e.ExecutedAt),
+	}
+}
+
+func mapAutomationExecutionsToProto(executions []*domain.AutomationExecution) []*boardpb.AutomationExecution {
+	result := make([]*boardpb.AutomationExecution, len(executions))
+	for i, e := range executions {
+		result[i] = mapAutomationExecutionToProto(e)
+	}
+	return result
+}
+
 // ============================================================================
 // Error Mapping (domain errors → gRPC codes)
 // ============================================================================
@@ -264,7 +363,10 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrLabelNotFound) ||
 		errors.Is(err, domain.ErrCardLinkNotFound) ||
 		errors.Is(err, domain.ErrChecklistNotFound) ||
-		errors.Is(err, domain.ErrChecklistItemNotFound) {
+		errors.Is(err, domain.ErrChecklistItemNotFound) ||
+		errors.Is(err, domain.ErrCustomFieldNotFound) ||
+		errors.Is(err, domain.ErrCustomFieldValueNotFound) ||
+		errors.Is(err, domain.ErrAutomationRuleNotFound) {
 		return status.Error(codes.NotFound, err.Error())
 	}
 
@@ -293,13 +395,21 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrSelfLink) ||
 		errors.Is(err, domain.ErrInvalidLinkType) ||
 		errors.Is(err, domain.ErrEmptyChecklistTitle) ||
-		errors.Is(err, domain.ErrEmptyItemTitle) {
+		errors.Is(err, domain.ErrEmptyItemTitle) ||
+		errors.Is(err, domain.ErrEmptyFieldName) ||
+		errors.Is(err, domain.ErrInvalidFieldType) ||
+		errors.Is(err, domain.ErrInvalidFieldValue) ||
+		errors.Is(err, domain.ErrEmptyRuleName) ||
+		errors.Is(err, domain.ErrInvalidTriggerType) ||
+		errors.Is(err, domain.ErrInvalidActionType) {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	// ResourceExhausted errors
 	if errors.Is(err, domain.ErrMaxAttachmentsReached) ||
-		errors.Is(err, domain.ErrMaxLabelsReached) {
+		errors.Is(err, domain.ErrMaxLabelsReached) ||
+		errors.Is(err, domain.ErrMaxCustomFieldsReached) ||
+		errors.Is(err, domain.ErrMaxRulesReached) {
 		return status.Error(codes.ResourceExhausted, err.Error())
 	}
 
@@ -307,7 +417,8 @@ func mapDomainError(err error) error {
 	if errors.Is(err, domain.ErrMemberExists) ||
 		errors.Is(err, domain.ErrLabelExists) ||
 		errors.Is(err, domain.ErrLabelAlreadyOnCard) ||
-		errors.Is(err, domain.ErrLinkAlreadyExists) {
+		errors.Is(err, domain.ErrLinkAlreadyExists) ||
+		errors.Is(err, domain.ErrCustomFieldExists) {
 		return status.Error(codes.AlreadyExists, err.Error())
 	}
 

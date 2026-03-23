@@ -183,6 +183,103 @@ func mapCardLinksFromProto(pbs []*boardpb.CardLink) []cardLinkResponse {
 	return links
 }
 
+func mapCustomFieldDefFromProto(pb *boardpb.CustomFieldDefinition) customFieldDefResponse {
+	return customFieldDefResponse{
+		ID:        pb.Id,
+		BoardID:   pb.BoardId,
+		Name:      pb.Name,
+		FieldType: pb.FieldType,
+		Options:   pb.Options,
+		Position:  pb.Position,
+		Required:  pb.Required,
+		CreatedAt: pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt: pb.UpdatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+func mapCustomFieldDefsFromProto(pbs []*boardpb.CustomFieldDefinition) []customFieldDefResponse {
+	defs := make([]customFieldDefResponse, len(pbs))
+	for i, pb := range pbs {
+		defs[i] = mapCustomFieldDefFromProto(pb)
+	}
+	return defs
+}
+
+func mapCustomFieldValueFromProto(pb *boardpb.CustomFieldValue) customFieldValueResponse {
+	resp := customFieldValueResponse{
+		ID:        pb.Id,
+		CardID:    pb.CardId,
+		BoardID:   pb.BoardId,
+		FieldID:   pb.FieldId,
+		CreatedAt: pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt: pb.UpdatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+	if pb.HasText {
+		resp.ValueText = &pb.ValueText
+	}
+	if pb.HasNumber {
+		resp.ValueNumber = &pb.ValueNumber
+	}
+	if pb.HasDate && pb.ValueDate != nil {
+		dateStr := pb.ValueDate.AsTime().Format("2006-01-02T15:04:05Z07:00")
+		resp.ValueDate = &dateStr
+	}
+	return resp
+}
+
+func mapCustomFieldValuesFromProto(pbs []*boardpb.CustomFieldValue) []customFieldValueResponse {
+	values := make([]customFieldValueResponse, len(pbs))
+	for i, pb := range pbs {
+		values[i] = mapCustomFieldValueFromProto(pb)
+	}
+	return values
+}
+
+func mapAutomationRuleFromProto(pb *boardpb.AutomationRule) automationRuleResponse {
+	return automationRuleResponse{
+		ID:            pb.Id,
+		BoardID:       pb.BoardId,
+		Name:          pb.Name,
+		Enabled:       pb.Enabled,
+		TriggerType:   pb.TriggerType,
+		TriggerConfig: pb.TriggerConfig,
+		ActionType:    pb.ActionType,
+		ActionConfig:  pb.ActionConfig,
+		CreatedBy:     pb.CreatedBy,
+		CreatedAt:     pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt:     pb.UpdatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+func mapAutomationRulesFromProto(pbs []*boardpb.AutomationRule) []automationRuleResponse {
+	rules := make([]automationRuleResponse, len(pbs))
+	for i, pb := range pbs {
+		rules[i] = mapAutomationRuleFromProto(pb)
+	}
+	return rules
+}
+
+func mapAutomationExecutionFromProto(pb *boardpb.AutomationExecution) automationExecutionResponse {
+	return automationExecutionResponse{
+		ID:             pb.Id,
+		RuleID:         pb.RuleId,
+		BoardID:        pb.BoardId,
+		CardID:         pb.CardId,
+		TriggerEventID: pb.TriggerEventId,
+		Status:         pb.Status,
+		ErrorMessage:   pb.ErrorMessage,
+		ExecutedAt:     pb.ExecutedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+func mapAutomationExecutionsFromProto(pbs []*boardpb.AutomationExecution) []automationExecutionResponse {
+	execs := make([]automationExecutionResponse, len(pbs))
+	for i, pb := range pbs {
+		execs[i] = mapAutomationExecutionFromProto(pb)
+	}
+	return execs
+}
+
 func parseIntQueryParam(r *http.Request, key string, defaultValue int) int {
 	val := r.URL.Query().Get(key)
 	if val == "" {

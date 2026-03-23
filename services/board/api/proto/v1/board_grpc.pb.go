@@ -20,53 +20,64 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BoardService_CreateBoard_FullMethodName         = "/board.v1.BoardService/CreateBoard"
-	BoardService_GetBoard_FullMethodName            = "/board.v1.BoardService/GetBoard"
-	BoardService_ListBoards_FullMethodName          = "/board.v1.BoardService/ListBoards"
-	BoardService_UpdateBoard_FullMethodName         = "/board.v1.BoardService/UpdateBoard"
-	BoardService_DeleteBoard_FullMethodName         = "/board.v1.BoardService/DeleteBoard"
-	BoardService_AddColumn_FullMethodName           = "/board.v1.BoardService/AddColumn"
-	BoardService_GetColumns_FullMethodName          = "/board.v1.BoardService/GetColumns"
-	BoardService_UpdateColumn_FullMethodName        = "/board.v1.BoardService/UpdateColumn"
-	BoardService_DeleteColumn_FullMethodName        = "/board.v1.BoardService/DeleteColumn"
-	BoardService_ReorderColumns_FullMethodName      = "/board.v1.BoardService/ReorderColumns"
-	BoardService_CreateCard_FullMethodName          = "/board.v1.BoardService/CreateCard"
-	BoardService_GetCard_FullMethodName             = "/board.v1.BoardService/GetCard"
-	BoardService_GetCards_FullMethodName            = "/board.v1.BoardService/GetCards"
-	BoardService_UpdateCard_FullMethodName          = "/board.v1.BoardService/UpdateCard"
-	BoardService_MoveCard_FullMethodName            = "/board.v1.BoardService/MoveCard"
-	BoardService_DeleteCard_FullMethodName          = "/board.v1.BoardService/DeleteCard"
-	BoardService_AssignCard_FullMethodName          = "/board.v1.BoardService/AssignCard"
-	BoardService_UnassignCard_FullMethodName        = "/board.v1.BoardService/UnassignCard"
-	BoardService_GetCardActivity_FullMethodName     = "/board.v1.BoardService/GetCardActivity"
-	BoardService_AddMember_FullMethodName           = "/board.v1.BoardService/AddMember"
-	BoardService_RemoveMember_FullMethodName        = "/board.v1.BoardService/RemoveMember"
-	BoardService_ListMembers_FullMethodName         = "/board.v1.BoardService/ListMembers"
-	BoardService_IsMember_FullMethodName            = "/board.v1.BoardService/IsMember"
-	BoardService_CreateUploadURL_FullMethodName     = "/board.v1.BoardService/CreateUploadURL"
-	BoardService_ConfirmUpload_FullMethodName       = "/board.v1.BoardService/ConfirmUpload"
-	BoardService_GetDownloadURL_FullMethodName      = "/board.v1.BoardService/GetDownloadURL"
-	BoardService_ListAttachments_FullMethodName     = "/board.v1.BoardService/ListAttachments"
-	BoardService_DeleteAttachment_FullMethodName    = "/board.v1.BoardService/DeleteAttachment"
-	BoardService_CreateLabel_FullMethodName         = "/board.v1.BoardService/CreateLabel"
-	BoardService_ListLabels_FullMethodName          = "/board.v1.BoardService/ListLabels"
-	BoardService_UpdateLabel_FullMethodName         = "/board.v1.BoardService/UpdateLabel"
-	BoardService_DeleteLabel_FullMethodName         = "/board.v1.BoardService/DeleteLabel"
-	BoardService_AddLabelToCard_FullMethodName      = "/board.v1.BoardService/AddLabelToCard"
-	BoardService_RemoveLabelFromCard_FullMethodName = "/board.v1.BoardService/RemoveLabelFromCard"
-	BoardService_GetCardLabels_FullMethodName       = "/board.v1.BoardService/GetCardLabels"
-	BoardService_LinkCards_FullMethodName           = "/board.v1.BoardService/LinkCards"
-	BoardService_UnlinkCards_FullMethodName         = "/board.v1.BoardService/UnlinkCards"
-	BoardService_GetCardChildren_FullMethodName     = "/board.v1.BoardService/GetCardChildren"
-	BoardService_GetCardParents_FullMethodName      = "/board.v1.BoardService/GetCardParents"
-	BoardService_CreateChecklist_FullMethodName     = "/board.v1.BoardService/CreateChecklist"
-	BoardService_GetChecklists_FullMethodName       = "/board.v1.BoardService/GetChecklists"
-	BoardService_UpdateChecklist_FullMethodName     = "/board.v1.BoardService/UpdateChecklist"
-	BoardService_DeleteChecklist_FullMethodName     = "/board.v1.BoardService/DeleteChecklist"
-	BoardService_CreateChecklistItem_FullMethodName = "/board.v1.BoardService/CreateChecklistItem"
-	BoardService_UpdateChecklistItem_FullMethodName = "/board.v1.BoardService/UpdateChecklistItem"
-	BoardService_DeleteChecklistItem_FullMethodName = "/board.v1.BoardService/DeleteChecklistItem"
-	BoardService_ToggleChecklistItem_FullMethodName = "/board.v1.BoardService/ToggleChecklistItem"
+	BoardService_CreateBoard_FullMethodName          = "/board.v1.BoardService/CreateBoard"
+	BoardService_GetBoard_FullMethodName             = "/board.v1.BoardService/GetBoard"
+	BoardService_ListBoards_FullMethodName           = "/board.v1.BoardService/ListBoards"
+	BoardService_UpdateBoard_FullMethodName          = "/board.v1.BoardService/UpdateBoard"
+	BoardService_DeleteBoard_FullMethodName          = "/board.v1.BoardService/DeleteBoard"
+	BoardService_AddColumn_FullMethodName            = "/board.v1.BoardService/AddColumn"
+	BoardService_GetColumns_FullMethodName           = "/board.v1.BoardService/GetColumns"
+	BoardService_UpdateColumn_FullMethodName         = "/board.v1.BoardService/UpdateColumn"
+	BoardService_DeleteColumn_FullMethodName         = "/board.v1.BoardService/DeleteColumn"
+	BoardService_ReorderColumns_FullMethodName       = "/board.v1.BoardService/ReorderColumns"
+	BoardService_CreateCard_FullMethodName           = "/board.v1.BoardService/CreateCard"
+	BoardService_GetCard_FullMethodName              = "/board.v1.BoardService/GetCard"
+	BoardService_GetCards_FullMethodName             = "/board.v1.BoardService/GetCards"
+	BoardService_UpdateCard_FullMethodName           = "/board.v1.BoardService/UpdateCard"
+	BoardService_MoveCard_FullMethodName             = "/board.v1.BoardService/MoveCard"
+	BoardService_DeleteCard_FullMethodName           = "/board.v1.BoardService/DeleteCard"
+	BoardService_AssignCard_FullMethodName           = "/board.v1.BoardService/AssignCard"
+	BoardService_UnassignCard_FullMethodName         = "/board.v1.BoardService/UnassignCard"
+	BoardService_GetCardActivity_FullMethodName      = "/board.v1.BoardService/GetCardActivity"
+	BoardService_AddMember_FullMethodName            = "/board.v1.BoardService/AddMember"
+	BoardService_RemoveMember_FullMethodName         = "/board.v1.BoardService/RemoveMember"
+	BoardService_ListMembers_FullMethodName          = "/board.v1.BoardService/ListMembers"
+	BoardService_IsMember_FullMethodName             = "/board.v1.BoardService/IsMember"
+	BoardService_CreateUploadURL_FullMethodName      = "/board.v1.BoardService/CreateUploadURL"
+	BoardService_ConfirmUpload_FullMethodName        = "/board.v1.BoardService/ConfirmUpload"
+	BoardService_GetDownloadURL_FullMethodName       = "/board.v1.BoardService/GetDownloadURL"
+	BoardService_ListAttachments_FullMethodName      = "/board.v1.BoardService/ListAttachments"
+	BoardService_DeleteAttachment_FullMethodName     = "/board.v1.BoardService/DeleteAttachment"
+	BoardService_CreateLabel_FullMethodName          = "/board.v1.BoardService/CreateLabel"
+	BoardService_ListLabels_FullMethodName           = "/board.v1.BoardService/ListLabels"
+	BoardService_UpdateLabel_FullMethodName          = "/board.v1.BoardService/UpdateLabel"
+	BoardService_DeleteLabel_FullMethodName          = "/board.v1.BoardService/DeleteLabel"
+	BoardService_AddLabelToCard_FullMethodName       = "/board.v1.BoardService/AddLabelToCard"
+	BoardService_RemoveLabelFromCard_FullMethodName  = "/board.v1.BoardService/RemoveLabelFromCard"
+	BoardService_GetCardLabels_FullMethodName        = "/board.v1.BoardService/GetCardLabels"
+	BoardService_LinkCards_FullMethodName            = "/board.v1.BoardService/LinkCards"
+	BoardService_UnlinkCards_FullMethodName          = "/board.v1.BoardService/UnlinkCards"
+	BoardService_GetCardChildren_FullMethodName      = "/board.v1.BoardService/GetCardChildren"
+	BoardService_GetCardParents_FullMethodName       = "/board.v1.BoardService/GetCardParents"
+	BoardService_CreateChecklist_FullMethodName      = "/board.v1.BoardService/CreateChecklist"
+	BoardService_GetChecklists_FullMethodName        = "/board.v1.BoardService/GetChecklists"
+	BoardService_UpdateChecklist_FullMethodName      = "/board.v1.BoardService/UpdateChecklist"
+	BoardService_DeleteChecklist_FullMethodName      = "/board.v1.BoardService/DeleteChecklist"
+	BoardService_CreateChecklistItem_FullMethodName  = "/board.v1.BoardService/CreateChecklistItem"
+	BoardService_UpdateChecklistItem_FullMethodName  = "/board.v1.BoardService/UpdateChecklistItem"
+	BoardService_DeleteChecklistItem_FullMethodName  = "/board.v1.BoardService/DeleteChecklistItem"
+	BoardService_ToggleChecklistItem_FullMethodName  = "/board.v1.BoardService/ToggleChecklistItem"
+	BoardService_CreateCustomField_FullMethodName    = "/board.v1.BoardService/CreateCustomField"
+	BoardService_ListCustomFields_FullMethodName     = "/board.v1.BoardService/ListCustomFields"
+	BoardService_UpdateCustomField_FullMethodName    = "/board.v1.BoardService/UpdateCustomField"
+	BoardService_DeleteCustomField_FullMethodName    = "/board.v1.BoardService/DeleteCustomField"
+	BoardService_SetCustomFieldValue_FullMethodName  = "/board.v1.BoardService/SetCustomFieldValue"
+	BoardService_GetCardCustomFields_FullMethodName  = "/board.v1.BoardService/GetCardCustomFields"
+	BoardService_CreateAutomationRule_FullMethodName = "/board.v1.BoardService/CreateAutomationRule"
+	BoardService_ListAutomationRules_FullMethodName  = "/board.v1.BoardService/ListAutomationRules"
+	BoardService_UpdateAutomationRule_FullMethodName = "/board.v1.BoardService/UpdateAutomationRule"
+	BoardService_DeleteAutomationRule_FullMethodName = "/board.v1.BoardService/DeleteAutomationRule"
+	BoardService_GetAutomationHistory_FullMethodName = "/board.v1.BoardService/GetAutomationHistory"
 )
 
 // BoardServiceClient is the client API for BoardService service.
@@ -128,6 +139,19 @@ type BoardServiceClient interface {
 	UpdateChecklistItem(ctx context.Context, in *UpdateChecklistItemRequest, opts ...grpc.CallOption) (*UpdateChecklistItemResponse, error)
 	DeleteChecklistItem(ctx context.Context, in *DeleteChecklistItemRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ToggleChecklistItem(ctx context.Context, in *ToggleChecklistItemRequest, opts ...grpc.CallOption) (*ToggleChecklistItemResponse, error)
+	// Custom Field operations
+	CreateCustomField(ctx context.Context, in *CreateCustomFieldRequest, opts ...grpc.CallOption) (*CreateCustomFieldResponse, error)
+	ListCustomFields(ctx context.Context, in *ListCustomFieldsRequest, opts ...grpc.CallOption) (*ListCustomFieldsResponse, error)
+	UpdateCustomField(ctx context.Context, in *UpdateCustomFieldRequest, opts ...grpc.CallOption) (*UpdateCustomFieldResponse, error)
+	DeleteCustomField(ctx context.Context, in *DeleteCustomFieldRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SetCustomFieldValue(ctx context.Context, in *SetCustomFieldValueRequest, opts ...grpc.CallOption) (*SetCustomFieldValueResponse, error)
+	GetCardCustomFields(ctx context.Context, in *GetCardCustomFieldsRequest, opts ...grpc.CallOption) (*GetCardCustomFieldsResponse, error)
+	// Automation Rule operations
+	CreateAutomationRule(ctx context.Context, in *CreateAutomationRuleRequest, opts ...grpc.CallOption) (*CreateAutomationRuleResponse, error)
+	ListAutomationRules(ctx context.Context, in *ListAutomationRulesRequest, opts ...grpc.CallOption) (*ListAutomationRulesResponse, error)
+	UpdateAutomationRule(ctx context.Context, in *UpdateAutomationRuleRequest, opts ...grpc.CallOption) (*UpdateAutomationRuleResponse, error)
+	DeleteAutomationRule(ctx context.Context, in *DeleteAutomationRuleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetAutomationHistory(ctx context.Context, in *GetAutomationHistoryRequest, opts ...grpc.CallOption) (*GetAutomationHistoryResponse, error)
 }
 
 type boardServiceClient struct {
@@ -608,6 +632,116 @@ func (c *boardServiceClient) ToggleChecklistItem(ctx context.Context, in *Toggle
 	return out, nil
 }
 
+func (c *boardServiceClient) CreateCustomField(ctx context.Context, in *CreateCustomFieldRequest, opts ...grpc.CallOption) (*CreateCustomFieldResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateCustomFieldResponse)
+	err := c.cc.Invoke(ctx, BoardService_CreateCustomField_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) ListCustomFields(ctx context.Context, in *ListCustomFieldsRequest, opts ...grpc.CallOption) (*ListCustomFieldsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListCustomFieldsResponse)
+	err := c.cc.Invoke(ctx, BoardService_ListCustomFields_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) UpdateCustomField(ctx context.Context, in *UpdateCustomFieldRequest, opts ...grpc.CallOption) (*UpdateCustomFieldResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateCustomFieldResponse)
+	err := c.cc.Invoke(ctx, BoardService_UpdateCustomField_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) DeleteCustomField(ctx context.Context, in *DeleteCustomFieldRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, BoardService_DeleteCustomField_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) SetCustomFieldValue(ctx context.Context, in *SetCustomFieldValueRequest, opts ...grpc.CallOption) (*SetCustomFieldValueResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetCustomFieldValueResponse)
+	err := c.cc.Invoke(ctx, BoardService_SetCustomFieldValue_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) GetCardCustomFields(ctx context.Context, in *GetCardCustomFieldsRequest, opts ...grpc.CallOption) (*GetCardCustomFieldsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCardCustomFieldsResponse)
+	err := c.cc.Invoke(ctx, BoardService_GetCardCustomFields_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) CreateAutomationRule(ctx context.Context, in *CreateAutomationRuleRequest, opts ...grpc.CallOption) (*CreateAutomationRuleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateAutomationRuleResponse)
+	err := c.cc.Invoke(ctx, BoardService_CreateAutomationRule_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) ListAutomationRules(ctx context.Context, in *ListAutomationRulesRequest, opts ...grpc.CallOption) (*ListAutomationRulesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAutomationRulesResponse)
+	err := c.cc.Invoke(ctx, BoardService_ListAutomationRules_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) UpdateAutomationRule(ctx context.Context, in *UpdateAutomationRuleRequest, opts ...grpc.CallOption) (*UpdateAutomationRuleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateAutomationRuleResponse)
+	err := c.cc.Invoke(ctx, BoardService_UpdateAutomationRule_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) DeleteAutomationRule(ctx context.Context, in *DeleteAutomationRuleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, BoardService_DeleteAutomationRule_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) GetAutomationHistory(ctx context.Context, in *GetAutomationHistoryRequest, opts ...grpc.CallOption) (*GetAutomationHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAutomationHistoryResponse)
+	err := c.cc.Invoke(ctx, BoardService_GetAutomationHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BoardServiceServer is the server API for BoardService service.
 // All implementations must embed UnimplementedBoardServiceServer
 // for forward compatibility.
@@ -667,6 +801,19 @@ type BoardServiceServer interface {
 	UpdateChecklistItem(context.Context, *UpdateChecklistItemRequest) (*UpdateChecklistItemResponse, error)
 	DeleteChecklistItem(context.Context, *DeleteChecklistItemRequest) (*emptypb.Empty, error)
 	ToggleChecklistItem(context.Context, *ToggleChecklistItemRequest) (*ToggleChecklistItemResponse, error)
+	// Custom Field operations
+	CreateCustomField(context.Context, *CreateCustomFieldRequest) (*CreateCustomFieldResponse, error)
+	ListCustomFields(context.Context, *ListCustomFieldsRequest) (*ListCustomFieldsResponse, error)
+	UpdateCustomField(context.Context, *UpdateCustomFieldRequest) (*UpdateCustomFieldResponse, error)
+	DeleteCustomField(context.Context, *DeleteCustomFieldRequest) (*emptypb.Empty, error)
+	SetCustomFieldValue(context.Context, *SetCustomFieldValueRequest) (*SetCustomFieldValueResponse, error)
+	GetCardCustomFields(context.Context, *GetCardCustomFieldsRequest) (*GetCardCustomFieldsResponse, error)
+	// Automation Rule operations
+	CreateAutomationRule(context.Context, *CreateAutomationRuleRequest) (*CreateAutomationRuleResponse, error)
+	ListAutomationRules(context.Context, *ListAutomationRulesRequest) (*ListAutomationRulesResponse, error)
+	UpdateAutomationRule(context.Context, *UpdateAutomationRuleRequest) (*UpdateAutomationRuleResponse, error)
+	DeleteAutomationRule(context.Context, *DeleteAutomationRuleRequest) (*emptypb.Empty, error)
+	GetAutomationHistory(context.Context, *GetAutomationHistoryRequest) (*GetAutomationHistoryResponse, error)
 	mustEmbedUnimplementedBoardServiceServer()
 }
 
@@ -817,6 +964,39 @@ func (UnimplementedBoardServiceServer) DeleteChecklistItem(context.Context, *Del
 }
 func (UnimplementedBoardServiceServer) ToggleChecklistItem(context.Context, *ToggleChecklistItemRequest) (*ToggleChecklistItemResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ToggleChecklistItem not implemented")
+}
+func (UnimplementedBoardServiceServer) CreateCustomField(context.Context, *CreateCustomFieldRequest) (*CreateCustomFieldResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateCustomField not implemented")
+}
+func (UnimplementedBoardServiceServer) ListCustomFields(context.Context, *ListCustomFieldsRequest) (*ListCustomFieldsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListCustomFields not implemented")
+}
+func (UnimplementedBoardServiceServer) UpdateCustomField(context.Context, *UpdateCustomFieldRequest) (*UpdateCustomFieldResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateCustomField not implemented")
+}
+func (UnimplementedBoardServiceServer) DeleteCustomField(context.Context, *DeleteCustomFieldRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteCustomField not implemented")
+}
+func (UnimplementedBoardServiceServer) SetCustomFieldValue(context.Context, *SetCustomFieldValueRequest) (*SetCustomFieldValueResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetCustomFieldValue not implemented")
+}
+func (UnimplementedBoardServiceServer) GetCardCustomFields(context.Context, *GetCardCustomFieldsRequest) (*GetCardCustomFieldsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetCardCustomFields not implemented")
+}
+func (UnimplementedBoardServiceServer) CreateAutomationRule(context.Context, *CreateAutomationRuleRequest) (*CreateAutomationRuleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateAutomationRule not implemented")
+}
+func (UnimplementedBoardServiceServer) ListAutomationRules(context.Context, *ListAutomationRulesRequest) (*ListAutomationRulesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListAutomationRules not implemented")
+}
+func (UnimplementedBoardServiceServer) UpdateAutomationRule(context.Context, *UpdateAutomationRuleRequest) (*UpdateAutomationRuleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateAutomationRule not implemented")
+}
+func (UnimplementedBoardServiceServer) DeleteAutomationRule(context.Context, *DeleteAutomationRuleRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteAutomationRule not implemented")
+}
+func (UnimplementedBoardServiceServer) GetAutomationHistory(context.Context, *GetAutomationHistoryRequest) (*GetAutomationHistoryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAutomationHistory not implemented")
 }
 func (UnimplementedBoardServiceServer) mustEmbedUnimplementedBoardServiceServer() {}
 func (UnimplementedBoardServiceServer) testEmbeddedByValue()                      {}
@@ -1685,6 +1865,204 @@ func _BoardService_ToggleChecklistItem_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BoardService_CreateCustomField_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateCustomFieldRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).CreateCustomField(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_CreateCustomField_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).CreateCustomField(ctx, req.(*CreateCustomFieldRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_ListCustomFields_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCustomFieldsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).ListCustomFields(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_ListCustomFields_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).ListCustomFields(ctx, req.(*ListCustomFieldsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_UpdateCustomField_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCustomFieldRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).UpdateCustomField(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_UpdateCustomField_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).UpdateCustomField(ctx, req.(*UpdateCustomFieldRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_DeleteCustomField_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteCustomFieldRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).DeleteCustomField(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_DeleteCustomField_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).DeleteCustomField(ctx, req.(*DeleteCustomFieldRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_SetCustomFieldValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetCustomFieldValueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).SetCustomFieldValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_SetCustomFieldValue_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).SetCustomFieldValue(ctx, req.(*SetCustomFieldValueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_GetCardCustomFields_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCardCustomFieldsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).GetCardCustomFields(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_GetCardCustomFields_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).GetCardCustomFields(ctx, req.(*GetCardCustomFieldsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_CreateAutomationRule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAutomationRuleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).CreateAutomationRule(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_CreateAutomationRule_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).CreateAutomationRule(ctx, req.(*CreateAutomationRuleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_ListAutomationRules_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAutomationRulesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).ListAutomationRules(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_ListAutomationRules_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).ListAutomationRules(ctx, req.(*ListAutomationRulesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_UpdateAutomationRule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAutomationRuleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).UpdateAutomationRule(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_UpdateAutomationRule_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).UpdateAutomationRule(ctx, req.(*UpdateAutomationRuleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_DeleteAutomationRule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAutomationRuleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).DeleteAutomationRule(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_DeleteAutomationRule_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).DeleteAutomationRule(ctx, req.(*DeleteAutomationRuleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_GetAutomationHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAutomationHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).GetAutomationHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_GetAutomationHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).GetAutomationHistory(ctx, req.(*GetAutomationHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BoardService_ServiceDesc is the grpc.ServiceDesc for BoardService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1879,6 +2257,50 @@ var BoardService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ToggleChecklistItem",
 			Handler:    _BoardService_ToggleChecklistItem_Handler,
+		},
+		{
+			MethodName: "CreateCustomField",
+			Handler:    _BoardService_CreateCustomField_Handler,
+		},
+		{
+			MethodName: "ListCustomFields",
+			Handler:    _BoardService_ListCustomFields_Handler,
+		},
+		{
+			MethodName: "UpdateCustomField",
+			Handler:    _BoardService_UpdateCustomField_Handler,
+		},
+		{
+			MethodName: "DeleteCustomField",
+			Handler:    _BoardService_DeleteCustomField_Handler,
+		},
+		{
+			MethodName: "SetCustomFieldValue",
+			Handler:    _BoardService_SetCustomFieldValue_Handler,
+		},
+		{
+			MethodName: "GetCardCustomFields",
+			Handler:    _BoardService_GetCardCustomFields_Handler,
+		},
+		{
+			MethodName: "CreateAutomationRule",
+			Handler:    _BoardService_CreateAutomationRule_Handler,
+		},
+		{
+			MethodName: "ListAutomationRules",
+			Handler:    _BoardService_ListAutomationRules_Handler,
+		},
+		{
+			MethodName: "UpdateAutomationRule",
+			Handler:    _BoardService_UpdateAutomationRule_Handler,
+		},
+		{
+			MethodName: "DeleteAutomationRule",
+			Handler:    _BoardService_DeleteAutomationRule_Handler,
+		},
+		{
+			MethodName: "GetAutomationHistory",
+			Handler:    _BoardService_GetAutomationHistory_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -126,3 +126,35 @@ func (p *EventPublisher) PublishChecklistDeleted(ctx context.Context, event usec
 func (p *EventPublisher) PublishChecklistItemToggled(ctx context.Context, event usecase.ChecklistItemToggled) error {
 	return p.publisher.Publish(ctx, "checklist.item.toggled", event)
 }
+
+func (p *EventPublisher) PublishCustomFieldCreated(ctx context.Context, event usecase.CustomFieldCreated) error {
+	return p.publisher.Publish(ctx, "custom_field.created", event)
+}
+
+func (p *EventPublisher) PublishCustomFieldUpdated(ctx context.Context, event usecase.CustomFieldUpdated) error {
+	return p.publisher.Publish(ctx, "custom_field.updated", event)
+}
+
+func (p *EventPublisher) PublishCustomFieldDeleted(ctx context.Context, event usecase.CustomFieldDeleted) error {
+	return p.publisher.Publish(ctx, "custom_field.deleted", event)
+}
+
+func (p *EventPublisher) PublishCustomFieldValueSet(ctx context.Context, event usecase.CustomFieldValueSet) error {
+	return p.publisher.Publish(ctx, "custom_field.value.set", event)
+}
+
+func (p *EventPublisher) PublishAutomationRuleCreated(ctx context.Context, event usecase.AutomationRuleCreated) error {
+	return p.publisher.Publish(ctx, "automation.rule_created", event)
+}
+
+func (p *EventPublisher) PublishAutomationRuleUpdated(ctx context.Context, event usecase.AutomationRuleUpdated) error {
+	return p.publisher.Publish(ctx, "automation.rule_updated", event)
+}
+
+func (p *EventPublisher) PublishAutomationRuleDeleted(ctx context.Context, event usecase.AutomationRuleDeleted) error {
+	return p.publisher.Publish(ctx, "automation.rule_deleted", event)
+}
+
+func (p *EventPublisher) PublishAutomationExecuted(ctx context.Context, event usecase.AutomationExecuted) error {
+	return p.publisher.Publish(ctx, "automation.executed", event)
+}

@@ -124,6 +124,8 @@ func main() {
 	labelRepo := postgres.NewLabelRepository(db)
 	cardLinkRepo := postgres.NewCardLinkRepository(db)
 	checklistRepo := postgres.NewChecklistRepository(db)
+	customFieldRepo := postgres.NewCustomFieldRepository(db)
+	automationRuleRepo := postgres.NewAutomationRuleRepository(db)
 
 	// Use Cases
 	createBoardUC := usecase.NewCreateBoardUseCase(boardRepo, memberRepo, publisher)
@@ -181,6 +183,19 @@ func main() {
 	deleteChecklistItemUC := usecase.NewDeleteChecklistItemUseCase(checklistRepo, memberRepo)
 	toggleChecklistItemUC := usecase.NewToggleChecklistItemUseCase(checklistRepo, memberRepo, publisher)
 
+	createCustomFieldUC := usecase.NewCreateCustomFieldUseCase(customFieldRepo, memberRepo, publisher)
+	listCustomFieldsUC := usecase.NewListCustomFieldsUseCase(customFieldRepo, memberRepo)
+	updateCustomFieldUC := usecase.NewUpdateCustomFieldUseCase(customFieldRepo, memberRepo, publisher)
+	deleteCustomFieldUC := usecase.NewDeleteCustomFieldUseCase(customFieldRepo, memberRepo, publisher)
+	setCustomFieldValueUC := usecase.NewSetCustomFieldValueUseCase(customFieldRepo, memberRepo, publisher)
+	getCardCustomFieldsUC := usecase.NewGetCardCustomFieldsUseCase(customFieldRepo, memberRepo)
+
+	createAutomationRuleUC := usecase.NewCreateAutomationRuleUseCase(automationRuleRepo, memberRepo, publisher)
+	listAutomationRulesUC := usecase.NewListAutomationRulesUseCase(automationRuleRepo, memberRepo)
+	updateAutomationRuleUC := usecase.NewUpdateAutomationRuleUseCase(automationRuleRepo, memberRepo, publisher)
+	deleteAutomationRuleUC := usecase.NewDeleteAutomationRuleUseCase(automationRuleRepo, memberRepo, publisher)
+	getAutomationHistoryUC := usecase.NewGetAutomationHistoryUseCase(automationRuleRepo, memberRepo)
+
 	// gRPC server
 	handler := delivery.NewBoardServiceServer(
 		createBoardUC,
@@ -230,6 +245,17 @@ func main() {
 		updateChecklistItemUC,
 		deleteChecklistItemUC,
 		toggleChecklistItemUC,
+		createCustomFieldUC,
+		listCustomFieldsUC,
+		updateCustomFieldUC,
+		deleteCustomFieldUC,
+		setCustomFieldValueUC,
+		getCardCustomFieldsUC,
+		createAutomationRuleUC,
+		listAutomationRulesUC,
+		updateAutomationRuleUC,
+		deleteAutomationRuleUC,
+		getAutomationHistoryUC,
 	)
 
 	grpcServer := grpc.NewServer(

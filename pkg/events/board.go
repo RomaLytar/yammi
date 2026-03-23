@@ -25,9 +25,17 @@ const (
 	SubjectLabelDeleted         = "label.deleted"
 	SubjectCardLabelAdded       = "card.label.added"
 	SubjectCardLabelRemoved     = "card.label.removed"
-	SubjectCardLinked           = "card.linked"
-	SubjectCardUnlinked         = "card.unlinked"
-	StreamBoards                = "BOARDS"
+	SubjectCardLinked                = "card.linked"
+	SubjectCardUnlinked              = "card.unlinked"
+	SubjectCustomFieldCreated        = "custom_field.created"
+	SubjectCustomFieldUpdated        = "custom_field.updated"
+	SubjectCustomFieldDeleted        = "custom_field.deleted"
+	SubjectCustomFieldValueSet       = "custom_field.value.set"
+	SubjectAutomationRuleCreated     = "automation.rule_created"
+	SubjectAutomationRuleUpdated    = "automation.rule_updated"
+	SubjectAutomationRuleDeleted    = "automation.rule_deleted"
+	SubjectAutomationExecuted       = "automation.executed"
+	StreamBoards                    = "BOARDS"
 )
 
 // BoardCreated событие создания доски
@@ -317,4 +325,51 @@ type CardUnlinked struct {
 	ChildID      string    `json:"child_id"`
 	BoardID      string    `json:"board_id"`
 	ActorID      string    `json:"actor_id"`
+}
+
+// AutomationRuleCreated событие создания правила автоматизации
+type AutomationRuleCreated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	RuleID       string    `json:"rule_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Name         string    `json:"name"`
+	TriggerType  string    `json:"trigger_type"`
+	ActionType   string    `json:"action_type"`
+}
+
+// AutomationRuleUpdated событие обновления правила автоматизации
+type AutomationRuleUpdated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	RuleID       string    `json:"rule_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Name         string    `json:"name"`
+	Enabled      bool      `json:"enabled"`
+}
+
+// AutomationRuleDeleted событие удаления правила автоматизации
+type AutomationRuleDeleted struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	RuleID       string    `json:"rule_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+// AutomationExecuted событие выполнения правила автоматизации
+type AutomationExecuted struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	ExecutionID  string    `json:"execution_id"`
+	RuleID       string    `json:"rule_id"`
+	BoardID      string    `json:"board_id"`
+	CardID       string    `json:"card_id"`
+	Status       string    `json:"status"`
 }

@@ -73,6 +73,21 @@ type BoardServiceServer struct {
 	updateChecklistItem *usecase.UpdateChecklistItemUseCase
 	deleteChecklistItem *usecase.DeleteChecklistItemUseCase
 	toggleChecklistItem *usecase.ToggleChecklistItemUseCase
+
+	// Custom Field Use Cases
+	createCustomField    *usecase.CreateCustomFieldUseCase
+	listCustomFields     *usecase.ListCustomFieldsUseCase
+	updateCustomField    *usecase.UpdateCustomFieldUseCase
+	deleteCustomField    *usecase.DeleteCustomFieldUseCase
+	setCustomFieldValue  *usecase.SetCustomFieldValueUseCase
+	getCardCustomFields  *usecase.GetCardCustomFieldsUseCase
+
+	// Automation Rule Use Cases
+	createAutomationRule *usecase.CreateAutomationRuleUseCase
+	listAutomationRules  *usecase.ListAutomationRulesUseCase
+	updateAutomationRule *usecase.UpdateAutomationRuleUseCase
+	deleteAutomationRule *usecase.DeleteAutomationRuleUseCase
+	getAutomationHistory *usecase.GetAutomationHistoryUseCase
 }
 
 // NewBoardServiceServer создает новый gRPC сервер с внедренными use cases
@@ -124,6 +139,17 @@ func NewBoardServiceServer(
 	updateChecklistItem *usecase.UpdateChecklistItemUseCase,
 	deleteChecklistItem *usecase.DeleteChecklistItemUseCase,
 	toggleChecklistItem *usecase.ToggleChecklistItemUseCase,
+	createCustomField *usecase.CreateCustomFieldUseCase,
+	listCustomFieldsUC *usecase.ListCustomFieldsUseCase,
+	updateCustomField *usecase.UpdateCustomFieldUseCase,
+	deleteCustomField *usecase.DeleteCustomFieldUseCase,
+	setCustomFieldValue *usecase.SetCustomFieldValueUseCase,
+	getCardCustomFields *usecase.GetCardCustomFieldsUseCase,
+	createAutomationRule *usecase.CreateAutomationRuleUseCase,
+	listAutomationRules *usecase.ListAutomationRulesUseCase,
+	updateAutomationRule *usecase.UpdateAutomationRuleUseCase,
+	deleteAutomationRule *usecase.DeleteAutomationRuleUseCase,
+	getAutomationHistory *usecase.GetAutomationHistoryUseCase,
 ) *BoardServiceServer {
 	return &BoardServiceServer{
 		createBoard:         createBoard,
@@ -172,7 +198,18 @@ func NewBoardServiceServer(
 		createChecklistItem: createChecklistItem,
 		updateChecklistItem: updateChecklistItem,
 		deleteChecklistItem: deleteChecklistItem,
-		toggleChecklistItem: toggleChecklistItem,
+		toggleChecklistItem:  toggleChecklistItem,
+		createCustomField:    createCustomField,
+		listCustomFields:     listCustomFieldsUC,
+		updateCustomField:    updateCustomField,
+		deleteCustomField:    deleteCustomField,
+		setCustomFieldValue:  setCustomFieldValue,
+		getCardCustomFields:  getCardCustomFields,
+		createAutomationRule: createAutomationRule,
+		listAutomationRules:  listAutomationRules,
+		updateAutomationRule: updateAutomationRule,
+		deleteAutomationRule: deleteAutomationRule,
+		getAutomationHistory: getAutomationHistory,
 	}
 }
 

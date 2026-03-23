@@ -72,6 +72,26 @@ var (
 	ErrInvalidLinkType  = errors.New("invalid link type")
 )
 
+// Custom Field errors
+var (
+	ErrCustomFieldNotFound      = errors.New("custom field not found")
+	ErrCustomFieldValueNotFound = errors.New("custom field value not found")
+	ErrCustomFieldExists        = errors.New("custom field with this name already exists")
+	ErrEmptyFieldName           = errors.New("field name cannot be empty")
+	ErrInvalidFieldType         = errors.New("invalid field type")
+	ErrInvalidFieldValue        = errors.New("invalid field value for field type")
+	ErrMaxCustomFieldsReached   = errors.New("maximum custom fields per board reached")
+)
+
+// Automation errors
+var (
+	ErrAutomationRuleNotFound = errors.New("automation rule not found")
+	ErrEmptyRuleName          = errors.New("rule name cannot be empty")
+	ErrInvalidTriggerType     = errors.New("invalid trigger type")
+	ErrInvalidActionType      = errors.New("invalid action type")
+	ErrMaxRulesReached        = errors.New("maximum automation rules per board reached")
+)
+
 // Activity errors
 var (
 	ErrEmptyActorID      = errors.New("actor ID cannot be empty")

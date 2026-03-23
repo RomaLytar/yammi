@@ -149,6 +149,59 @@ type cardLinkResponse struct {
 	CreatedAt       string `json:"created_at"`
 }
 
+// --- Custom Field responses ---
+
+type customFieldDefResponse struct {
+	ID        string   `json:"id"`
+	BoardID   string   `json:"board_id"`
+	Name      string   `json:"name"`
+	FieldType string   `json:"field_type"`
+	Options   []string `json:"options,omitempty"`
+	Position  int32    `json:"position"`
+	Required  bool     `json:"required"`
+	CreatedAt string   `json:"created_at"`
+	UpdatedAt string   `json:"updated_at"`
+}
+
+type customFieldValueResponse struct {
+	ID          string   `json:"id"`
+	CardID      string   `json:"card_id"`
+	BoardID     string   `json:"board_id"`
+	FieldID     string   `json:"field_id"`
+	ValueText   *string  `json:"value_text,omitempty"`
+	ValueNumber *float64 `json:"value_number,omitempty"`
+	ValueDate   *string  `json:"value_date,omitempty"`
+	CreatedAt   string   `json:"created_at"`
+	UpdatedAt   string   `json:"updated_at"`
+}
+
+// --- Automation Rule responses ---
+
+type automationRuleResponse struct {
+	ID            string            `json:"id"`
+	BoardID       string            `json:"board_id"`
+	Name          string            `json:"name"`
+	Enabled       bool              `json:"enabled"`
+	TriggerType   string            `json:"trigger_type"`
+	TriggerConfig map[string]string `json:"trigger_config"`
+	ActionType    string            `json:"action_type"`
+	ActionConfig  map[string]string `json:"action_config"`
+	CreatedBy     string            `json:"created_by"`
+	CreatedAt     string            `json:"created_at"`
+	UpdatedAt     string            `json:"updated_at"`
+}
+
+type automationExecutionResponse struct {
+	ID             string `json:"id"`
+	RuleID         string `json:"rule_id"`
+	BoardID        string `json:"board_id"`
+	CardID         string `json:"card_id,omitempty"`
+	TriggerEventID string `json:"trigger_event_id,omitempty"`
+	Status         string `json:"status"`
+	ErrorMessage   string `json:"error_message,omitempty"`
+	ExecutedAt     string `json:"executed_at"`
+}
+
 // --- Generic responses ---
 
 type statusResponse struct {

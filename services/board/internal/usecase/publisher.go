@@ -32,4 +32,12 @@ type EventPublisher interface {
 	PublishChecklistUpdated(ctx context.Context, event ChecklistUpdated) error
 	PublishChecklistDeleted(ctx context.Context, event ChecklistDeleted) error
 	PublishChecklistItemToggled(ctx context.Context, event ChecklistItemToggled) error
+	PublishCustomFieldCreated(ctx context.Context, event CustomFieldCreated) error
+	PublishCustomFieldUpdated(ctx context.Context, event CustomFieldUpdated) error
+	PublishCustomFieldDeleted(ctx context.Context, event CustomFieldDeleted) error
+	PublishCustomFieldValueSet(ctx context.Context, event CustomFieldValueSet) error
+	PublishAutomationRuleCreated(ctx context.Context, event AutomationRuleCreated) error
+	PublishAutomationRuleUpdated(ctx context.Context, event AutomationRuleUpdated) error
+	PublishAutomationRuleDeleted(ctx context.Context, event AutomationRuleDeleted) error
+	PublishAutomationExecuted(ctx context.Context, event AutomationExecuted) error
 }

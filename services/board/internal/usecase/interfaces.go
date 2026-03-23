@@ -186,6 +186,66 @@ type CardLinkRepository interface {
 	Exists(ctx context.Context, parentID, childID, boardID string) (bool, error)
 }
 
+// CustomFieldRepository определяет интерфейс для работы с кастомными полями
+type CustomFieldRepository interface {
+	// CreateDefinition создает новое определение кастомного поля
+	CreateDefinition(ctx context.Context, def *domain.CustomFieldDefinition) error
+
+	// GetDefinitionByID возвращает определение по ID
+	GetDefinitionByID(ctx context.Context, defID string) (*domain.CustomFieldDefinition, error)
+
+	// ListDefinitionsByBoardID возвращает все определения кастомных полей доски
+	ListDefinitionsByBoardID(ctx context.Context, boardID string) ([]*domain.CustomFieldDefinition, error)
+
+	// UpdateDefinition обновляет определение кастомного поля
+	UpdateDefinition(ctx context.Context, def *domain.CustomFieldDefinition) error
+
+	// DeleteDefinition удаляет определение кастомного поля (CASCADE удалит значения)
+	DeleteDefinition(ctx context.Context, defID string) error
+
+	// CountDefinitionsByBoardID возвращает количество определений кастомных полей доски
+	CountDefinitionsByBoardID(ctx context.Context, boardID string) (int, error)
+
+	// SetValue создает или обновляет значение кастомного поля для карточки
+	SetValue(ctx context.Context, value *domain.CustomFieldValue) error
+
+	// GetCardValues возвращает все значения кастомных полей карточки
+	GetCardValues(ctx context.Context, cardID, boardID string) ([]*domain.CustomFieldValue, error)
+
+	// DeleteValue удаляет значение кастомного поля карточки
+	DeleteValue(ctx context.Context, cardID, boardID, fieldID string) error
+}
+
+// AutomationRuleRepository определяет интерфейс для работы с правилами автоматизации
+type AutomationRuleRepository interface {
+	// Create создает новое правило автоматизации
+	Create(ctx context.Context, rule *domain.AutomationRule) error
+
+	// GetByID возвращает правило по ID
+	GetByID(ctx context.Context, ruleID string) (*domain.AutomationRule, error)
+
+	// ListByBoardID возвращает все правила доски
+	ListByBoardID(ctx context.Context, boardID string) ([]*domain.AutomationRule, error)
+
+	// ListEnabledByBoardAndTrigger возвращает активные правила по доске и типу триггера
+	ListEnabledByBoardAndTrigger(ctx context.Context, boardID string, triggerType domain.TriggerType) ([]*domain.AutomationRule, error)
+
+	// Update обновляет правило
+	Update(ctx context.Context, rule *domain.AutomationRule) error
+
+	// Delete удаляет правило по ID
+	Delete(ctx context.Context, ruleID string) error
+
+	// CountByBoardID возвращает количество правил доски
+	CountByBoardID(ctx context.Context, boardID string) (int, error)
+
+	// CreateExecution создает запись о выполнении правила
+	CreateExecution(ctx context.Context, exec *domain.AutomationExecution) error
+
+	// ListExecutionsByRuleID возвращает историю выполнений правила
+	ListExecutionsByRuleID(ctx context.Context, ruleID, boardID string, limit int) ([]*domain.AutomationExecution, error)
+}
+
 // FileStorage определяет интерфейс для работы с файловым хранилищем
 type FileStorage interface {
 	// GenerateUploadURL генерирует pre-signed URL для загрузки файла

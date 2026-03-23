@@ -312,6 +312,89 @@ type ChecklistItemToggled struct {
 	IsChecked    bool      `json:"is_checked"`
 }
 
+type CustomFieldCreated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	FieldID      string    `json:"field_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Name         string    `json:"name"`
+	FieldType    string    `json:"field_type"`
+}
+
+type CustomFieldUpdated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	FieldID      string    `json:"field_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Name         string    `json:"name"`
+}
+
+type CustomFieldDeleted struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	FieldID      string    `json:"field_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type CustomFieldValueSet struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	FieldID      string    `json:"field_id"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type AutomationRuleCreated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	RuleID       string    `json:"rule_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Name         string    `json:"name"`
+	TriggerType  string    `json:"trigger_type"`
+	ActionType   string    `json:"action_type"`
+}
+
+type AutomationRuleUpdated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	RuleID       string    `json:"rule_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Name         string    `json:"name"`
+	Enabled      bool      `json:"enabled"`
+}
+
+type AutomationRuleDeleted struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	RuleID       string    `json:"rule_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type AutomationExecuted struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	ExecutionID  string    `json:"execution_id"`
+	RuleID       string    `json:"rule_id"`
+	BoardID      string    `json:"board_id"`
+	CardID       string    `json:"card_id"`
+	Status       string    `json:"status"`
+}
+
 func generateEventID() string {
 	return uuid.New().String()
 }

@@ -61,6 +61,31 @@ service BoardService {
   rpc UnlinkCards(UnlinkCardsRequest) returns (google.protobuf.Empty);
   rpc GetCardChildren(GetCardChildrenRequest) returns (GetCardChildrenResponse);
   rpc GetCardParents(GetCardParentsRequest) returns (GetCardParentsResponse);
+
+  // Checklist operations
+  rpc CreateChecklist(CreateChecklistRequest) returns (CreateChecklistResponse);
+  rpc GetChecklists(GetChecklistsRequest) returns (GetChecklistsResponse);
+  rpc UpdateChecklist(UpdateChecklistRequest) returns (UpdateChecklistResponse);
+  rpc DeleteChecklist(DeleteChecklistRequest) returns (google.protobuf.Empty);
+  rpc CreateChecklistItem(CreateChecklistItemRequest) returns (CreateChecklistItemResponse);
+  rpc UpdateChecklistItem(UpdateChecklistItemRequest) returns (UpdateChecklistItemResponse);
+  rpc DeleteChecklistItem(DeleteChecklistItemRequest) returns (google.protobuf.Empty);
+  rpc ToggleChecklistItem(ToggleChecklistItemRequest) returns (ToggleChecklistItemResponse);
+
+  // Custom Field operations
+  rpc CreateCustomField(CreateCustomFieldRequest) returns (CreateCustomFieldResponse);
+  rpc ListCustomFields(ListCustomFieldsRequest) returns (ListCustomFieldsResponse);
+  rpc UpdateCustomField(UpdateCustomFieldRequest) returns (UpdateCustomFieldResponse);
+  rpc DeleteCustomField(DeleteCustomFieldRequest) returns (google.protobuf.Empty);
+  rpc SetCustomFieldValue(SetCustomFieldValueRequest) returns (SetCustomFieldValueResponse);
+  rpc GetCardCustomFields(GetCardCustomFieldsRequest) returns (GetCardCustomFieldsResponse);
+
+  // Automation Rule operations
+  rpc CreateAutomationRule(CreateAutomationRuleRequest) returns (CreateAutomationRuleResponse);
+  rpc ListAutomationRules(ListAutomationRulesRequest) returns (ListAutomationRulesResponse);
+  rpc UpdateAutomationRule(UpdateAutomationRuleRequest) returns (UpdateAutomationRuleResponse);
+  rpc DeleteAutomationRule(DeleteAutomationRuleRequest) returns (google.protobuf.Empty);
+  rpc GetAutomationHistory(GetAutomationHistoryRequest) returns (GetAutomationHistoryResponse);
 }
 
 // ============================================================================
@@ -276,6 +301,10 @@ message UnassignCardRequest {
 message UnassignCardResponse {
   Card card = 1;
 }
+
+// ============================================================================
+// Activity Messages
+// ============================================================================
 
 message GetCardActivityRequest {
   string card_id = 1;
@@ -580,4 +609,293 @@ message GetCardParentsRequest {
 
 message GetCardParentsResponse {
   repeated CardLink links = 1;
+}
+
+// ============================================================================
+// Checklist Messages
+// ============================================================================
+
+message Checklist {
+  string id = 1;
+  string card_id = 2;
+  string board_id = 3;
+  string title = 4;
+  int32 position = 5;
+  repeated ChecklistItem items = 6;
+  int32 progress = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message ChecklistItem {
+  string id = 1;
+  string checklist_id = 2;
+  string board_id = 3;
+  string title = 4;
+  bool is_checked = 5;
+  int32 position = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+message CreateChecklistRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string title = 4;
+  int32 position = 5;
+}
+
+message CreateChecklistResponse {
+  Checklist checklist = 1;
+}
+
+message GetChecklistsRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetChecklistsResponse {
+  repeated Checklist checklists = 1;
+}
+
+message UpdateChecklistRequest {
+  string checklist_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string title = 4;
+}
+
+message UpdateChecklistResponse {
+  Checklist checklist = 1;
+}
+
+message DeleteChecklistRequest {
+  string checklist_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message CreateChecklistItemRequest {
+  string checklist_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string title = 4;
+  int32 position = 5;
+}
+
+message CreateChecklistItemResponse {
+  ChecklistItem item = 1;
+}
+
+message UpdateChecklistItemRequest {
+  string item_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string title = 4;
+}
+
+message UpdateChecklistItemResponse {
+  ChecklistItem item = 1;
+}
+
+message DeleteChecklistItemRequest {
+  string item_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message ToggleChecklistItemRequest {
+  string item_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  bool is_checked = 4;
+}
+
+message ToggleChecklistItemResponse {
+  bool is_checked = 1;
+}
+
+// ============================================================================
+// Custom Field Messages
+// ============================================================================
+
+message CustomFieldDefinition {
+  string id = 1;
+  string board_id = 2;
+  string name = 3;
+  string field_type = 4;
+  repeated string options = 5;
+  int32 position = 6;
+  bool required = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message CustomFieldValue {
+  string id = 1;
+  string card_id = 2;
+  string board_id = 3;
+  string field_id = 4;
+  string value_text = 5;
+  double value_number = 6;
+  google.protobuf.Timestamp value_date = 7;
+  bool has_text = 8;
+  bool has_number = 9;
+  bool has_date = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message CreateCustomFieldRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string name = 3;
+  string field_type = 4;
+  repeated string options = 5;
+  int32 position = 6;
+  bool required = 7;
+}
+
+message CreateCustomFieldResponse {
+  CustomFieldDefinition definition = 1;
+}
+
+message ListCustomFieldsRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message ListCustomFieldsResponse {
+  repeated CustomFieldDefinition definitions = 1;
+}
+
+message UpdateCustomFieldRequest {
+  string field_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string name = 4;
+  repeated string options = 5;
+  bool required = 6;
+}
+
+message UpdateCustomFieldResponse {
+  CustomFieldDefinition definition = 1;
+}
+
+message DeleteCustomFieldRequest {
+  string field_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message SetCustomFieldValueRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string field_id = 3;
+  string user_id = 4;
+  string value_text = 5;
+  double value_number = 6;
+  google.protobuf.Timestamp value_date = 7;
+  bool has_text = 8;
+  bool has_number = 9;
+  bool has_date = 10;
+}
+
+message SetCustomFieldValueResponse {
+  CustomFieldValue value = 1;
+}
+
+message GetCardCustomFieldsRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetCardCustomFieldsResponse {
+  repeated CustomFieldValue values = 1;
+}
+
+// ============================================================================
+// Automation Rule Messages
+// ============================================================================
+
+message AutomationRule {
+  string id = 1;
+  string board_id = 2;
+  string name = 3;
+  bool enabled = 4;
+  string trigger_type = 5;
+  map<string, string> trigger_config = 6;
+  string action_type = 7;
+  map<string, string> action_config = 8;
+  string created_by = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message AutomationExecution {
+  string id = 1;
+  string rule_id = 2;
+  string board_id = 3;
+  string card_id = 4;
+  string trigger_event_id = 5;
+  string status = 6;
+  string error_message = 7;
+  google.protobuf.Timestamp executed_at = 8;
+}
+
+message CreateAutomationRuleRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string name = 3;
+  string trigger_type = 4;
+  map<string, string> trigger_config = 5;
+  string action_type = 6;
+  map<string, string> action_config = 7;
+}
+
+message CreateAutomationRuleResponse {
+  AutomationRule rule = 1;
+}
+
+message ListAutomationRulesRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message ListAutomationRulesResponse {
+  repeated AutomationRule rules = 1;
+}
+
+message UpdateAutomationRuleRequest {
+  string rule_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string name = 4;
+  bool enabled = 5;
+  map<string, string> trigger_config = 6;
+  map<string, string> action_config = 7;
+}
+
+message UpdateAutomationRuleResponse {
+  AutomationRule rule = 1;
+}
+
+message DeleteAutomationRuleRequest {
+  string rule_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetAutomationHistoryRequest {
+  string rule_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  int32 limit = 4;
+}
+
+message GetAutomationHistoryResponse {
+  repeated AutomationExecution executions = 1;
 }

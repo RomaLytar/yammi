@@ -105,6 +105,21 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("GET /api/v1/boards/{boardId}/cards/{cardId}/children", rateLimit(requireAuth(http.HandlerFunc(board.GetCardChildren))))
 	mux.Handle("GET /api/v1/boards/{boardId}/cards/{cardId}/parents", rateLimit(requireAuth(http.HandlerFunc(board.GetCardParents))))
 
+	// Custom Field routes
+	mux.Handle("POST /api/v1/boards/{id}/custom-fields", rateLimit(requireAuth(http.HandlerFunc(board.CreateCustomField))))
+	mux.Handle("GET /api/v1/boards/{id}/custom-fields", rateLimit(requireAuth(http.HandlerFunc(board.ListCustomFields))))
+	mux.Handle("PUT /api/v1/boards/{boardId}/custom-fields/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateCustomField))))
+	mux.Handle("DELETE /api/v1/boards/{boardId}/custom-fields/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteCustomField))))
+	mux.Handle("PUT /api/v1/boards/{boardId}/cards/{cardId}/custom-fields/{fieldId}", rateLimit(requireAuth(http.HandlerFunc(board.SetCustomFieldValue))))
+	mux.Handle("GET /api/v1/boards/{boardId}/cards/{cardId}/custom-fields", rateLimit(requireAuth(http.HandlerFunc(board.GetCardCustomFields))))
+
+	// Automation Rule routes
+	mux.Handle("POST /api/v1/boards/{id}/automations", rateLimit(requireAuth(http.HandlerFunc(board.CreateAutomationRule))))
+	mux.Handle("GET /api/v1/boards/{id}/automations", rateLimit(requireAuth(http.HandlerFunc(board.ListAutomationRules))))
+	mux.Handle("PUT /api/v1/boards/{boardId}/automations/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateAutomationRule))))
+	mux.Handle("DELETE /api/v1/boards/{boardId}/automations/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteAutomationRule))))
+	mux.Handle("GET /api/v1/boards/{boardId}/automations/{id}/history", rateLimit(requireAuth(http.HandlerFunc(board.GetAutomationHistory))))
+
 	// Comment routes
 	comment := NewCommentHandler(clients.CommentClient)
 	mux.Handle("POST /api/v1/cards/{id}/comments", rateLimit(requireAuth(http.HandlerFunc(comment.CreateComment))))

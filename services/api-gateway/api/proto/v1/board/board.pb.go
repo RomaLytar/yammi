@@ -4858,6 +4858,2702 @@ func (x *GetCardParentsResponse) GetLinks() []*CardLink {
 	return nil
 }
 
+type Checklist struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	CardId        string                 `protobuf:"bytes,2,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,3,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	Position      int32                  `protobuf:"varint,5,opt,name=position,proto3" json:"position,omitempty"`
+	Items         []*ChecklistItem       `protobuf:"bytes,6,rep,name=items,proto3" json:"items,omitempty"`
+	Progress      int32                  `protobuf:"varint,7,opt,name=progress,proto3" json:"progress,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Checklist) Reset() {
+	*x = Checklist{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[78]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Checklist) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Checklist) ProtoMessage() {}
+
+func (x *Checklist) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[78]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Checklist.ProtoReflect.Descriptor instead.
+func (*Checklist) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{78}
+}
+
+func (x *Checklist) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Checklist) GetCardId() string {
+	if x != nil {
+		return x.CardId
+	}
+	return ""
+}
+
+func (x *Checklist) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *Checklist) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *Checklist) GetPosition() int32 {
+	if x != nil {
+		return x.Position
+	}
+	return 0
+}
+
+func (x *Checklist) GetItems() []*ChecklistItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+func (x *Checklist) GetProgress() int32 {
+	if x != nil {
+		return x.Progress
+	}
+	return 0
+}
+
+func (x *Checklist) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Checklist) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+type ChecklistItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ChecklistId   string                 `protobuf:"bytes,2,opt,name=checklist_id,json=checklistId,proto3" json:"checklist_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,3,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	IsChecked     bool                   `protobuf:"varint,5,opt,name=is_checked,json=isChecked,proto3" json:"is_checked,omitempty"`
+	Position      int32                  `protobuf:"varint,6,opt,name=position,proto3" json:"position,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChecklistItem) Reset() {
+	*x = ChecklistItem{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[79]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChecklistItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChecklistItem) ProtoMessage() {}
+
+func (x *ChecklistItem) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[79]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChecklistItem.ProtoReflect.Descriptor instead.
+func (*ChecklistItem) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{79}
+}
+
+func (x *ChecklistItem) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ChecklistItem) GetChecklistId() string {
+	if x != nil {
+		return x.ChecklistId
+	}
+	return ""
+}
+
+func (x *ChecklistItem) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *ChecklistItem) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *ChecklistItem) GetIsChecked() bool {
+	if x != nil {
+		return x.IsChecked
+	}
+	return false
+}
+
+func (x *ChecklistItem) GetPosition() int32 {
+	if x != nil {
+		return x.Position
+	}
+	return 0
+}
+
+func (x *ChecklistItem) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *ChecklistItem) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+type CreateChecklistRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CardId        string                 `protobuf:"bytes,1,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	Position      int32                  `protobuf:"varint,5,opt,name=position,proto3" json:"position,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateChecklistRequest) Reset() {
+	*x = CreateChecklistRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[80]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateChecklistRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateChecklistRequest) ProtoMessage() {}
+
+func (x *CreateChecklistRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[80]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateChecklistRequest.ProtoReflect.Descriptor instead.
+func (*CreateChecklistRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{80}
+}
+
+func (x *CreateChecklistRequest) GetCardId() string {
+	if x != nil {
+		return x.CardId
+	}
+	return ""
+}
+
+func (x *CreateChecklistRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *CreateChecklistRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *CreateChecklistRequest) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *CreateChecklistRequest) GetPosition() int32 {
+	if x != nil {
+		return x.Position
+	}
+	return 0
+}
+
+type CreateChecklistResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Checklist     *Checklist             `protobuf:"bytes,1,opt,name=checklist,proto3" json:"checklist,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateChecklistResponse) Reset() {
+	*x = CreateChecklistResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[81]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateChecklistResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateChecklistResponse) ProtoMessage() {}
+
+func (x *CreateChecklistResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[81]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateChecklistResponse.ProtoReflect.Descriptor instead.
+func (*CreateChecklistResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{81}
+}
+
+func (x *CreateChecklistResponse) GetChecklist() *Checklist {
+	if x != nil {
+		return x.Checklist
+	}
+	return nil
+}
+
+type GetChecklistsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CardId        string                 `protobuf:"bytes,1,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetChecklistsRequest) Reset() {
+	*x = GetChecklistsRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[82]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetChecklistsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetChecklistsRequest) ProtoMessage() {}
+
+func (x *GetChecklistsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[82]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetChecklistsRequest.ProtoReflect.Descriptor instead.
+func (*GetChecklistsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{82}
+}
+
+func (x *GetChecklistsRequest) GetCardId() string {
+	if x != nil {
+		return x.CardId
+	}
+	return ""
+}
+
+func (x *GetChecklistsRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *GetChecklistsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetChecklistsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Checklists    []*Checklist           `protobuf:"bytes,1,rep,name=checklists,proto3" json:"checklists,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetChecklistsResponse) Reset() {
+	*x = GetChecklistsResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[83]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetChecklistsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetChecklistsResponse) ProtoMessage() {}
+
+func (x *GetChecklistsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[83]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetChecklistsResponse.ProtoReflect.Descriptor instead.
+func (*GetChecklistsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{83}
+}
+
+func (x *GetChecklistsResponse) GetChecklists() []*Checklist {
+	if x != nil {
+		return x.Checklists
+	}
+	return nil
+}
+
+type UpdateChecklistRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChecklistId   string                 `protobuf:"bytes,1,opt,name=checklist_id,json=checklistId,proto3" json:"checklist_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateChecklistRequest) Reset() {
+	*x = UpdateChecklistRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[84]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateChecklistRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateChecklistRequest) ProtoMessage() {}
+
+func (x *UpdateChecklistRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[84]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateChecklistRequest.ProtoReflect.Descriptor instead.
+func (*UpdateChecklistRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{84}
+}
+
+func (x *UpdateChecklistRequest) GetChecklistId() string {
+	if x != nil {
+		return x.ChecklistId
+	}
+	return ""
+}
+
+func (x *UpdateChecklistRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *UpdateChecklistRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *UpdateChecklistRequest) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+type UpdateChecklistResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Checklist     *Checklist             `protobuf:"bytes,1,opt,name=checklist,proto3" json:"checklist,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateChecklistResponse) Reset() {
+	*x = UpdateChecklistResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[85]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateChecklistResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateChecklistResponse) ProtoMessage() {}
+
+func (x *UpdateChecklistResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[85]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateChecklistResponse.ProtoReflect.Descriptor instead.
+func (*UpdateChecklistResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{85}
+}
+
+func (x *UpdateChecklistResponse) GetChecklist() *Checklist {
+	if x != nil {
+		return x.Checklist
+	}
+	return nil
+}
+
+type DeleteChecklistRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChecklistId   string                 `protobuf:"bytes,1,opt,name=checklist_id,json=checklistId,proto3" json:"checklist_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteChecklistRequest) Reset() {
+	*x = DeleteChecklistRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[86]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteChecklistRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteChecklistRequest) ProtoMessage() {}
+
+func (x *DeleteChecklistRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[86]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteChecklistRequest.ProtoReflect.Descriptor instead.
+func (*DeleteChecklistRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{86}
+}
+
+func (x *DeleteChecklistRequest) GetChecklistId() string {
+	if x != nil {
+		return x.ChecklistId
+	}
+	return ""
+}
+
+func (x *DeleteChecklistRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *DeleteChecklistRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type CreateChecklistItemRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChecklistId   string                 `protobuf:"bytes,1,opt,name=checklist_id,json=checklistId,proto3" json:"checklist_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	Position      int32                  `protobuf:"varint,5,opt,name=position,proto3" json:"position,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateChecklistItemRequest) Reset() {
+	*x = CreateChecklistItemRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[87]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateChecklistItemRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateChecklistItemRequest) ProtoMessage() {}
+
+func (x *CreateChecklistItemRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[87]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateChecklistItemRequest.ProtoReflect.Descriptor instead.
+func (*CreateChecklistItemRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{87}
+}
+
+func (x *CreateChecklistItemRequest) GetChecklistId() string {
+	if x != nil {
+		return x.ChecklistId
+	}
+	return ""
+}
+
+func (x *CreateChecklistItemRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *CreateChecklistItemRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *CreateChecklistItemRequest) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *CreateChecklistItemRequest) GetPosition() int32 {
+	if x != nil {
+		return x.Position
+	}
+	return 0
+}
+
+type CreateChecklistItemResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *ChecklistItem         `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateChecklistItemResponse) Reset() {
+	*x = CreateChecklistItemResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[88]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateChecklistItemResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateChecklistItemResponse) ProtoMessage() {}
+
+func (x *CreateChecklistItemResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[88]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateChecklistItemResponse.ProtoReflect.Descriptor instead.
+func (*CreateChecklistItemResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{88}
+}
+
+func (x *CreateChecklistItemResponse) GetItem() *ChecklistItem {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type UpdateChecklistItemRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        string                 `protobuf:"bytes,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateChecklistItemRequest) Reset() {
+	*x = UpdateChecklistItemRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[89]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateChecklistItemRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateChecklistItemRequest) ProtoMessage() {}
+
+func (x *UpdateChecklistItemRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[89]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateChecklistItemRequest.ProtoReflect.Descriptor instead.
+func (*UpdateChecklistItemRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{89}
+}
+
+func (x *UpdateChecklistItemRequest) GetItemId() string {
+	if x != nil {
+		return x.ItemId
+	}
+	return ""
+}
+
+func (x *UpdateChecklistItemRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *UpdateChecklistItemRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *UpdateChecklistItemRequest) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+type UpdateChecklistItemResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *ChecklistItem         `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateChecklistItemResponse) Reset() {
+	*x = UpdateChecklistItemResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[90]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateChecklistItemResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateChecklistItemResponse) ProtoMessage() {}
+
+func (x *UpdateChecklistItemResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[90]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateChecklistItemResponse.ProtoReflect.Descriptor instead.
+func (*UpdateChecklistItemResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{90}
+}
+
+func (x *UpdateChecklistItemResponse) GetItem() *ChecklistItem {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type DeleteChecklistItemRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        string                 `protobuf:"bytes,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteChecklistItemRequest) Reset() {
+	*x = DeleteChecklistItemRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[91]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteChecklistItemRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteChecklistItemRequest) ProtoMessage() {}
+
+func (x *DeleteChecklistItemRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[91]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteChecklistItemRequest.ProtoReflect.Descriptor instead.
+func (*DeleteChecklistItemRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{91}
+}
+
+func (x *DeleteChecklistItemRequest) GetItemId() string {
+	if x != nil {
+		return x.ItemId
+	}
+	return ""
+}
+
+func (x *DeleteChecklistItemRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *DeleteChecklistItemRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type ToggleChecklistItemRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        string                 `protobuf:"bytes,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	IsChecked     bool                   `protobuf:"varint,4,opt,name=is_checked,json=isChecked,proto3" json:"is_checked,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ToggleChecklistItemRequest) Reset() {
+	*x = ToggleChecklistItemRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[92]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ToggleChecklistItemRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ToggleChecklistItemRequest) ProtoMessage() {}
+
+func (x *ToggleChecklistItemRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[92]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ToggleChecklistItemRequest.ProtoReflect.Descriptor instead.
+func (*ToggleChecklistItemRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{92}
+}
+
+func (x *ToggleChecklistItemRequest) GetItemId() string {
+	if x != nil {
+		return x.ItemId
+	}
+	return ""
+}
+
+func (x *ToggleChecklistItemRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *ToggleChecklistItemRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ToggleChecklistItemRequest) GetIsChecked() bool {
+	if x != nil {
+		return x.IsChecked
+	}
+	return false
+}
+
+type ToggleChecklistItemResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	IsChecked     bool                   `protobuf:"varint,1,opt,name=is_checked,json=isChecked,proto3" json:"is_checked,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ToggleChecklistItemResponse) Reset() {
+	*x = ToggleChecklistItemResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[93]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ToggleChecklistItemResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ToggleChecklistItemResponse) ProtoMessage() {}
+
+func (x *ToggleChecklistItemResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[93]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ToggleChecklistItemResponse.ProtoReflect.Descriptor instead.
+func (*ToggleChecklistItemResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{93}
+}
+
+func (x *ToggleChecklistItemResponse) GetIsChecked() bool {
+	if x != nil {
+		return x.IsChecked
+	}
+	return false
+}
+
+type CustomFieldDefinition struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	FieldType     string                 `protobuf:"bytes,4,opt,name=field_type,json=fieldType,proto3" json:"field_type,omitempty"`
+	Options       []string               `protobuf:"bytes,5,rep,name=options,proto3" json:"options,omitempty"`
+	Position      int32                  `protobuf:"varint,6,opt,name=position,proto3" json:"position,omitempty"`
+	Required      bool                   `protobuf:"varint,7,opt,name=required,proto3" json:"required,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CustomFieldDefinition) Reset() {
+	*x = CustomFieldDefinition{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[94]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CustomFieldDefinition) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CustomFieldDefinition) ProtoMessage() {}
+
+func (x *CustomFieldDefinition) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[94]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CustomFieldDefinition.ProtoReflect.Descriptor instead.
+func (*CustomFieldDefinition) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{94}
+}
+
+func (x *CustomFieldDefinition) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CustomFieldDefinition) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *CustomFieldDefinition) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CustomFieldDefinition) GetFieldType() string {
+	if x != nil {
+		return x.FieldType
+	}
+	return ""
+}
+
+func (x *CustomFieldDefinition) GetOptions() []string {
+	if x != nil {
+		return x.Options
+	}
+	return nil
+}
+
+func (x *CustomFieldDefinition) GetPosition() int32 {
+	if x != nil {
+		return x.Position
+	}
+	return 0
+}
+
+func (x *CustomFieldDefinition) GetRequired() bool {
+	if x != nil {
+		return x.Required
+	}
+	return false
+}
+
+func (x *CustomFieldDefinition) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *CustomFieldDefinition) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+type CustomFieldValue struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	CardId        string                 `protobuf:"bytes,2,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,3,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	FieldId       string                 `protobuf:"bytes,4,opt,name=field_id,json=fieldId,proto3" json:"field_id,omitempty"`
+	ValueText     string                 `protobuf:"bytes,5,opt,name=value_text,json=valueText,proto3" json:"value_text,omitempty"`
+	ValueNumber   float64                `protobuf:"fixed64,6,opt,name=value_number,json=valueNumber,proto3" json:"value_number,omitempty"`
+	ValueDate     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=value_date,json=valueDate,proto3" json:"value_date,omitempty"`
+	HasText       bool                   `protobuf:"varint,8,opt,name=has_text,json=hasText,proto3" json:"has_text,omitempty"`
+	HasNumber     bool                   `protobuf:"varint,9,opt,name=has_number,json=hasNumber,proto3" json:"has_number,omitempty"`
+	HasDate       bool                   `protobuf:"varint,10,opt,name=has_date,json=hasDate,proto3" json:"has_date,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CustomFieldValue) Reset() {
+	*x = CustomFieldValue{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[95]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CustomFieldValue) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CustomFieldValue) ProtoMessage() {}
+
+func (x *CustomFieldValue) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[95]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CustomFieldValue.ProtoReflect.Descriptor instead.
+func (*CustomFieldValue) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{95}
+}
+
+func (x *CustomFieldValue) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CustomFieldValue) GetCardId() string {
+	if x != nil {
+		return x.CardId
+	}
+	return ""
+}
+
+func (x *CustomFieldValue) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *CustomFieldValue) GetFieldId() string {
+	if x != nil {
+		return x.FieldId
+	}
+	return ""
+}
+
+func (x *CustomFieldValue) GetValueText() string {
+	if x != nil {
+		return x.ValueText
+	}
+	return ""
+}
+
+func (x *CustomFieldValue) GetValueNumber() float64 {
+	if x != nil {
+		return x.ValueNumber
+	}
+	return 0
+}
+
+func (x *CustomFieldValue) GetValueDate() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ValueDate
+	}
+	return nil
+}
+
+func (x *CustomFieldValue) GetHasText() bool {
+	if x != nil {
+		return x.HasText
+	}
+	return false
+}
+
+func (x *CustomFieldValue) GetHasNumber() bool {
+	if x != nil {
+		return x.HasNumber
+	}
+	return false
+}
+
+func (x *CustomFieldValue) GetHasDate() bool {
+	if x != nil {
+		return x.HasDate
+	}
+	return false
+}
+
+func (x *CustomFieldValue) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *CustomFieldValue) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+type CreateCustomFieldRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BoardId       string                 `protobuf:"bytes,1,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	FieldType     string                 `protobuf:"bytes,4,opt,name=field_type,json=fieldType,proto3" json:"field_type,omitempty"`
+	Options       []string               `protobuf:"bytes,5,rep,name=options,proto3" json:"options,omitempty"`
+	Position      int32                  `protobuf:"varint,6,opt,name=position,proto3" json:"position,omitempty"`
+	Required      bool                   `protobuf:"varint,7,opt,name=required,proto3" json:"required,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateCustomFieldRequest) Reset() {
+	*x = CreateCustomFieldRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[96]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateCustomFieldRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateCustomFieldRequest) ProtoMessage() {}
+
+func (x *CreateCustomFieldRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[96]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateCustomFieldRequest.ProtoReflect.Descriptor instead.
+func (*CreateCustomFieldRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{96}
+}
+
+func (x *CreateCustomFieldRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *CreateCustomFieldRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *CreateCustomFieldRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateCustomFieldRequest) GetFieldType() string {
+	if x != nil {
+		return x.FieldType
+	}
+	return ""
+}
+
+func (x *CreateCustomFieldRequest) GetOptions() []string {
+	if x != nil {
+		return x.Options
+	}
+	return nil
+}
+
+func (x *CreateCustomFieldRequest) GetPosition() int32 {
+	if x != nil {
+		return x.Position
+	}
+	return 0
+}
+
+func (x *CreateCustomFieldRequest) GetRequired() bool {
+	if x != nil {
+		return x.Required
+	}
+	return false
+}
+
+type CreateCustomFieldResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Definition    *CustomFieldDefinition `protobuf:"bytes,1,opt,name=definition,proto3" json:"definition,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateCustomFieldResponse) Reset() {
+	*x = CreateCustomFieldResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[97]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateCustomFieldResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateCustomFieldResponse) ProtoMessage() {}
+
+func (x *CreateCustomFieldResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[97]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateCustomFieldResponse.ProtoReflect.Descriptor instead.
+func (*CreateCustomFieldResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{97}
+}
+
+func (x *CreateCustomFieldResponse) GetDefinition() *CustomFieldDefinition {
+	if x != nil {
+		return x.Definition
+	}
+	return nil
+}
+
+type ListCustomFieldsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BoardId       string                 `protobuf:"bytes,1,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCustomFieldsRequest) Reset() {
+	*x = ListCustomFieldsRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[98]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCustomFieldsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCustomFieldsRequest) ProtoMessage() {}
+
+func (x *ListCustomFieldsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[98]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCustomFieldsRequest.ProtoReflect.Descriptor instead.
+func (*ListCustomFieldsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{98}
+}
+
+func (x *ListCustomFieldsRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *ListCustomFieldsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type ListCustomFieldsResponse struct {
+	state         protoimpl.MessageState   `protogen:"open.v1"`
+	Definitions   []*CustomFieldDefinition `protobuf:"bytes,1,rep,name=definitions,proto3" json:"definitions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCustomFieldsResponse) Reset() {
+	*x = ListCustomFieldsResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[99]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCustomFieldsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCustomFieldsResponse) ProtoMessage() {}
+
+func (x *ListCustomFieldsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[99]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCustomFieldsResponse.ProtoReflect.Descriptor instead.
+func (*ListCustomFieldsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{99}
+}
+
+func (x *ListCustomFieldsResponse) GetDefinitions() []*CustomFieldDefinition {
+	if x != nil {
+		return x.Definitions
+	}
+	return nil
+}
+
+type UpdateCustomFieldRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FieldId       string                 `protobuf:"bytes,1,opt,name=field_id,json=fieldId,proto3" json:"field_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Options       []string               `protobuf:"bytes,5,rep,name=options,proto3" json:"options,omitempty"`
+	Required      bool                   `protobuf:"varint,6,opt,name=required,proto3" json:"required,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateCustomFieldRequest) Reset() {
+	*x = UpdateCustomFieldRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[100]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateCustomFieldRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateCustomFieldRequest) ProtoMessage() {}
+
+func (x *UpdateCustomFieldRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[100]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateCustomFieldRequest.ProtoReflect.Descriptor instead.
+func (*UpdateCustomFieldRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{100}
+}
+
+func (x *UpdateCustomFieldRequest) GetFieldId() string {
+	if x != nil {
+		return x.FieldId
+	}
+	return ""
+}
+
+func (x *UpdateCustomFieldRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *UpdateCustomFieldRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *UpdateCustomFieldRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *UpdateCustomFieldRequest) GetOptions() []string {
+	if x != nil {
+		return x.Options
+	}
+	return nil
+}
+
+func (x *UpdateCustomFieldRequest) GetRequired() bool {
+	if x != nil {
+		return x.Required
+	}
+	return false
+}
+
+type UpdateCustomFieldResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Definition    *CustomFieldDefinition `protobuf:"bytes,1,opt,name=definition,proto3" json:"definition,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateCustomFieldResponse) Reset() {
+	*x = UpdateCustomFieldResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[101]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateCustomFieldResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateCustomFieldResponse) ProtoMessage() {}
+
+func (x *UpdateCustomFieldResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[101]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateCustomFieldResponse.ProtoReflect.Descriptor instead.
+func (*UpdateCustomFieldResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{101}
+}
+
+func (x *UpdateCustomFieldResponse) GetDefinition() *CustomFieldDefinition {
+	if x != nil {
+		return x.Definition
+	}
+	return nil
+}
+
+type DeleteCustomFieldRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FieldId       string                 `protobuf:"bytes,1,opt,name=field_id,json=fieldId,proto3" json:"field_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteCustomFieldRequest) Reset() {
+	*x = DeleteCustomFieldRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[102]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteCustomFieldRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteCustomFieldRequest) ProtoMessage() {}
+
+func (x *DeleteCustomFieldRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[102]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteCustomFieldRequest.ProtoReflect.Descriptor instead.
+func (*DeleteCustomFieldRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{102}
+}
+
+func (x *DeleteCustomFieldRequest) GetFieldId() string {
+	if x != nil {
+		return x.FieldId
+	}
+	return ""
+}
+
+func (x *DeleteCustomFieldRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *DeleteCustomFieldRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type SetCustomFieldValueRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CardId        string                 `protobuf:"bytes,1,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	FieldId       string                 `protobuf:"bytes,3,opt,name=field_id,json=fieldId,proto3" json:"field_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ValueText     string                 `protobuf:"bytes,5,opt,name=value_text,json=valueText,proto3" json:"value_text,omitempty"`
+	ValueNumber   float64                `protobuf:"fixed64,6,opt,name=value_number,json=valueNumber,proto3" json:"value_number,omitempty"`
+	ValueDate     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=value_date,json=valueDate,proto3" json:"value_date,omitempty"`
+	HasText       bool                   `protobuf:"varint,8,opt,name=has_text,json=hasText,proto3" json:"has_text,omitempty"`
+	HasNumber     bool                   `protobuf:"varint,9,opt,name=has_number,json=hasNumber,proto3" json:"has_number,omitempty"`
+	HasDate       bool                   `protobuf:"varint,10,opt,name=has_date,json=hasDate,proto3" json:"has_date,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetCustomFieldValueRequest) Reset() {
+	*x = SetCustomFieldValueRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[103]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetCustomFieldValueRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetCustomFieldValueRequest) ProtoMessage() {}
+
+func (x *SetCustomFieldValueRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[103]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetCustomFieldValueRequest.ProtoReflect.Descriptor instead.
+func (*SetCustomFieldValueRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{103}
+}
+
+func (x *SetCustomFieldValueRequest) GetCardId() string {
+	if x != nil {
+		return x.CardId
+	}
+	return ""
+}
+
+func (x *SetCustomFieldValueRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *SetCustomFieldValueRequest) GetFieldId() string {
+	if x != nil {
+		return x.FieldId
+	}
+	return ""
+}
+
+func (x *SetCustomFieldValueRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *SetCustomFieldValueRequest) GetValueText() string {
+	if x != nil {
+		return x.ValueText
+	}
+	return ""
+}
+
+func (x *SetCustomFieldValueRequest) GetValueNumber() float64 {
+	if x != nil {
+		return x.ValueNumber
+	}
+	return 0
+}
+
+func (x *SetCustomFieldValueRequest) GetValueDate() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ValueDate
+	}
+	return nil
+}
+
+func (x *SetCustomFieldValueRequest) GetHasText() bool {
+	if x != nil {
+		return x.HasText
+	}
+	return false
+}
+
+func (x *SetCustomFieldValueRequest) GetHasNumber() bool {
+	if x != nil {
+		return x.HasNumber
+	}
+	return false
+}
+
+func (x *SetCustomFieldValueRequest) GetHasDate() bool {
+	if x != nil {
+		return x.HasDate
+	}
+	return false
+}
+
+type SetCustomFieldValueResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Value         *CustomFieldValue      `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetCustomFieldValueResponse) Reset() {
+	*x = SetCustomFieldValueResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[104]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetCustomFieldValueResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetCustomFieldValueResponse) ProtoMessage() {}
+
+func (x *SetCustomFieldValueResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[104]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetCustomFieldValueResponse.ProtoReflect.Descriptor instead.
+func (*SetCustomFieldValueResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{104}
+}
+
+func (x *SetCustomFieldValueResponse) GetValue() *CustomFieldValue {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type GetCardCustomFieldsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CardId        string                 `protobuf:"bytes,1,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCardCustomFieldsRequest) Reset() {
+	*x = GetCardCustomFieldsRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[105]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCardCustomFieldsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCardCustomFieldsRequest) ProtoMessage() {}
+
+func (x *GetCardCustomFieldsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[105]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCardCustomFieldsRequest.ProtoReflect.Descriptor instead.
+func (*GetCardCustomFieldsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{105}
+}
+
+func (x *GetCardCustomFieldsRequest) GetCardId() string {
+	if x != nil {
+		return x.CardId
+	}
+	return ""
+}
+
+func (x *GetCardCustomFieldsRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *GetCardCustomFieldsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetCardCustomFieldsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Values        []*CustomFieldValue    `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCardCustomFieldsResponse) Reset() {
+	*x = GetCardCustomFieldsResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[106]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCardCustomFieldsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCardCustomFieldsResponse) ProtoMessage() {}
+
+func (x *GetCardCustomFieldsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[106]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCardCustomFieldsResponse.ProtoReflect.Descriptor instead.
+func (*GetCardCustomFieldsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{106}
+}
+
+func (x *GetCardCustomFieldsResponse) GetValues() []*CustomFieldValue {
+	if x != nil {
+		return x.Values
+	}
+	return nil
+}
+
+type AutomationRule struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Enabled       bool                   `protobuf:"varint,4,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	TriggerType   string                 `protobuf:"bytes,5,opt,name=trigger_type,json=triggerType,proto3" json:"trigger_type,omitempty"`
+	TriggerConfig map[string]string      `protobuf:"bytes,6,rep,name=trigger_config,json=triggerConfig,proto3" json:"trigger_config,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ActionType    string                 `protobuf:"bytes,7,opt,name=action_type,json=actionType,proto3" json:"action_type,omitempty"`
+	ActionConfig  map[string]string      `protobuf:"bytes,8,rep,name=action_config,json=actionConfig,proto3" json:"action_config,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	CreatedBy     string                 `protobuf:"bytes,9,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AutomationRule) Reset() {
+	*x = AutomationRule{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[107]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AutomationRule) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AutomationRule) ProtoMessage() {}
+
+func (x *AutomationRule) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[107]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AutomationRule.ProtoReflect.Descriptor instead.
+func (*AutomationRule) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{107}
+}
+
+func (x *AutomationRule) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *AutomationRule) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *AutomationRule) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *AutomationRule) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+func (x *AutomationRule) GetTriggerType() string {
+	if x != nil {
+		return x.TriggerType
+	}
+	return ""
+}
+
+func (x *AutomationRule) GetTriggerConfig() map[string]string {
+	if x != nil {
+		return x.TriggerConfig
+	}
+	return nil
+}
+
+func (x *AutomationRule) GetActionType() string {
+	if x != nil {
+		return x.ActionType
+	}
+	return ""
+}
+
+func (x *AutomationRule) GetActionConfig() map[string]string {
+	if x != nil {
+		return x.ActionConfig
+	}
+	return nil
+}
+
+func (x *AutomationRule) GetCreatedBy() string {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return ""
+}
+
+func (x *AutomationRule) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *AutomationRule) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+type AutomationExecution struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	RuleId         string                 `protobuf:"bytes,2,opt,name=rule_id,json=ruleId,proto3" json:"rule_id,omitempty"`
+	BoardId        string                 `protobuf:"bytes,3,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	CardId         string                 `protobuf:"bytes,4,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
+	TriggerEventId string                 `protobuf:"bytes,5,opt,name=trigger_event_id,json=triggerEventId,proto3" json:"trigger_event_id,omitempty"`
+	Status         string                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
+	ErrorMessage   string                 `protobuf:"bytes,7,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	ExecutedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=executed_at,json=executedAt,proto3" json:"executed_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *AutomationExecution) Reset() {
+	*x = AutomationExecution{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[108]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AutomationExecution) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AutomationExecution) ProtoMessage() {}
+
+func (x *AutomationExecution) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[108]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AutomationExecution.ProtoReflect.Descriptor instead.
+func (*AutomationExecution) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{108}
+}
+
+func (x *AutomationExecution) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *AutomationExecution) GetRuleId() string {
+	if x != nil {
+		return x.RuleId
+	}
+	return ""
+}
+
+func (x *AutomationExecution) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *AutomationExecution) GetCardId() string {
+	if x != nil {
+		return x.CardId
+	}
+	return ""
+}
+
+func (x *AutomationExecution) GetTriggerEventId() string {
+	if x != nil {
+		return x.TriggerEventId
+	}
+	return ""
+}
+
+func (x *AutomationExecution) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *AutomationExecution) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
+func (x *AutomationExecution) GetExecutedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExecutedAt
+	}
+	return nil
+}
+
+type CreateAutomationRuleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BoardId       string                 `protobuf:"bytes,1,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	TriggerType   string                 `protobuf:"bytes,4,opt,name=trigger_type,json=triggerType,proto3" json:"trigger_type,omitempty"`
+	TriggerConfig map[string]string      `protobuf:"bytes,5,rep,name=trigger_config,json=triggerConfig,proto3" json:"trigger_config,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ActionType    string                 `protobuf:"bytes,6,opt,name=action_type,json=actionType,proto3" json:"action_type,omitempty"`
+	ActionConfig  map[string]string      `protobuf:"bytes,7,rep,name=action_config,json=actionConfig,proto3" json:"action_config,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateAutomationRuleRequest) Reset() {
+	*x = CreateAutomationRuleRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[109]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateAutomationRuleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAutomationRuleRequest) ProtoMessage() {}
+
+func (x *CreateAutomationRuleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[109]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAutomationRuleRequest.ProtoReflect.Descriptor instead.
+func (*CreateAutomationRuleRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{109}
+}
+
+func (x *CreateAutomationRuleRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *CreateAutomationRuleRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *CreateAutomationRuleRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateAutomationRuleRequest) GetTriggerType() string {
+	if x != nil {
+		return x.TriggerType
+	}
+	return ""
+}
+
+func (x *CreateAutomationRuleRequest) GetTriggerConfig() map[string]string {
+	if x != nil {
+		return x.TriggerConfig
+	}
+	return nil
+}
+
+func (x *CreateAutomationRuleRequest) GetActionType() string {
+	if x != nil {
+		return x.ActionType
+	}
+	return ""
+}
+
+func (x *CreateAutomationRuleRequest) GetActionConfig() map[string]string {
+	if x != nil {
+		return x.ActionConfig
+	}
+	return nil
+}
+
+type CreateAutomationRuleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Rule          *AutomationRule        `protobuf:"bytes,1,opt,name=rule,proto3" json:"rule,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateAutomationRuleResponse) Reset() {
+	*x = CreateAutomationRuleResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[110]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateAutomationRuleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAutomationRuleResponse) ProtoMessage() {}
+
+func (x *CreateAutomationRuleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[110]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAutomationRuleResponse.ProtoReflect.Descriptor instead.
+func (*CreateAutomationRuleResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{110}
+}
+
+func (x *CreateAutomationRuleResponse) GetRule() *AutomationRule {
+	if x != nil {
+		return x.Rule
+	}
+	return nil
+}
+
+type ListAutomationRulesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BoardId       string                 `protobuf:"bytes,1,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAutomationRulesRequest) Reset() {
+	*x = ListAutomationRulesRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[111]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAutomationRulesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAutomationRulesRequest) ProtoMessage() {}
+
+func (x *ListAutomationRulesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[111]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAutomationRulesRequest.ProtoReflect.Descriptor instead.
+func (*ListAutomationRulesRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{111}
+}
+
+func (x *ListAutomationRulesRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *ListAutomationRulesRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type ListAutomationRulesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Rules         []*AutomationRule      `protobuf:"bytes,1,rep,name=rules,proto3" json:"rules,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAutomationRulesResponse) Reset() {
+	*x = ListAutomationRulesResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[112]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAutomationRulesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAutomationRulesResponse) ProtoMessage() {}
+
+func (x *ListAutomationRulesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[112]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAutomationRulesResponse.ProtoReflect.Descriptor instead.
+func (*ListAutomationRulesResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{112}
+}
+
+func (x *ListAutomationRulesResponse) GetRules() []*AutomationRule {
+	if x != nil {
+		return x.Rules
+	}
+	return nil
+}
+
+type UpdateAutomationRuleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RuleId        string                 `protobuf:"bytes,1,opt,name=rule_id,json=ruleId,proto3" json:"rule_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Enabled       bool                   `protobuf:"varint,5,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	TriggerConfig map[string]string      `protobuf:"bytes,6,rep,name=trigger_config,json=triggerConfig,proto3" json:"trigger_config,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ActionConfig  map[string]string      `protobuf:"bytes,7,rep,name=action_config,json=actionConfig,proto3" json:"action_config,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateAutomationRuleRequest) Reset() {
+	*x = UpdateAutomationRuleRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[113]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateAutomationRuleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateAutomationRuleRequest) ProtoMessage() {}
+
+func (x *UpdateAutomationRuleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[113]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateAutomationRuleRequest.ProtoReflect.Descriptor instead.
+func (*UpdateAutomationRuleRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{113}
+}
+
+func (x *UpdateAutomationRuleRequest) GetRuleId() string {
+	if x != nil {
+		return x.RuleId
+	}
+	return ""
+}
+
+func (x *UpdateAutomationRuleRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *UpdateAutomationRuleRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *UpdateAutomationRuleRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *UpdateAutomationRuleRequest) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+func (x *UpdateAutomationRuleRequest) GetTriggerConfig() map[string]string {
+	if x != nil {
+		return x.TriggerConfig
+	}
+	return nil
+}
+
+func (x *UpdateAutomationRuleRequest) GetActionConfig() map[string]string {
+	if x != nil {
+		return x.ActionConfig
+	}
+	return nil
+}
+
+type UpdateAutomationRuleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Rule          *AutomationRule        `protobuf:"bytes,1,opt,name=rule,proto3" json:"rule,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateAutomationRuleResponse) Reset() {
+	*x = UpdateAutomationRuleResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[114]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateAutomationRuleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateAutomationRuleResponse) ProtoMessage() {}
+
+func (x *UpdateAutomationRuleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[114]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateAutomationRuleResponse.ProtoReflect.Descriptor instead.
+func (*UpdateAutomationRuleResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{114}
+}
+
+func (x *UpdateAutomationRuleResponse) GetRule() *AutomationRule {
+	if x != nil {
+		return x.Rule
+	}
+	return nil
+}
+
+type DeleteAutomationRuleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RuleId        string                 `protobuf:"bytes,1,opt,name=rule_id,json=ruleId,proto3" json:"rule_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteAutomationRuleRequest) Reset() {
+	*x = DeleteAutomationRuleRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[115]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteAutomationRuleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteAutomationRuleRequest) ProtoMessage() {}
+
+func (x *DeleteAutomationRuleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[115]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteAutomationRuleRequest.ProtoReflect.Descriptor instead.
+func (*DeleteAutomationRuleRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{115}
+}
+
+func (x *DeleteAutomationRuleRequest) GetRuleId() string {
+	if x != nil {
+		return x.RuleId
+	}
+	return ""
+}
+
+func (x *DeleteAutomationRuleRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *DeleteAutomationRuleRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetAutomationHistoryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RuleId        string                 `protobuf:"bytes,1,opt,name=rule_id,json=ruleId,proto3" json:"rule_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Limit         int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAutomationHistoryRequest) Reset() {
+	*x = GetAutomationHistoryRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[116]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAutomationHistoryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAutomationHistoryRequest) ProtoMessage() {}
+
+func (x *GetAutomationHistoryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[116]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAutomationHistoryRequest.ProtoReflect.Descriptor instead.
+func (*GetAutomationHistoryRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{116}
+}
+
+func (x *GetAutomationHistoryRequest) GetRuleId() string {
+	if x != nil {
+		return x.RuleId
+	}
+	return ""
+}
+
+func (x *GetAutomationHistoryRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *GetAutomationHistoryRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *GetAutomationHistoryRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type GetAutomationHistoryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Executions    []*AutomationExecution `protobuf:"bytes,1,rep,name=executions,proto3" json:"executions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAutomationHistoryResponse) Reset() {
+	*x = GetAutomationHistoryResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[117]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAutomationHistoryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAutomationHistoryResponse) ProtoMessage() {}
+
+func (x *GetAutomationHistoryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[117]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAutomationHistoryResponse.ProtoReflect.Descriptor instead.
+func (*GetAutomationHistoryResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{117}
+}
+
+func (x *GetAutomationHistoryResponse) GetExecutions() []*AutomationExecution {
+	if x != nil {
+		return x.Executions
+	}
+	return nil
+}
+
 var File_api_proto_v1_board_board_proto protoreflect.FileDescriptor
 
 const file_api_proto_v1_board_board_proto_rawDesc = "" +
@@ -5228,7 +7924,258 @@ const file_api_proto_v1_board_board_proto_rawDesc = "" +
 	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
 	"\auser_id\x18\x03 \x01(\tR\x06userId\"B\n" +
 	"\x16GetCardParentsResponse\x12(\n" +
-	"\x05links\x18\x01 \x03(\v2\x12.board.v1.CardLinkR\x05links2\x8e\x17\n" +
+	"\x05links\x18\x01 \x03(\v2\x12.board.v1.CardLinkR\x05links\"\xc2\x02\n" +
+	"\tChecklist\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\acard_id\x18\x02 \x01(\tR\x06cardId\x12\x19\n" +
+	"\bboard_id\x18\x03 \x01(\tR\aboardId\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\x12\x1a\n" +
+	"\bposition\x18\x05 \x01(\x05R\bposition\x12-\n" +
+	"\x05items\x18\x06 \x03(\v2\x17.board.v1.ChecklistItemR\x05items\x12\x1a\n" +
+	"\bprogress\x18\a \x01(\x05R\bprogress\x129\n" +
+	"\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xa4\x02\n" +
+	"\rChecklistItem\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
+	"\fchecklist_id\x18\x02 \x01(\tR\vchecklistId\x12\x19\n" +
+	"\bboard_id\x18\x03 \x01(\tR\aboardId\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\x12\x1d\n" +
+	"\n" +
+	"is_checked\x18\x05 \x01(\bR\tisChecked\x12\x1a\n" +
+	"\bposition\x18\x06 \x01(\x05R\bposition\x129\n" +
+	"\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x97\x01\n" +
+	"\x16CreateChecklistRequest\x12\x17\n" +
+	"\acard_id\x18\x01 \x01(\tR\x06cardId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\x12\x1a\n" +
+	"\bposition\x18\x05 \x01(\x05R\bposition\"L\n" +
+	"\x17CreateChecklistResponse\x121\n" +
+	"\tchecklist\x18\x01 \x01(\v2\x13.board.v1.ChecklistR\tchecklist\"c\n" +
+	"\x14GetChecklistsRequest\x12\x17\n" +
+	"\acard_id\x18\x01 \x01(\tR\x06cardId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\"L\n" +
+	"\x15GetChecklistsResponse\x123\n" +
+	"\n" +
+	"checklists\x18\x01 \x03(\v2\x13.board.v1.ChecklistR\n" +
+	"checklists\"\x85\x01\n" +
+	"\x16UpdateChecklistRequest\x12!\n" +
+	"\fchecklist_id\x18\x01 \x01(\tR\vchecklistId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\"L\n" +
+	"\x17UpdateChecklistResponse\x121\n" +
+	"\tchecklist\x18\x01 \x01(\v2\x13.board.v1.ChecklistR\tchecklist\"o\n" +
+	"\x16DeleteChecklistRequest\x12!\n" +
+	"\fchecklist_id\x18\x01 \x01(\tR\vchecklistId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\"\xa5\x01\n" +
+	"\x1aCreateChecklistItemRequest\x12!\n" +
+	"\fchecklist_id\x18\x01 \x01(\tR\vchecklistId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\x12\x1a\n" +
+	"\bposition\x18\x05 \x01(\x05R\bposition\"J\n" +
+	"\x1bCreateChecklistItemResponse\x12+\n" +
+	"\x04item\x18\x01 \x01(\v2\x17.board.v1.ChecklistItemR\x04item\"\x7f\n" +
+	"\x1aUpdateChecklistItemRequest\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\tR\x06itemId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\"J\n" +
+	"\x1bUpdateChecklistItemResponse\x12+\n" +
+	"\x04item\x18\x01 \x01(\v2\x17.board.v1.ChecklistItemR\x04item\"i\n" +
+	"\x1aDeleteChecklistItemRequest\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\tR\x06itemId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\"\x88\x01\n" +
+	"\x1aToggleChecklistItemRequest\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\tR\x06itemId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"is_checked\x18\x04 \x01(\bR\tisChecked\"<\n" +
+	"\x1bToggleChecklistItemResponse\x12\x1d\n" +
+	"\n" +
+	"is_checked\x18\x01 \x01(\bR\tisChecked\"\xbd\x02\n" +
+	"\x15CustomFieldDefinition\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"field_type\x18\x04 \x01(\tR\tfieldType\x12\x18\n" +
+	"\aoptions\x18\x05 \x03(\tR\aoptions\x12\x1a\n" +
+	"\bposition\x18\x06 \x01(\x05R\bposition\x12\x1a\n" +
+	"\brequired\x18\a \x01(\bR\brequired\x129\n" +
+	"\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xb9\x03\n" +
+	"\x10CustomFieldValue\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\acard_id\x18\x02 \x01(\tR\x06cardId\x12\x19\n" +
+	"\bboard_id\x18\x03 \x01(\tR\aboardId\x12\x19\n" +
+	"\bfield_id\x18\x04 \x01(\tR\afieldId\x12\x1d\n" +
+	"\n" +
+	"value_text\x18\x05 \x01(\tR\tvalueText\x12!\n" +
+	"\fvalue_number\x18\x06 \x01(\x01R\vvalueNumber\x129\n" +
+	"\n" +
+	"value_date\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tvalueDate\x12\x19\n" +
+	"\bhas_text\x18\b \x01(\bR\ahasText\x12\x1d\n" +
+	"\n" +
+	"has_number\x18\t \x01(\bR\thasNumber\x12\x19\n" +
+	"\bhas_date\x18\n" +
+	" \x01(\bR\ahasDate\x129\n" +
+	"\n" +
+	"created_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xd3\x01\n" +
+	"\x18CreateCustomFieldRequest\x12\x19\n" +
+	"\bboard_id\x18\x01 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"field_type\x18\x04 \x01(\tR\tfieldType\x12\x18\n" +
+	"\aoptions\x18\x05 \x03(\tR\aoptions\x12\x1a\n" +
+	"\bposition\x18\x06 \x01(\x05R\bposition\x12\x1a\n" +
+	"\brequired\x18\a \x01(\bR\brequired\"\\\n" +
+	"\x19CreateCustomFieldResponse\x12?\n" +
+	"\n" +
+	"definition\x18\x01 \x01(\v2\x1f.board.v1.CustomFieldDefinitionR\n" +
+	"definition\"M\n" +
+	"\x17ListCustomFieldsRequest\x12\x19\n" +
+	"\bboard_id\x18\x01 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\"]\n" +
+	"\x18ListCustomFieldsResponse\x12A\n" +
+	"\vdefinitions\x18\x01 \x03(\v2\x1f.board.v1.CustomFieldDefinitionR\vdefinitions\"\xb3\x01\n" +
+	"\x18UpdateCustomFieldRequest\x12\x19\n" +
+	"\bfield_id\x18\x01 \x01(\tR\afieldId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x12\n" +
+	"\x04name\x18\x04 \x01(\tR\x04name\x12\x18\n" +
+	"\aoptions\x18\x05 \x03(\tR\aoptions\x12\x1a\n" +
+	"\brequired\x18\x06 \x01(\bR\brequired\"\\\n" +
+	"\x19UpdateCustomFieldResponse\x12?\n" +
+	"\n" +
+	"definition\x18\x01 \x01(\v2\x1f.board.v1.CustomFieldDefinitionR\n" +
+	"definition\"i\n" +
+	"\x18DeleteCustomFieldRequest\x12\x19\n" +
+	"\bfield_id\x18\x01 \x01(\tR\afieldId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\"\xd6\x02\n" +
+	"\x1aSetCustomFieldValueRequest\x12\x17\n" +
+	"\acard_id\x18\x01 \x01(\tR\x06cardId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x19\n" +
+	"\bfield_id\x18\x03 \x01(\tR\afieldId\x12\x17\n" +
+	"\auser_id\x18\x04 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"value_text\x18\x05 \x01(\tR\tvalueText\x12!\n" +
+	"\fvalue_number\x18\x06 \x01(\x01R\vvalueNumber\x129\n" +
+	"\n" +
+	"value_date\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tvalueDate\x12\x19\n" +
+	"\bhas_text\x18\b \x01(\bR\ahasText\x12\x1d\n" +
+	"\n" +
+	"has_number\x18\t \x01(\bR\thasNumber\x12\x19\n" +
+	"\bhas_date\x18\n" +
+	" \x01(\bR\ahasDate\"O\n" +
+	"\x1bSetCustomFieldValueResponse\x120\n" +
+	"\x05value\x18\x01 \x01(\v2\x1a.board.v1.CustomFieldValueR\x05value\"i\n" +
+	"\x1aGetCardCustomFieldsRequest\x12\x17\n" +
+	"\acard_id\x18\x01 \x01(\tR\x06cardId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\"Q\n" +
+	"\x1bGetCardCustomFieldsResponse\x122\n" +
+	"\x06values\x18\x01 \x03(\v2\x1a.board.v1.CustomFieldValueR\x06values\"\xea\x04\n" +
+	"\x0eAutomationRule\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x18\n" +
+	"\aenabled\x18\x04 \x01(\bR\aenabled\x12!\n" +
+	"\ftrigger_type\x18\x05 \x01(\tR\vtriggerType\x12R\n" +
+	"\x0etrigger_config\x18\x06 \x03(\v2+.board.v1.AutomationRule.TriggerConfigEntryR\rtriggerConfig\x12\x1f\n" +
+	"\vaction_type\x18\a \x01(\tR\n" +
+	"actionType\x12O\n" +
+	"\raction_config\x18\b \x03(\v2*.board.v1.AutomationRule.ActionConfigEntryR\factionConfig\x12\x1d\n" +
+	"\n" +
+	"created_by\x18\t \x01(\tR\tcreatedBy\x129\n" +
+	"\n" +
+	"created_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a@\n" +
+	"\x12TriggerConfigEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a?\n" +
+	"\x11ActionConfigEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x96\x02\n" +
+	"\x13AutomationExecution\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\arule_id\x18\x02 \x01(\tR\x06ruleId\x12\x19\n" +
+	"\bboard_id\x18\x03 \x01(\tR\aboardId\x12\x17\n" +
+	"\acard_id\x18\x04 \x01(\tR\x06cardId\x12(\n" +
+	"\x10trigger_event_id\x18\x05 \x01(\tR\x0etriggerEventId\x12\x16\n" +
+	"\x06status\x18\x06 \x01(\tR\x06status\x12#\n" +
+	"\rerror_message\x18\a \x01(\tR\ferrorMessage\x12;\n" +
+	"\vexecuted_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"executedAt\"\xeb\x03\n" +
+	"\x1bCreateAutomationRuleRequest\x12\x19\n" +
+	"\bboard_id\x18\x01 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12!\n" +
+	"\ftrigger_type\x18\x04 \x01(\tR\vtriggerType\x12_\n" +
+	"\x0etrigger_config\x18\x05 \x03(\v28.board.v1.CreateAutomationRuleRequest.TriggerConfigEntryR\rtriggerConfig\x12\x1f\n" +
+	"\vaction_type\x18\x06 \x01(\tR\n" +
+	"actionType\x12\\\n" +
+	"\raction_config\x18\a \x03(\v27.board.v1.CreateAutomationRuleRequest.ActionConfigEntryR\factionConfig\x1a@\n" +
+	"\x12TriggerConfigEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a?\n" +
+	"\x11ActionConfigEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"L\n" +
+	"\x1cCreateAutomationRuleResponse\x12,\n" +
+	"\x04rule\x18\x01 \x01(\v2\x18.board.v1.AutomationRuleR\x04rule\"P\n" +
+	"\x1aListAutomationRulesRequest\x12\x19\n" +
+	"\bboard_id\x18\x01 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\"M\n" +
+	"\x1bListAutomationRulesResponse\x12.\n" +
+	"\x05rules\x18\x01 \x03(\v2\x18.board.v1.AutomationRuleR\x05rules\"\xda\x03\n" +
+	"\x1bUpdateAutomationRuleRequest\x12\x17\n" +
+	"\arule_id\x18\x01 \x01(\tR\x06ruleId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x12\n" +
+	"\x04name\x18\x04 \x01(\tR\x04name\x12\x18\n" +
+	"\aenabled\x18\x05 \x01(\bR\aenabled\x12_\n" +
+	"\x0etrigger_config\x18\x06 \x03(\v28.board.v1.UpdateAutomationRuleRequest.TriggerConfigEntryR\rtriggerConfig\x12\\\n" +
+	"\raction_config\x18\a \x03(\v27.board.v1.UpdateAutomationRuleRequest.ActionConfigEntryR\factionConfig\x1a@\n" +
+	"\x12TriggerConfigEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a?\n" +
+	"\x11ActionConfigEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"L\n" +
+	"\x1cUpdateAutomationRuleResponse\x12,\n" +
+	"\x04rule\x18\x01 \x01(\v2\x18.board.v1.AutomationRuleR\x04rule\"j\n" +
+	"\x1bDeleteAutomationRuleRequest\x12\x17\n" +
+	"\arule_id\x18\x01 \x01(\tR\x06ruleId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\"\x80\x01\n" +
+	"\x1bGetAutomationHistoryRequest\x12\x17\n" +
+	"\arule_id\x18\x01 \x01(\tR\x06ruleId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\"]\n" +
+	"\x1cGetAutomationHistoryResponse\x12=\n" +
+	"\n" +
+	"executions\x18\x01 \x03(\v2\x1d.board.v1.AutomationExecutionR\n" +
+	"executions2\xfe$\n" +
 	"\fBoardService\x12J\n" +
 	"\vCreateBoard\x12\x1c.board.v1.CreateBoardRequest\x1a\x1d.board.v1.CreateBoardResponse\x12A\n" +
 	"\bGetBoard\x12\x19.board.v1.GetBoardRequest\x1a\x1a.board.v1.GetBoardResponse\x12G\n" +
@@ -5275,7 +8222,26 @@ const file_api_proto_v1_board_board_proto_rawDesc = "" +
 	"\tLinkCards\x12\x1a.board.v1.LinkCardsRequest\x1a\x1b.board.v1.LinkCardsResponse\x12C\n" +
 	"\vUnlinkCards\x12\x1c.board.v1.UnlinkCardsRequest\x1a\x16.google.protobuf.Empty\x12V\n" +
 	"\x0fGetCardChildren\x12 .board.v1.GetCardChildrenRequest\x1a!.board.v1.GetCardChildrenResponse\x12S\n" +
-	"\x0eGetCardParents\x12\x1f.board.v1.GetCardParentsRequest\x1a .board.v1.GetCardParentsResponseBLZJgithub.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board;boardpbb\x06proto3"
+	"\x0eGetCardParents\x12\x1f.board.v1.GetCardParentsRequest\x1a .board.v1.GetCardParentsResponse\x12V\n" +
+	"\x0fCreateChecklist\x12 .board.v1.CreateChecklistRequest\x1a!.board.v1.CreateChecklistResponse\x12P\n" +
+	"\rGetChecklists\x12\x1e.board.v1.GetChecklistsRequest\x1a\x1f.board.v1.GetChecklistsResponse\x12V\n" +
+	"\x0fUpdateChecklist\x12 .board.v1.UpdateChecklistRequest\x1a!.board.v1.UpdateChecklistResponse\x12K\n" +
+	"\x0fDeleteChecklist\x12 .board.v1.DeleteChecklistRequest\x1a\x16.google.protobuf.Empty\x12b\n" +
+	"\x13CreateChecklistItem\x12$.board.v1.CreateChecklistItemRequest\x1a%.board.v1.CreateChecklistItemResponse\x12b\n" +
+	"\x13UpdateChecklistItem\x12$.board.v1.UpdateChecklistItemRequest\x1a%.board.v1.UpdateChecklistItemResponse\x12S\n" +
+	"\x13DeleteChecklistItem\x12$.board.v1.DeleteChecklistItemRequest\x1a\x16.google.protobuf.Empty\x12b\n" +
+	"\x13ToggleChecklistItem\x12$.board.v1.ToggleChecklistItemRequest\x1a%.board.v1.ToggleChecklistItemResponse\x12\\\n" +
+	"\x11CreateCustomField\x12\".board.v1.CreateCustomFieldRequest\x1a#.board.v1.CreateCustomFieldResponse\x12Y\n" +
+	"\x10ListCustomFields\x12!.board.v1.ListCustomFieldsRequest\x1a\".board.v1.ListCustomFieldsResponse\x12\\\n" +
+	"\x11UpdateCustomField\x12\".board.v1.UpdateCustomFieldRequest\x1a#.board.v1.UpdateCustomFieldResponse\x12O\n" +
+	"\x11DeleteCustomField\x12\".board.v1.DeleteCustomFieldRequest\x1a\x16.google.protobuf.Empty\x12b\n" +
+	"\x13SetCustomFieldValue\x12$.board.v1.SetCustomFieldValueRequest\x1a%.board.v1.SetCustomFieldValueResponse\x12b\n" +
+	"\x13GetCardCustomFields\x12$.board.v1.GetCardCustomFieldsRequest\x1a%.board.v1.GetCardCustomFieldsResponse\x12e\n" +
+	"\x14CreateAutomationRule\x12%.board.v1.CreateAutomationRuleRequest\x1a&.board.v1.CreateAutomationRuleResponse\x12b\n" +
+	"\x13ListAutomationRules\x12$.board.v1.ListAutomationRulesRequest\x1a%.board.v1.ListAutomationRulesResponse\x12e\n" +
+	"\x14UpdateAutomationRule\x12%.board.v1.UpdateAutomationRuleRequest\x1a&.board.v1.UpdateAutomationRuleResponse\x12U\n" +
+	"\x14DeleteAutomationRule\x12%.board.v1.DeleteAutomationRuleRequest\x1a\x16.google.protobuf.Empty\x12e\n" +
+	"\x14GetAutomationHistory\x12%.board.v1.GetAutomationHistoryRequest\x1a&.board.v1.GetAutomationHistoryResponseBLZJgithub.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board;boardpbb\x06proto3"
 
 var (
 	file_api_proto_v1_board_board_proto_rawDescOnce sync.Once
@@ -5289,221 +8255,339 @@ func file_api_proto_v1_board_board_proto_rawDescGZIP() []byte {
 	return file_api_proto_v1_board_board_proto_rawDescData
 }
 
-var file_api_proto_v1_board_board_proto_msgTypes = make([]protoimpl.MessageInfo, 79)
+var file_api_proto_v1_board_board_proto_msgTypes = make([]protoimpl.MessageInfo, 125)
 var file_api_proto_v1_board_board_proto_goTypes = []any{
-	(*CreateBoardRequest)(nil),         // 0: board.v1.CreateBoardRequest
-	(*CreateBoardResponse)(nil),        // 1: board.v1.CreateBoardResponse
-	(*GetBoardRequest)(nil),            // 2: board.v1.GetBoardRequest
-	(*GetBoardResponse)(nil),           // 3: board.v1.GetBoardResponse
-	(*ListBoardsRequest)(nil),          // 4: board.v1.ListBoardsRequest
-	(*ListBoardsResponse)(nil),         // 5: board.v1.ListBoardsResponse
-	(*UpdateBoardRequest)(nil),         // 6: board.v1.UpdateBoardRequest
-	(*UpdateBoardResponse)(nil),        // 7: board.v1.UpdateBoardResponse
-	(*DeleteBoardRequest)(nil),         // 8: board.v1.DeleteBoardRequest
-	(*AddColumnRequest)(nil),           // 9: board.v1.AddColumnRequest
-	(*AddColumnResponse)(nil),          // 10: board.v1.AddColumnResponse
-	(*GetColumnsRequest)(nil),          // 11: board.v1.GetColumnsRequest
-	(*GetColumnsResponse)(nil),         // 12: board.v1.GetColumnsResponse
-	(*UpdateColumnRequest)(nil),        // 13: board.v1.UpdateColumnRequest
-	(*UpdateColumnResponse)(nil),       // 14: board.v1.UpdateColumnResponse
-	(*DeleteColumnRequest)(nil),        // 15: board.v1.DeleteColumnRequest
-	(*ReorderColumnsRequest)(nil),      // 16: board.v1.ReorderColumnsRequest
-	(*ColumnPosition)(nil),             // 17: board.v1.ColumnPosition
-	(*ReorderColumnsResponse)(nil),     // 18: board.v1.ReorderColumnsResponse
-	(*CreateCardRequest)(nil),          // 19: board.v1.CreateCardRequest
-	(*CreateCardResponse)(nil),         // 20: board.v1.CreateCardResponse
-	(*GetCardRequest)(nil),             // 21: board.v1.GetCardRequest
-	(*GetCardResponse)(nil),            // 22: board.v1.GetCardResponse
-	(*GetCardsRequest)(nil),            // 23: board.v1.GetCardsRequest
-	(*GetCardsResponse)(nil),           // 24: board.v1.GetCardsResponse
-	(*UpdateCardRequest)(nil),          // 25: board.v1.UpdateCardRequest
-	(*UpdateCardResponse)(nil),         // 26: board.v1.UpdateCardResponse
-	(*MoveCardRequest)(nil),            // 27: board.v1.MoveCardRequest
-	(*MoveCardResponse)(nil),           // 28: board.v1.MoveCardResponse
-	(*DeleteCardRequest)(nil),          // 29: board.v1.DeleteCardRequest
-	(*AssignCardRequest)(nil),          // 30: board.v1.AssignCardRequest
-	(*AssignCardResponse)(nil),         // 31: board.v1.AssignCardResponse
-	(*UnassignCardRequest)(nil),        // 32: board.v1.UnassignCardRequest
-	(*UnassignCardResponse)(nil),       // 33: board.v1.UnassignCardResponse
-	(*GetCardActivityRequest)(nil),     // 34: board.v1.GetCardActivityRequest
-	(*GetCardActivityResponse)(nil),    // 35: board.v1.GetCardActivityResponse
-	(*ActivityEntry)(nil),              // 36: board.v1.ActivityEntry
-	(*AddMemberRequest)(nil),           // 37: board.v1.AddMemberRequest
-	(*AddMemberResponse)(nil),          // 38: board.v1.AddMemberResponse
-	(*RemoveMemberRequest)(nil),        // 39: board.v1.RemoveMemberRequest
-	(*ListMembersRequest)(nil),         // 40: board.v1.ListMembersRequest
-	(*ListMembersResponse)(nil),        // 41: board.v1.ListMembersResponse
-	(*IsMemberRequest)(nil),            // 42: board.v1.IsMemberRequest
-	(*IsMemberResponse)(nil),           // 43: board.v1.IsMemberResponse
-	(*CreateUploadURLRequest)(nil),     // 44: board.v1.CreateUploadURLRequest
-	(*CreateUploadURLResponse)(nil),    // 45: board.v1.CreateUploadURLResponse
-	(*ConfirmUploadRequest)(nil),       // 46: board.v1.ConfirmUploadRequest
-	(*ConfirmUploadResponse)(nil),      // 47: board.v1.ConfirmUploadResponse
-	(*GetDownloadURLRequest)(nil),      // 48: board.v1.GetDownloadURLRequest
-	(*GetDownloadURLResponse)(nil),     // 49: board.v1.GetDownloadURLResponse
-	(*ListAttachmentsRequest)(nil),     // 50: board.v1.ListAttachmentsRequest
-	(*ListAttachmentsResponse)(nil),    // 51: board.v1.ListAttachmentsResponse
-	(*DeleteAttachmentRequest)(nil),    // 52: board.v1.DeleteAttachmentRequest
-	(*Board)(nil),                      // 53: board.v1.Board
-	(*Column)(nil),                     // 54: board.v1.Column
-	(*Card)(nil),                       // 55: board.v1.Card
-	(*BoardMember)(nil),                // 56: board.v1.BoardMember
-	(*Attachment)(nil),                 // 57: board.v1.Attachment
-	(*Label)(nil),                      // 58: board.v1.Label
-	(*CreateLabelRequest)(nil),         // 59: board.v1.CreateLabelRequest
-	(*CreateLabelResponse)(nil),        // 60: board.v1.CreateLabelResponse
-	(*ListLabelsRequest)(nil),          // 61: board.v1.ListLabelsRequest
-	(*ListLabelsResponse)(nil),         // 62: board.v1.ListLabelsResponse
-	(*UpdateLabelRequest)(nil),         // 63: board.v1.UpdateLabelRequest
-	(*UpdateLabelResponse)(nil),        // 64: board.v1.UpdateLabelResponse
-	(*DeleteLabelRequest)(nil),         // 65: board.v1.DeleteLabelRequest
-	(*AddLabelToCardRequest)(nil),      // 66: board.v1.AddLabelToCardRequest
-	(*RemoveLabelFromCardRequest)(nil), // 67: board.v1.RemoveLabelFromCardRequest
-	(*GetCardLabelsRequest)(nil),       // 68: board.v1.GetCardLabelsRequest
-	(*GetCardLabelsResponse)(nil),      // 69: board.v1.GetCardLabelsResponse
-	(*CardLink)(nil),                   // 70: board.v1.CardLink
-	(*LinkCardsRequest)(nil),           // 71: board.v1.LinkCardsRequest
-	(*LinkCardsResponse)(nil),          // 72: board.v1.LinkCardsResponse
-	(*UnlinkCardsRequest)(nil),         // 73: board.v1.UnlinkCardsRequest
-	(*GetCardChildrenRequest)(nil),     // 74: board.v1.GetCardChildrenRequest
-	(*GetCardChildrenResponse)(nil),    // 75: board.v1.GetCardChildrenResponse
-	(*GetCardParentsRequest)(nil),      // 76: board.v1.GetCardParentsRequest
-	(*GetCardParentsResponse)(nil),     // 77: board.v1.GetCardParentsResponse
-	nil,                                // 78: board.v1.ActivityEntry.ChangesEntry
-	(*timestamppb.Timestamp)(nil),      // 79: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),              // 80: google.protobuf.Empty
+	(*CreateBoardRequest)(nil),           // 0: board.v1.CreateBoardRequest
+	(*CreateBoardResponse)(nil),          // 1: board.v1.CreateBoardResponse
+	(*GetBoardRequest)(nil),              // 2: board.v1.GetBoardRequest
+	(*GetBoardResponse)(nil),             // 3: board.v1.GetBoardResponse
+	(*ListBoardsRequest)(nil),            // 4: board.v1.ListBoardsRequest
+	(*ListBoardsResponse)(nil),           // 5: board.v1.ListBoardsResponse
+	(*UpdateBoardRequest)(nil),           // 6: board.v1.UpdateBoardRequest
+	(*UpdateBoardResponse)(nil),          // 7: board.v1.UpdateBoardResponse
+	(*DeleteBoardRequest)(nil),           // 8: board.v1.DeleteBoardRequest
+	(*AddColumnRequest)(nil),             // 9: board.v1.AddColumnRequest
+	(*AddColumnResponse)(nil),            // 10: board.v1.AddColumnResponse
+	(*GetColumnsRequest)(nil),            // 11: board.v1.GetColumnsRequest
+	(*GetColumnsResponse)(nil),           // 12: board.v1.GetColumnsResponse
+	(*UpdateColumnRequest)(nil),          // 13: board.v1.UpdateColumnRequest
+	(*UpdateColumnResponse)(nil),         // 14: board.v1.UpdateColumnResponse
+	(*DeleteColumnRequest)(nil),          // 15: board.v1.DeleteColumnRequest
+	(*ReorderColumnsRequest)(nil),        // 16: board.v1.ReorderColumnsRequest
+	(*ColumnPosition)(nil),               // 17: board.v1.ColumnPosition
+	(*ReorderColumnsResponse)(nil),       // 18: board.v1.ReorderColumnsResponse
+	(*CreateCardRequest)(nil),            // 19: board.v1.CreateCardRequest
+	(*CreateCardResponse)(nil),           // 20: board.v1.CreateCardResponse
+	(*GetCardRequest)(nil),               // 21: board.v1.GetCardRequest
+	(*GetCardResponse)(nil),              // 22: board.v1.GetCardResponse
+	(*GetCardsRequest)(nil),              // 23: board.v1.GetCardsRequest
+	(*GetCardsResponse)(nil),             // 24: board.v1.GetCardsResponse
+	(*UpdateCardRequest)(nil),            // 25: board.v1.UpdateCardRequest
+	(*UpdateCardResponse)(nil),           // 26: board.v1.UpdateCardResponse
+	(*MoveCardRequest)(nil),              // 27: board.v1.MoveCardRequest
+	(*MoveCardResponse)(nil),             // 28: board.v1.MoveCardResponse
+	(*DeleteCardRequest)(nil),            // 29: board.v1.DeleteCardRequest
+	(*AssignCardRequest)(nil),            // 30: board.v1.AssignCardRequest
+	(*AssignCardResponse)(nil),           // 31: board.v1.AssignCardResponse
+	(*UnassignCardRequest)(nil),          // 32: board.v1.UnassignCardRequest
+	(*UnassignCardResponse)(nil),         // 33: board.v1.UnassignCardResponse
+	(*GetCardActivityRequest)(nil),       // 34: board.v1.GetCardActivityRequest
+	(*GetCardActivityResponse)(nil),      // 35: board.v1.GetCardActivityResponse
+	(*ActivityEntry)(nil),                // 36: board.v1.ActivityEntry
+	(*AddMemberRequest)(nil),             // 37: board.v1.AddMemberRequest
+	(*AddMemberResponse)(nil),            // 38: board.v1.AddMemberResponse
+	(*RemoveMemberRequest)(nil),          // 39: board.v1.RemoveMemberRequest
+	(*ListMembersRequest)(nil),           // 40: board.v1.ListMembersRequest
+	(*ListMembersResponse)(nil),          // 41: board.v1.ListMembersResponse
+	(*IsMemberRequest)(nil),              // 42: board.v1.IsMemberRequest
+	(*IsMemberResponse)(nil),             // 43: board.v1.IsMemberResponse
+	(*CreateUploadURLRequest)(nil),       // 44: board.v1.CreateUploadURLRequest
+	(*CreateUploadURLResponse)(nil),      // 45: board.v1.CreateUploadURLResponse
+	(*ConfirmUploadRequest)(nil),         // 46: board.v1.ConfirmUploadRequest
+	(*ConfirmUploadResponse)(nil),        // 47: board.v1.ConfirmUploadResponse
+	(*GetDownloadURLRequest)(nil),        // 48: board.v1.GetDownloadURLRequest
+	(*GetDownloadURLResponse)(nil),       // 49: board.v1.GetDownloadURLResponse
+	(*ListAttachmentsRequest)(nil),       // 50: board.v1.ListAttachmentsRequest
+	(*ListAttachmentsResponse)(nil),      // 51: board.v1.ListAttachmentsResponse
+	(*DeleteAttachmentRequest)(nil),      // 52: board.v1.DeleteAttachmentRequest
+	(*Board)(nil),                        // 53: board.v1.Board
+	(*Column)(nil),                       // 54: board.v1.Column
+	(*Card)(nil),                         // 55: board.v1.Card
+	(*BoardMember)(nil),                  // 56: board.v1.BoardMember
+	(*Attachment)(nil),                   // 57: board.v1.Attachment
+	(*Label)(nil),                        // 58: board.v1.Label
+	(*CreateLabelRequest)(nil),           // 59: board.v1.CreateLabelRequest
+	(*CreateLabelResponse)(nil),          // 60: board.v1.CreateLabelResponse
+	(*ListLabelsRequest)(nil),            // 61: board.v1.ListLabelsRequest
+	(*ListLabelsResponse)(nil),           // 62: board.v1.ListLabelsResponse
+	(*UpdateLabelRequest)(nil),           // 63: board.v1.UpdateLabelRequest
+	(*UpdateLabelResponse)(nil),          // 64: board.v1.UpdateLabelResponse
+	(*DeleteLabelRequest)(nil),           // 65: board.v1.DeleteLabelRequest
+	(*AddLabelToCardRequest)(nil),        // 66: board.v1.AddLabelToCardRequest
+	(*RemoveLabelFromCardRequest)(nil),   // 67: board.v1.RemoveLabelFromCardRequest
+	(*GetCardLabelsRequest)(nil),         // 68: board.v1.GetCardLabelsRequest
+	(*GetCardLabelsResponse)(nil),        // 69: board.v1.GetCardLabelsResponse
+	(*CardLink)(nil),                     // 70: board.v1.CardLink
+	(*LinkCardsRequest)(nil),             // 71: board.v1.LinkCardsRequest
+	(*LinkCardsResponse)(nil),            // 72: board.v1.LinkCardsResponse
+	(*UnlinkCardsRequest)(nil),           // 73: board.v1.UnlinkCardsRequest
+	(*GetCardChildrenRequest)(nil),       // 74: board.v1.GetCardChildrenRequest
+	(*GetCardChildrenResponse)(nil),      // 75: board.v1.GetCardChildrenResponse
+	(*GetCardParentsRequest)(nil),        // 76: board.v1.GetCardParentsRequest
+	(*GetCardParentsResponse)(nil),       // 77: board.v1.GetCardParentsResponse
+	(*Checklist)(nil),                    // 78: board.v1.Checklist
+	(*ChecklistItem)(nil),                // 79: board.v1.ChecklistItem
+	(*CreateChecklistRequest)(nil),       // 80: board.v1.CreateChecklistRequest
+	(*CreateChecklistResponse)(nil),      // 81: board.v1.CreateChecklistResponse
+	(*GetChecklistsRequest)(nil),         // 82: board.v1.GetChecklistsRequest
+	(*GetChecklistsResponse)(nil),        // 83: board.v1.GetChecklistsResponse
+	(*UpdateChecklistRequest)(nil),       // 84: board.v1.UpdateChecklistRequest
+	(*UpdateChecklistResponse)(nil),      // 85: board.v1.UpdateChecklistResponse
+	(*DeleteChecklistRequest)(nil),       // 86: board.v1.DeleteChecklistRequest
+	(*CreateChecklistItemRequest)(nil),   // 87: board.v1.CreateChecklistItemRequest
+	(*CreateChecklistItemResponse)(nil),  // 88: board.v1.CreateChecklistItemResponse
+	(*UpdateChecklistItemRequest)(nil),   // 89: board.v1.UpdateChecklistItemRequest
+	(*UpdateChecklistItemResponse)(nil),  // 90: board.v1.UpdateChecklistItemResponse
+	(*DeleteChecklistItemRequest)(nil),   // 91: board.v1.DeleteChecklistItemRequest
+	(*ToggleChecklistItemRequest)(nil),   // 92: board.v1.ToggleChecklistItemRequest
+	(*ToggleChecklistItemResponse)(nil),  // 93: board.v1.ToggleChecklistItemResponse
+	(*CustomFieldDefinition)(nil),        // 94: board.v1.CustomFieldDefinition
+	(*CustomFieldValue)(nil),             // 95: board.v1.CustomFieldValue
+	(*CreateCustomFieldRequest)(nil),     // 96: board.v1.CreateCustomFieldRequest
+	(*CreateCustomFieldResponse)(nil),    // 97: board.v1.CreateCustomFieldResponse
+	(*ListCustomFieldsRequest)(nil),      // 98: board.v1.ListCustomFieldsRequest
+	(*ListCustomFieldsResponse)(nil),     // 99: board.v1.ListCustomFieldsResponse
+	(*UpdateCustomFieldRequest)(nil),     // 100: board.v1.UpdateCustomFieldRequest
+	(*UpdateCustomFieldResponse)(nil),    // 101: board.v1.UpdateCustomFieldResponse
+	(*DeleteCustomFieldRequest)(nil),     // 102: board.v1.DeleteCustomFieldRequest
+	(*SetCustomFieldValueRequest)(nil),   // 103: board.v1.SetCustomFieldValueRequest
+	(*SetCustomFieldValueResponse)(nil),  // 104: board.v1.SetCustomFieldValueResponse
+	(*GetCardCustomFieldsRequest)(nil),   // 105: board.v1.GetCardCustomFieldsRequest
+	(*GetCardCustomFieldsResponse)(nil),  // 106: board.v1.GetCardCustomFieldsResponse
+	(*AutomationRule)(nil),               // 107: board.v1.AutomationRule
+	(*AutomationExecution)(nil),          // 108: board.v1.AutomationExecution
+	(*CreateAutomationRuleRequest)(nil),  // 109: board.v1.CreateAutomationRuleRequest
+	(*CreateAutomationRuleResponse)(nil), // 110: board.v1.CreateAutomationRuleResponse
+	(*ListAutomationRulesRequest)(nil),   // 111: board.v1.ListAutomationRulesRequest
+	(*ListAutomationRulesResponse)(nil),  // 112: board.v1.ListAutomationRulesResponse
+	(*UpdateAutomationRuleRequest)(nil),  // 113: board.v1.UpdateAutomationRuleRequest
+	(*UpdateAutomationRuleResponse)(nil), // 114: board.v1.UpdateAutomationRuleResponse
+	(*DeleteAutomationRuleRequest)(nil),  // 115: board.v1.DeleteAutomationRuleRequest
+	(*GetAutomationHistoryRequest)(nil),  // 116: board.v1.GetAutomationHistoryRequest
+	(*GetAutomationHistoryResponse)(nil), // 117: board.v1.GetAutomationHistoryResponse
+	nil,                                  // 118: board.v1.ActivityEntry.ChangesEntry
+	nil,                                  // 119: board.v1.AutomationRule.TriggerConfigEntry
+	nil,                                  // 120: board.v1.AutomationRule.ActionConfigEntry
+	nil,                                  // 121: board.v1.CreateAutomationRuleRequest.TriggerConfigEntry
+	nil,                                  // 122: board.v1.CreateAutomationRuleRequest.ActionConfigEntry
+	nil,                                  // 123: board.v1.UpdateAutomationRuleRequest.TriggerConfigEntry
+	nil,                                  // 124: board.v1.UpdateAutomationRuleRequest.ActionConfigEntry
+	(*timestamppb.Timestamp)(nil),        // 125: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                // 126: google.protobuf.Empty
 }
 var file_api_proto_v1_board_board_proto_depIdxs = []int32{
-	53, // 0: board.v1.CreateBoardResponse.board:type_name -> board.v1.Board
-	53, // 1: board.v1.GetBoardResponse.board:type_name -> board.v1.Board
-	54, // 2: board.v1.GetBoardResponse.columns:type_name -> board.v1.Column
-	56, // 3: board.v1.GetBoardResponse.members:type_name -> board.v1.BoardMember
-	53, // 4: board.v1.ListBoardsResponse.boards:type_name -> board.v1.Board
-	53, // 5: board.v1.UpdateBoardResponse.board:type_name -> board.v1.Board
-	54, // 6: board.v1.AddColumnResponse.column:type_name -> board.v1.Column
-	54, // 7: board.v1.GetColumnsResponse.columns:type_name -> board.v1.Column
-	54, // 8: board.v1.UpdateColumnResponse.column:type_name -> board.v1.Column
-	17, // 9: board.v1.ReorderColumnsRequest.positions:type_name -> board.v1.ColumnPosition
-	54, // 10: board.v1.ReorderColumnsResponse.columns:type_name -> board.v1.Column
-	79, // 11: board.v1.CreateCardRequest.due_date:type_name -> google.protobuf.Timestamp
-	55, // 12: board.v1.CreateCardResponse.card:type_name -> board.v1.Card
-	55, // 13: board.v1.GetCardResponse.card:type_name -> board.v1.Card
-	55, // 14: board.v1.GetCardsResponse.cards:type_name -> board.v1.Card
-	79, // 15: board.v1.UpdateCardRequest.due_date:type_name -> google.protobuf.Timestamp
-	55, // 16: board.v1.UpdateCardResponse.card:type_name -> board.v1.Card
-	55, // 17: board.v1.MoveCardResponse.card:type_name -> board.v1.Card
-	55, // 18: board.v1.MoveCardResponse.cards_in_column:type_name -> board.v1.Card
-	55, // 19: board.v1.AssignCardResponse.card:type_name -> board.v1.Card
-	55, // 20: board.v1.UnassignCardResponse.card:type_name -> board.v1.Card
-	36, // 21: board.v1.GetCardActivityResponse.entries:type_name -> board.v1.ActivityEntry
-	78, // 22: board.v1.ActivityEntry.changes:type_name -> board.v1.ActivityEntry.ChangesEntry
-	79, // 23: board.v1.ActivityEntry.created_at:type_name -> google.protobuf.Timestamp
-	56, // 24: board.v1.AddMemberResponse.member:type_name -> board.v1.BoardMember
-	56, // 25: board.v1.ListMembersResponse.members:type_name -> board.v1.BoardMember
-	57, // 26: board.v1.CreateUploadURLResponse.attachment:type_name -> board.v1.Attachment
-	57, // 27: board.v1.ConfirmUploadResponse.attachment:type_name -> board.v1.Attachment
-	57, // 28: board.v1.ListAttachmentsResponse.attachments:type_name -> board.v1.Attachment
-	79, // 29: board.v1.Board.created_at:type_name -> google.protobuf.Timestamp
-	79, // 30: board.v1.Board.updated_at:type_name -> google.protobuf.Timestamp
-	79, // 31: board.v1.Column.created_at:type_name -> google.protobuf.Timestamp
-	79, // 32: board.v1.Column.updated_at:type_name -> google.protobuf.Timestamp
-	79, // 33: board.v1.Card.created_at:type_name -> google.protobuf.Timestamp
-	79, // 34: board.v1.Card.updated_at:type_name -> google.protobuf.Timestamp
-	79, // 35: board.v1.Card.due_date:type_name -> google.protobuf.Timestamp
-	79, // 36: board.v1.BoardMember.joined_at:type_name -> google.protobuf.Timestamp
-	79, // 37: board.v1.Attachment.created_at:type_name -> google.protobuf.Timestamp
-	79, // 38: board.v1.Label.created_at:type_name -> google.protobuf.Timestamp
-	58, // 39: board.v1.CreateLabelResponse.label:type_name -> board.v1.Label
-	58, // 40: board.v1.ListLabelsResponse.labels:type_name -> board.v1.Label
-	58, // 41: board.v1.UpdateLabelResponse.label:type_name -> board.v1.Label
-	58, // 42: board.v1.GetCardLabelsResponse.labels:type_name -> board.v1.Label
-	79, // 43: board.v1.CardLink.created_at:type_name -> google.protobuf.Timestamp
-	70, // 44: board.v1.LinkCardsResponse.link:type_name -> board.v1.CardLink
-	70, // 45: board.v1.GetCardChildrenResponse.links:type_name -> board.v1.CardLink
-	70, // 46: board.v1.GetCardParentsResponse.links:type_name -> board.v1.CardLink
-	0,  // 47: board.v1.BoardService.CreateBoard:input_type -> board.v1.CreateBoardRequest
-	2,  // 48: board.v1.BoardService.GetBoard:input_type -> board.v1.GetBoardRequest
-	4,  // 49: board.v1.BoardService.ListBoards:input_type -> board.v1.ListBoardsRequest
-	6,  // 50: board.v1.BoardService.UpdateBoard:input_type -> board.v1.UpdateBoardRequest
-	8,  // 51: board.v1.BoardService.DeleteBoard:input_type -> board.v1.DeleteBoardRequest
-	9,  // 52: board.v1.BoardService.AddColumn:input_type -> board.v1.AddColumnRequest
-	11, // 53: board.v1.BoardService.GetColumns:input_type -> board.v1.GetColumnsRequest
-	13, // 54: board.v1.BoardService.UpdateColumn:input_type -> board.v1.UpdateColumnRequest
-	15, // 55: board.v1.BoardService.DeleteColumn:input_type -> board.v1.DeleteColumnRequest
-	16, // 56: board.v1.BoardService.ReorderColumns:input_type -> board.v1.ReorderColumnsRequest
-	19, // 57: board.v1.BoardService.CreateCard:input_type -> board.v1.CreateCardRequest
-	21, // 58: board.v1.BoardService.GetCard:input_type -> board.v1.GetCardRequest
-	23, // 59: board.v1.BoardService.GetCards:input_type -> board.v1.GetCardsRequest
-	25, // 60: board.v1.BoardService.UpdateCard:input_type -> board.v1.UpdateCardRequest
-	27, // 61: board.v1.BoardService.MoveCard:input_type -> board.v1.MoveCardRequest
-	29, // 62: board.v1.BoardService.DeleteCard:input_type -> board.v1.DeleteCardRequest
-	30, // 63: board.v1.BoardService.AssignCard:input_type -> board.v1.AssignCardRequest
-	32, // 64: board.v1.BoardService.UnassignCard:input_type -> board.v1.UnassignCardRequest
-	34, // 65: board.v1.BoardService.GetCardActivity:input_type -> board.v1.GetCardActivityRequest
-	37, // 66: board.v1.BoardService.AddMember:input_type -> board.v1.AddMemberRequest
-	39, // 67: board.v1.BoardService.RemoveMember:input_type -> board.v1.RemoveMemberRequest
-	40, // 68: board.v1.BoardService.ListMembers:input_type -> board.v1.ListMembersRequest
-	42, // 69: board.v1.BoardService.IsMember:input_type -> board.v1.IsMemberRequest
-	44, // 70: board.v1.BoardService.CreateUploadURL:input_type -> board.v1.CreateUploadURLRequest
-	46, // 71: board.v1.BoardService.ConfirmUpload:input_type -> board.v1.ConfirmUploadRequest
-	48, // 72: board.v1.BoardService.GetDownloadURL:input_type -> board.v1.GetDownloadURLRequest
-	50, // 73: board.v1.BoardService.ListAttachments:input_type -> board.v1.ListAttachmentsRequest
-	52, // 74: board.v1.BoardService.DeleteAttachment:input_type -> board.v1.DeleteAttachmentRequest
-	59, // 75: board.v1.BoardService.CreateLabel:input_type -> board.v1.CreateLabelRequest
-	61, // 76: board.v1.BoardService.ListLabels:input_type -> board.v1.ListLabelsRequest
-	63, // 77: board.v1.BoardService.UpdateLabel:input_type -> board.v1.UpdateLabelRequest
-	65, // 78: board.v1.BoardService.DeleteLabel:input_type -> board.v1.DeleteLabelRequest
-	66, // 79: board.v1.BoardService.AddLabelToCard:input_type -> board.v1.AddLabelToCardRequest
-	67, // 80: board.v1.BoardService.RemoveLabelFromCard:input_type -> board.v1.RemoveLabelFromCardRequest
-	68, // 81: board.v1.BoardService.GetCardLabels:input_type -> board.v1.GetCardLabelsRequest
-	71, // 82: board.v1.BoardService.LinkCards:input_type -> board.v1.LinkCardsRequest
-	73, // 83: board.v1.BoardService.UnlinkCards:input_type -> board.v1.UnlinkCardsRequest
-	74, // 84: board.v1.BoardService.GetCardChildren:input_type -> board.v1.GetCardChildrenRequest
-	76, // 85: board.v1.BoardService.GetCardParents:input_type -> board.v1.GetCardParentsRequest
-	1,  // 86: board.v1.BoardService.CreateBoard:output_type -> board.v1.CreateBoardResponse
-	3,  // 87: board.v1.BoardService.GetBoard:output_type -> board.v1.GetBoardResponse
-	5,  // 88: board.v1.BoardService.ListBoards:output_type -> board.v1.ListBoardsResponse
-	7,  // 89: board.v1.BoardService.UpdateBoard:output_type -> board.v1.UpdateBoardResponse
-	80, // 90: board.v1.BoardService.DeleteBoard:output_type -> google.protobuf.Empty
-	10, // 91: board.v1.BoardService.AddColumn:output_type -> board.v1.AddColumnResponse
-	12, // 92: board.v1.BoardService.GetColumns:output_type -> board.v1.GetColumnsResponse
-	14, // 93: board.v1.BoardService.UpdateColumn:output_type -> board.v1.UpdateColumnResponse
-	80, // 94: board.v1.BoardService.DeleteColumn:output_type -> google.protobuf.Empty
-	18, // 95: board.v1.BoardService.ReorderColumns:output_type -> board.v1.ReorderColumnsResponse
-	20, // 96: board.v1.BoardService.CreateCard:output_type -> board.v1.CreateCardResponse
-	22, // 97: board.v1.BoardService.GetCard:output_type -> board.v1.GetCardResponse
-	24, // 98: board.v1.BoardService.GetCards:output_type -> board.v1.GetCardsResponse
-	26, // 99: board.v1.BoardService.UpdateCard:output_type -> board.v1.UpdateCardResponse
-	28, // 100: board.v1.BoardService.MoveCard:output_type -> board.v1.MoveCardResponse
-	80, // 101: board.v1.BoardService.DeleteCard:output_type -> google.protobuf.Empty
-	31, // 102: board.v1.BoardService.AssignCard:output_type -> board.v1.AssignCardResponse
-	33, // 103: board.v1.BoardService.UnassignCard:output_type -> board.v1.UnassignCardResponse
-	35, // 104: board.v1.BoardService.GetCardActivity:output_type -> board.v1.GetCardActivityResponse
-	38, // 105: board.v1.BoardService.AddMember:output_type -> board.v1.AddMemberResponse
-	80, // 106: board.v1.BoardService.RemoveMember:output_type -> google.protobuf.Empty
-	41, // 107: board.v1.BoardService.ListMembers:output_type -> board.v1.ListMembersResponse
-	43, // 108: board.v1.BoardService.IsMember:output_type -> board.v1.IsMemberResponse
-	45, // 109: board.v1.BoardService.CreateUploadURL:output_type -> board.v1.CreateUploadURLResponse
-	47, // 110: board.v1.BoardService.ConfirmUpload:output_type -> board.v1.ConfirmUploadResponse
-	49, // 111: board.v1.BoardService.GetDownloadURL:output_type -> board.v1.GetDownloadURLResponse
-	51, // 112: board.v1.BoardService.ListAttachments:output_type -> board.v1.ListAttachmentsResponse
-	80, // 113: board.v1.BoardService.DeleteAttachment:output_type -> google.protobuf.Empty
-	60, // 114: board.v1.BoardService.CreateLabel:output_type -> board.v1.CreateLabelResponse
-	62, // 115: board.v1.BoardService.ListLabels:output_type -> board.v1.ListLabelsResponse
-	64, // 116: board.v1.BoardService.UpdateLabel:output_type -> board.v1.UpdateLabelResponse
-	80, // 117: board.v1.BoardService.DeleteLabel:output_type -> google.protobuf.Empty
-	80, // 118: board.v1.BoardService.AddLabelToCard:output_type -> google.protobuf.Empty
-	80, // 119: board.v1.BoardService.RemoveLabelFromCard:output_type -> google.protobuf.Empty
-	69, // 120: board.v1.BoardService.GetCardLabels:output_type -> board.v1.GetCardLabelsResponse
-	72, // 121: board.v1.BoardService.LinkCards:output_type -> board.v1.LinkCardsResponse
-	80, // 122: board.v1.BoardService.UnlinkCards:output_type -> google.protobuf.Empty
-	75, // 123: board.v1.BoardService.GetCardChildren:output_type -> board.v1.GetCardChildrenResponse
-	77, // 124: board.v1.BoardService.GetCardParents:output_type -> board.v1.GetCardParentsResponse
-	86, // [86:125] is the sub-list for method output_type
-	47, // [47:86] is the sub-list for method input_type
-	47, // [47:47] is the sub-list for extension type_name
-	47, // [47:47] is the sub-list for extension extendee
-	0,  // [0:47] is the sub-list for field type_name
+	53,  // 0: board.v1.CreateBoardResponse.board:type_name -> board.v1.Board
+	53,  // 1: board.v1.GetBoardResponse.board:type_name -> board.v1.Board
+	54,  // 2: board.v1.GetBoardResponse.columns:type_name -> board.v1.Column
+	56,  // 3: board.v1.GetBoardResponse.members:type_name -> board.v1.BoardMember
+	53,  // 4: board.v1.ListBoardsResponse.boards:type_name -> board.v1.Board
+	53,  // 5: board.v1.UpdateBoardResponse.board:type_name -> board.v1.Board
+	54,  // 6: board.v1.AddColumnResponse.column:type_name -> board.v1.Column
+	54,  // 7: board.v1.GetColumnsResponse.columns:type_name -> board.v1.Column
+	54,  // 8: board.v1.UpdateColumnResponse.column:type_name -> board.v1.Column
+	17,  // 9: board.v1.ReorderColumnsRequest.positions:type_name -> board.v1.ColumnPosition
+	54,  // 10: board.v1.ReorderColumnsResponse.columns:type_name -> board.v1.Column
+	125, // 11: board.v1.CreateCardRequest.due_date:type_name -> google.protobuf.Timestamp
+	55,  // 12: board.v1.CreateCardResponse.card:type_name -> board.v1.Card
+	55,  // 13: board.v1.GetCardResponse.card:type_name -> board.v1.Card
+	55,  // 14: board.v1.GetCardsResponse.cards:type_name -> board.v1.Card
+	125, // 15: board.v1.UpdateCardRequest.due_date:type_name -> google.protobuf.Timestamp
+	55,  // 16: board.v1.UpdateCardResponse.card:type_name -> board.v1.Card
+	55,  // 17: board.v1.MoveCardResponse.card:type_name -> board.v1.Card
+	55,  // 18: board.v1.MoveCardResponse.cards_in_column:type_name -> board.v1.Card
+	55,  // 19: board.v1.AssignCardResponse.card:type_name -> board.v1.Card
+	55,  // 20: board.v1.UnassignCardResponse.card:type_name -> board.v1.Card
+	36,  // 21: board.v1.GetCardActivityResponse.entries:type_name -> board.v1.ActivityEntry
+	118, // 22: board.v1.ActivityEntry.changes:type_name -> board.v1.ActivityEntry.ChangesEntry
+	125, // 23: board.v1.ActivityEntry.created_at:type_name -> google.protobuf.Timestamp
+	56,  // 24: board.v1.AddMemberResponse.member:type_name -> board.v1.BoardMember
+	56,  // 25: board.v1.ListMembersResponse.members:type_name -> board.v1.BoardMember
+	57,  // 26: board.v1.CreateUploadURLResponse.attachment:type_name -> board.v1.Attachment
+	57,  // 27: board.v1.ConfirmUploadResponse.attachment:type_name -> board.v1.Attachment
+	57,  // 28: board.v1.ListAttachmentsResponse.attachments:type_name -> board.v1.Attachment
+	125, // 29: board.v1.Board.created_at:type_name -> google.protobuf.Timestamp
+	125, // 30: board.v1.Board.updated_at:type_name -> google.protobuf.Timestamp
+	125, // 31: board.v1.Column.created_at:type_name -> google.protobuf.Timestamp
+	125, // 32: board.v1.Column.updated_at:type_name -> google.protobuf.Timestamp
+	125, // 33: board.v1.Card.created_at:type_name -> google.protobuf.Timestamp
+	125, // 34: board.v1.Card.updated_at:type_name -> google.protobuf.Timestamp
+	125, // 35: board.v1.Card.due_date:type_name -> google.protobuf.Timestamp
+	125, // 36: board.v1.BoardMember.joined_at:type_name -> google.protobuf.Timestamp
+	125, // 37: board.v1.Attachment.created_at:type_name -> google.protobuf.Timestamp
+	125, // 38: board.v1.Label.created_at:type_name -> google.protobuf.Timestamp
+	58,  // 39: board.v1.CreateLabelResponse.label:type_name -> board.v1.Label
+	58,  // 40: board.v1.ListLabelsResponse.labels:type_name -> board.v1.Label
+	58,  // 41: board.v1.UpdateLabelResponse.label:type_name -> board.v1.Label
+	58,  // 42: board.v1.GetCardLabelsResponse.labels:type_name -> board.v1.Label
+	125, // 43: board.v1.CardLink.created_at:type_name -> google.protobuf.Timestamp
+	70,  // 44: board.v1.LinkCardsResponse.link:type_name -> board.v1.CardLink
+	70,  // 45: board.v1.GetCardChildrenResponse.links:type_name -> board.v1.CardLink
+	70,  // 46: board.v1.GetCardParentsResponse.links:type_name -> board.v1.CardLink
+	79,  // 47: board.v1.Checklist.items:type_name -> board.v1.ChecklistItem
+	125, // 48: board.v1.Checklist.created_at:type_name -> google.protobuf.Timestamp
+	125, // 49: board.v1.Checklist.updated_at:type_name -> google.protobuf.Timestamp
+	125, // 50: board.v1.ChecklistItem.created_at:type_name -> google.protobuf.Timestamp
+	125, // 51: board.v1.ChecklistItem.updated_at:type_name -> google.protobuf.Timestamp
+	78,  // 52: board.v1.CreateChecklistResponse.checklist:type_name -> board.v1.Checklist
+	78,  // 53: board.v1.GetChecklistsResponse.checklists:type_name -> board.v1.Checklist
+	78,  // 54: board.v1.UpdateChecklistResponse.checklist:type_name -> board.v1.Checklist
+	79,  // 55: board.v1.CreateChecklistItemResponse.item:type_name -> board.v1.ChecklistItem
+	79,  // 56: board.v1.UpdateChecklistItemResponse.item:type_name -> board.v1.ChecklistItem
+	125, // 57: board.v1.CustomFieldDefinition.created_at:type_name -> google.protobuf.Timestamp
+	125, // 58: board.v1.CustomFieldDefinition.updated_at:type_name -> google.protobuf.Timestamp
+	125, // 59: board.v1.CustomFieldValue.value_date:type_name -> google.protobuf.Timestamp
+	125, // 60: board.v1.CustomFieldValue.created_at:type_name -> google.protobuf.Timestamp
+	125, // 61: board.v1.CustomFieldValue.updated_at:type_name -> google.protobuf.Timestamp
+	94,  // 62: board.v1.CreateCustomFieldResponse.definition:type_name -> board.v1.CustomFieldDefinition
+	94,  // 63: board.v1.ListCustomFieldsResponse.definitions:type_name -> board.v1.CustomFieldDefinition
+	94,  // 64: board.v1.UpdateCustomFieldResponse.definition:type_name -> board.v1.CustomFieldDefinition
+	125, // 65: board.v1.SetCustomFieldValueRequest.value_date:type_name -> google.protobuf.Timestamp
+	95,  // 66: board.v1.SetCustomFieldValueResponse.value:type_name -> board.v1.CustomFieldValue
+	95,  // 67: board.v1.GetCardCustomFieldsResponse.values:type_name -> board.v1.CustomFieldValue
+	119, // 68: board.v1.AutomationRule.trigger_config:type_name -> board.v1.AutomationRule.TriggerConfigEntry
+	120, // 69: board.v1.AutomationRule.action_config:type_name -> board.v1.AutomationRule.ActionConfigEntry
+	125, // 70: board.v1.AutomationRule.created_at:type_name -> google.protobuf.Timestamp
+	125, // 71: board.v1.AutomationRule.updated_at:type_name -> google.protobuf.Timestamp
+	125, // 72: board.v1.AutomationExecution.executed_at:type_name -> google.protobuf.Timestamp
+	121, // 73: board.v1.CreateAutomationRuleRequest.trigger_config:type_name -> board.v1.CreateAutomationRuleRequest.TriggerConfigEntry
+	122, // 74: board.v1.CreateAutomationRuleRequest.action_config:type_name -> board.v1.CreateAutomationRuleRequest.ActionConfigEntry
+	107, // 75: board.v1.CreateAutomationRuleResponse.rule:type_name -> board.v1.AutomationRule
+	107, // 76: board.v1.ListAutomationRulesResponse.rules:type_name -> board.v1.AutomationRule
+	123, // 77: board.v1.UpdateAutomationRuleRequest.trigger_config:type_name -> board.v1.UpdateAutomationRuleRequest.TriggerConfigEntry
+	124, // 78: board.v1.UpdateAutomationRuleRequest.action_config:type_name -> board.v1.UpdateAutomationRuleRequest.ActionConfigEntry
+	107, // 79: board.v1.UpdateAutomationRuleResponse.rule:type_name -> board.v1.AutomationRule
+	108, // 80: board.v1.GetAutomationHistoryResponse.executions:type_name -> board.v1.AutomationExecution
+	0,   // 81: board.v1.BoardService.CreateBoard:input_type -> board.v1.CreateBoardRequest
+	2,   // 82: board.v1.BoardService.GetBoard:input_type -> board.v1.GetBoardRequest
+	4,   // 83: board.v1.BoardService.ListBoards:input_type -> board.v1.ListBoardsRequest
+	6,   // 84: board.v1.BoardService.UpdateBoard:input_type -> board.v1.UpdateBoardRequest
+	8,   // 85: board.v1.BoardService.DeleteBoard:input_type -> board.v1.DeleteBoardRequest
+	9,   // 86: board.v1.BoardService.AddColumn:input_type -> board.v1.AddColumnRequest
+	11,  // 87: board.v1.BoardService.GetColumns:input_type -> board.v1.GetColumnsRequest
+	13,  // 88: board.v1.BoardService.UpdateColumn:input_type -> board.v1.UpdateColumnRequest
+	15,  // 89: board.v1.BoardService.DeleteColumn:input_type -> board.v1.DeleteColumnRequest
+	16,  // 90: board.v1.BoardService.ReorderColumns:input_type -> board.v1.ReorderColumnsRequest
+	19,  // 91: board.v1.BoardService.CreateCard:input_type -> board.v1.CreateCardRequest
+	21,  // 92: board.v1.BoardService.GetCard:input_type -> board.v1.GetCardRequest
+	23,  // 93: board.v1.BoardService.GetCards:input_type -> board.v1.GetCardsRequest
+	25,  // 94: board.v1.BoardService.UpdateCard:input_type -> board.v1.UpdateCardRequest
+	27,  // 95: board.v1.BoardService.MoveCard:input_type -> board.v1.MoveCardRequest
+	29,  // 96: board.v1.BoardService.DeleteCard:input_type -> board.v1.DeleteCardRequest
+	30,  // 97: board.v1.BoardService.AssignCard:input_type -> board.v1.AssignCardRequest
+	32,  // 98: board.v1.BoardService.UnassignCard:input_type -> board.v1.UnassignCardRequest
+	34,  // 99: board.v1.BoardService.GetCardActivity:input_type -> board.v1.GetCardActivityRequest
+	37,  // 100: board.v1.BoardService.AddMember:input_type -> board.v1.AddMemberRequest
+	39,  // 101: board.v1.BoardService.RemoveMember:input_type -> board.v1.RemoveMemberRequest
+	40,  // 102: board.v1.BoardService.ListMembers:input_type -> board.v1.ListMembersRequest
+	42,  // 103: board.v1.BoardService.IsMember:input_type -> board.v1.IsMemberRequest
+	44,  // 104: board.v1.BoardService.CreateUploadURL:input_type -> board.v1.CreateUploadURLRequest
+	46,  // 105: board.v1.BoardService.ConfirmUpload:input_type -> board.v1.ConfirmUploadRequest
+	48,  // 106: board.v1.BoardService.GetDownloadURL:input_type -> board.v1.GetDownloadURLRequest
+	50,  // 107: board.v1.BoardService.ListAttachments:input_type -> board.v1.ListAttachmentsRequest
+	52,  // 108: board.v1.BoardService.DeleteAttachment:input_type -> board.v1.DeleteAttachmentRequest
+	59,  // 109: board.v1.BoardService.CreateLabel:input_type -> board.v1.CreateLabelRequest
+	61,  // 110: board.v1.BoardService.ListLabels:input_type -> board.v1.ListLabelsRequest
+	63,  // 111: board.v1.BoardService.UpdateLabel:input_type -> board.v1.UpdateLabelRequest
+	65,  // 112: board.v1.BoardService.DeleteLabel:input_type -> board.v1.DeleteLabelRequest
+	66,  // 113: board.v1.BoardService.AddLabelToCard:input_type -> board.v1.AddLabelToCardRequest
+	67,  // 114: board.v1.BoardService.RemoveLabelFromCard:input_type -> board.v1.RemoveLabelFromCardRequest
+	68,  // 115: board.v1.BoardService.GetCardLabels:input_type -> board.v1.GetCardLabelsRequest
+	71,  // 116: board.v1.BoardService.LinkCards:input_type -> board.v1.LinkCardsRequest
+	73,  // 117: board.v1.BoardService.UnlinkCards:input_type -> board.v1.UnlinkCardsRequest
+	74,  // 118: board.v1.BoardService.GetCardChildren:input_type -> board.v1.GetCardChildrenRequest
+	76,  // 119: board.v1.BoardService.GetCardParents:input_type -> board.v1.GetCardParentsRequest
+	80,  // 120: board.v1.BoardService.CreateChecklist:input_type -> board.v1.CreateChecklistRequest
+	82,  // 121: board.v1.BoardService.GetChecklists:input_type -> board.v1.GetChecklistsRequest
+	84,  // 122: board.v1.BoardService.UpdateChecklist:input_type -> board.v1.UpdateChecklistRequest
+	86,  // 123: board.v1.BoardService.DeleteChecklist:input_type -> board.v1.DeleteChecklistRequest
+	87,  // 124: board.v1.BoardService.CreateChecklistItem:input_type -> board.v1.CreateChecklistItemRequest
+	89,  // 125: board.v1.BoardService.UpdateChecklistItem:input_type -> board.v1.UpdateChecklistItemRequest
+	91,  // 126: board.v1.BoardService.DeleteChecklistItem:input_type -> board.v1.DeleteChecklistItemRequest
+	92,  // 127: board.v1.BoardService.ToggleChecklistItem:input_type -> board.v1.ToggleChecklistItemRequest
+	96,  // 128: board.v1.BoardService.CreateCustomField:input_type -> board.v1.CreateCustomFieldRequest
+	98,  // 129: board.v1.BoardService.ListCustomFields:input_type -> board.v1.ListCustomFieldsRequest
+	100, // 130: board.v1.BoardService.UpdateCustomField:input_type -> board.v1.UpdateCustomFieldRequest
+	102, // 131: board.v1.BoardService.DeleteCustomField:input_type -> board.v1.DeleteCustomFieldRequest
+	103, // 132: board.v1.BoardService.SetCustomFieldValue:input_type -> board.v1.SetCustomFieldValueRequest
+	105, // 133: board.v1.BoardService.GetCardCustomFields:input_type -> board.v1.GetCardCustomFieldsRequest
+	109, // 134: board.v1.BoardService.CreateAutomationRule:input_type -> board.v1.CreateAutomationRuleRequest
+	111, // 135: board.v1.BoardService.ListAutomationRules:input_type -> board.v1.ListAutomationRulesRequest
+	113, // 136: board.v1.BoardService.UpdateAutomationRule:input_type -> board.v1.UpdateAutomationRuleRequest
+	115, // 137: board.v1.BoardService.DeleteAutomationRule:input_type -> board.v1.DeleteAutomationRuleRequest
+	116, // 138: board.v1.BoardService.GetAutomationHistory:input_type -> board.v1.GetAutomationHistoryRequest
+	1,   // 139: board.v1.BoardService.CreateBoard:output_type -> board.v1.CreateBoardResponse
+	3,   // 140: board.v1.BoardService.GetBoard:output_type -> board.v1.GetBoardResponse
+	5,   // 141: board.v1.BoardService.ListBoards:output_type -> board.v1.ListBoardsResponse
+	7,   // 142: board.v1.BoardService.UpdateBoard:output_type -> board.v1.UpdateBoardResponse
+	126, // 143: board.v1.BoardService.DeleteBoard:output_type -> google.protobuf.Empty
+	10,  // 144: board.v1.BoardService.AddColumn:output_type -> board.v1.AddColumnResponse
+	12,  // 145: board.v1.BoardService.GetColumns:output_type -> board.v1.GetColumnsResponse
+	14,  // 146: board.v1.BoardService.UpdateColumn:output_type -> board.v1.UpdateColumnResponse
+	126, // 147: board.v1.BoardService.DeleteColumn:output_type -> google.protobuf.Empty
+	18,  // 148: board.v1.BoardService.ReorderColumns:output_type -> board.v1.ReorderColumnsResponse
+	20,  // 149: board.v1.BoardService.CreateCard:output_type -> board.v1.CreateCardResponse
+	22,  // 150: board.v1.BoardService.GetCard:output_type -> board.v1.GetCardResponse
+	24,  // 151: board.v1.BoardService.GetCards:output_type -> board.v1.GetCardsResponse
+	26,  // 152: board.v1.BoardService.UpdateCard:output_type -> board.v1.UpdateCardResponse
+	28,  // 153: board.v1.BoardService.MoveCard:output_type -> board.v1.MoveCardResponse
+	126, // 154: board.v1.BoardService.DeleteCard:output_type -> google.protobuf.Empty
+	31,  // 155: board.v1.BoardService.AssignCard:output_type -> board.v1.AssignCardResponse
+	33,  // 156: board.v1.BoardService.UnassignCard:output_type -> board.v1.UnassignCardResponse
+	35,  // 157: board.v1.BoardService.GetCardActivity:output_type -> board.v1.GetCardActivityResponse
+	38,  // 158: board.v1.BoardService.AddMember:output_type -> board.v1.AddMemberResponse
+	126, // 159: board.v1.BoardService.RemoveMember:output_type -> google.protobuf.Empty
+	41,  // 160: board.v1.BoardService.ListMembers:output_type -> board.v1.ListMembersResponse
+	43,  // 161: board.v1.BoardService.IsMember:output_type -> board.v1.IsMemberResponse
+	45,  // 162: board.v1.BoardService.CreateUploadURL:output_type -> board.v1.CreateUploadURLResponse
+	47,  // 163: board.v1.BoardService.ConfirmUpload:output_type -> board.v1.ConfirmUploadResponse
+	49,  // 164: board.v1.BoardService.GetDownloadURL:output_type -> board.v1.GetDownloadURLResponse
+	51,  // 165: board.v1.BoardService.ListAttachments:output_type -> board.v1.ListAttachmentsResponse
+	126, // 166: board.v1.BoardService.DeleteAttachment:output_type -> google.protobuf.Empty
+	60,  // 167: board.v1.BoardService.CreateLabel:output_type -> board.v1.CreateLabelResponse
+	62,  // 168: board.v1.BoardService.ListLabels:output_type -> board.v1.ListLabelsResponse
+	64,  // 169: board.v1.BoardService.UpdateLabel:output_type -> board.v1.UpdateLabelResponse
+	126, // 170: board.v1.BoardService.DeleteLabel:output_type -> google.protobuf.Empty
+	126, // 171: board.v1.BoardService.AddLabelToCard:output_type -> google.protobuf.Empty
+	126, // 172: board.v1.BoardService.RemoveLabelFromCard:output_type -> google.protobuf.Empty
+	69,  // 173: board.v1.BoardService.GetCardLabels:output_type -> board.v1.GetCardLabelsResponse
+	72,  // 174: board.v1.BoardService.LinkCards:output_type -> board.v1.LinkCardsResponse
+	126, // 175: board.v1.BoardService.UnlinkCards:output_type -> google.protobuf.Empty
+	75,  // 176: board.v1.BoardService.GetCardChildren:output_type -> board.v1.GetCardChildrenResponse
+	77,  // 177: board.v1.BoardService.GetCardParents:output_type -> board.v1.GetCardParentsResponse
+	81,  // 178: board.v1.BoardService.CreateChecklist:output_type -> board.v1.CreateChecklistResponse
+	83,  // 179: board.v1.BoardService.GetChecklists:output_type -> board.v1.GetChecklistsResponse
+	85,  // 180: board.v1.BoardService.UpdateChecklist:output_type -> board.v1.UpdateChecklistResponse
+	126, // 181: board.v1.BoardService.DeleteChecklist:output_type -> google.protobuf.Empty
+	88,  // 182: board.v1.BoardService.CreateChecklistItem:output_type -> board.v1.CreateChecklistItemResponse
+	90,  // 183: board.v1.BoardService.UpdateChecklistItem:output_type -> board.v1.UpdateChecklistItemResponse
+	126, // 184: board.v1.BoardService.DeleteChecklistItem:output_type -> google.protobuf.Empty
+	93,  // 185: board.v1.BoardService.ToggleChecklistItem:output_type -> board.v1.ToggleChecklistItemResponse
+	97,  // 186: board.v1.BoardService.CreateCustomField:output_type -> board.v1.CreateCustomFieldResponse
+	99,  // 187: board.v1.BoardService.ListCustomFields:output_type -> board.v1.ListCustomFieldsResponse
+	101, // 188: board.v1.BoardService.UpdateCustomField:output_type -> board.v1.UpdateCustomFieldResponse
+	126, // 189: board.v1.BoardService.DeleteCustomField:output_type -> google.protobuf.Empty
+	104, // 190: board.v1.BoardService.SetCustomFieldValue:output_type -> board.v1.SetCustomFieldValueResponse
+	106, // 191: board.v1.BoardService.GetCardCustomFields:output_type -> board.v1.GetCardCustomFieldsResponse
+	110, // 192: board.v1.BoardService.CreateAutomationRule:output_type -> board.v1.CreateAutomationRuleResponse
+	112, // 193: board.v1.BoardService.ListAutomationRules:output_type -> board.v1.ListAutomationRulesResponse
+	114, // 194: board.v1.BoardService.UpdateAutomationRule:output_type -> board.v1.UpdateAutomationRuleResponse
+	126, // 195: board.v1.BoardService.DeleteAutomationRule:output_type -> google.protobuf.Empty
+	117, // 196: board.v1.BoardService.GetAutomationHistory:output_type -> board.v1.GetAutomationHistoryResponse
+	139, // [139:197] is the sub-list for method output_type
+	81,  // [81:139] is the sub-list for method input_type
+	81,  // [81:81] is the sub-list for extension type_name
+	81,  // [81:81] is the sub-list for extension extendee
+	0,   // [0:81] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_v1_board_board_proto_init() }
@@ -5517,7 +8601,7 @@ func file_api_proto_v1_board_board_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_v1_board_board_proto_rawDesc), len(file_api_proto_v1_board_board_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   79,
+			NumMessages:   125,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

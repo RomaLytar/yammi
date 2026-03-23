@@ -276,7 +276,7 @@ function handleClose() {
               v-model="dueDateObj"
               mode="date"
               locale="ru"
-              :popover="{ placement: 'bottom-start' }"
+              :popover="{ placement: 'bottom-start', visibility: 'click' }"
               :is-dark="isDarkTheme"
               color="purple"
             >

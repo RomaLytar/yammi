@@ -146,7 +146,7 @@ export const useBoardStore = defineStore('board', () => {
         title,
         description,
         position,
-        due_date: opts?.dueDate,
+        due_date: opts?.dueDate ? new Date(opts.dueDate).toISOString() : undefined,
         priority: opts?.priority,
         task_type: opts?.taskType,
       })
@@ -178,7 +178,7 @@ export const useBoardStore = defineStore('board', () => {
         title,
         description,
         assignee_id: currentAssignee,
-        due_date: opts?.dueDate,
+        due_date: opts?.dueDate ? new Date(opts.dueDate).toISOString() : undefined,
         priority: opts?.priority,
         task_type: opts?.taskType,
       })

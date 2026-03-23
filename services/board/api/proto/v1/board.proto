@@ -59,6 +59,16 @@ service BoardService {
   rpc UnlinkCards(UnlinkCardsRequest) returns (google.protobuf.Empty);
   rpc GetCardChildren(GetCardChildrenRequest) returns (GetCardChildrenResponse);
   rpc GetCardParents(GetCardParentsRequest) returns (GetCardParentsResponse);
+
+  // Checklist operations
+  rpc CreateChecklist(CreateChecklistRequest) returns (CreateChecklistResponse);
+  rpc GetChecklists(GetChecklistsRequest) returns (GetChecklistsResponse);
+  rpc UpdateChecklist(UpdateChecklistRequest) returns (UpdateChecklistResponse);
+  rpc DeleteChecklist(DeleteChecklistRequest) returns (google.protobuf.Empty);
+  rpc CreateChecklistItem(CreateChecklistItemRequest) returns (CreateChecklistItemResponse);
+  rpc UpdateChecklistItem(UpdateChecklistItemRequest) returns (UpdateChecklistItemResponse);
+  rpc DeleteChecklistItem(DeleteChecklistItemRequest) returns (google.protobuf.Empty);
+  rpc ToggleChecklistItem(ToggleChecklistItemRequest) returns (ToggleChecklistItemResponse);
 }
 
 // ============================================================================
@@ -582,4 +592,110 @@ message GetCardParentsRequest {
 
 message GetCardParentsResponse {
   repeated CardLink links = 1;
+}
+
+// ============================================================================
+// Checklist Messages
+// ============================================================================
+
+message Checklist {
+  string id = 1;
+  string card_id = 2;
+  string board_id = 3;
+  string title = 4;
+  int32 position = 5;
+  repeated ChecklistItem items = 6;
+  int32 progress = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message ChecklistItem {
+  string id = 1;
+  string checklist_id = 2;
+  string board_id = 3;
+  string title = 4;
+  bool is_checked = 5;
+  int32 position = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+message CreateChecklistRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string title = 4;
+  int32 position = 5;
+}
+
+message CreateChecklistResponse {
+  Checklist checklist = 1;
+}
+
+message GetChecklistsRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetChecklistsResponse {
+  repeated Checklist checklists = 1;
+}
+
+message UpdateChecklistRequest {
+  string checklist_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string title = 4;
+}
+
+message UpdateChecklistResponse {
+  Checklist checklist = 1;
+}
+
+message DeleteChecklistRequest {
+  string checklist_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message CreateChecklistItemRequest {
+  string checklist_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string title = 4;
+  int32 position = 5;
+}
+
+message CreateChecklistItemResponse {
+  ChecklistItem item = 1;
+}
+
+message UpdateChecklistItemRequest {
+  string item_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string title = 4;
+}
+
+message UpdateChecklistItemResponse {
+  ChecklistItem item = 1;
+}
+
+message DeleteChecklistItemRequest {
+  string item_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message ToggleChecklistItemRequest {
+  string item_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  bool is_checked = 4;
+}
+
+message ToggleChecklistItemResponse {
+  bool is_checked = 1;
 }

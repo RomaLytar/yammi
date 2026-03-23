@@ -28,4 +28,8 @@ type EventPublisher interface {
 	PublishCardLabelRemoved(ctx context.Context, event CardLabelRemoved) error
 	PublishCardLinked(ctx context.Context, event CardLinked) error
 	PublishCardUnlinked(ctx context.Context, event CardUnlinked) error
+	PublishChecklistCreated(ctx context.Context, event ChecklistCreated) error
+	PublishChecklistUpdated(ctx context.Context, event ChecklistUpdated) error
+	PublishChecklistDeleted(ctx context.Context, event ChecklistDeleted) error
+	PublishChecklistItemToggled(ctx context.Context, event ChecklistItemToggled) error
 }

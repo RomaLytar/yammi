@@ -123,6 +123,7 @@ func main() {
 	activityRepo := postgres.NewActivityRepository(db)
 	labelRepo := postgres.NewLabelRepository(db)
 	cardLinkRepo := postgres.NewCardLinkRepository(db)
+	checklistRepo := postgres.NewChecklistRepository(db)
 
 	// Use Cases
 	createBoardUC := usecase.NewCreateBoardUseCase(boardRepo, memberRepo, publisher)
@@ -171,6 +172,15 @@ func main() {
 	getCardChildrenUC := usecase.NewGetCardChildrenUseCase(cardLinkRepo, memberRepo)
 	getCardParentsUC := usecase.NewGetCardParentsUseCase(cardLinkRepo, memberRepo)
 
+	createChecklistUC := usecase.NewCreateChecklistUseCase(checklistRepo, memberRepo, publisher)
+	getChecklistsUC := usecase.NewGetChecklistsUseCase(checklistRepo, memberRepo)
+	updateChecklistUC := usecase.NewUpdateChecklistUseCase(checklistRepo, memberRepo, publisher)
+	deleteChecklistUC := usecase.NewDeleteChecklistUseCase(checklistRepo, memberRepo, publisher)
+	createChecklistItemUC := usecase.NewCreateChecklistItemUseCase(checklistRepo, memberRepo)
+	updateChecklistItemUC := usecase.NewUpdateChecklistItemUseCase(checklistRepo, memberRepo)
+	deleteChecklistItemUC := usecase.NewDeleteChecklistItemUseCase(checklistRepo, memberRepo)
+	toggleChecklistItemUC := usecase.NewToggleChecklistItemUseCase(checklistRepo, memberRepo, publisher)
+
 	// gRPC server
 	handler := delivery.NewBoardServiceServer(
 		createBoardUC,
@@ -212,6 +222,14 @@ func main() {
 		unlinkCardsUC,
 		getCardChildrenUC,
 		getCardParentsUC,
+		createChecklistUC,
+		getChecklistsUC,
+		updateChecklistUC,
+		deleteChecklistUC,
+		createChecklistItemUC,
+		updateChecklistItemUC,
+		deleteChecklistItemUC,
+		toggleChecklistItemUC,
 	)
 
 	grpcServer := grpc.NewServer(

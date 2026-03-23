@@ -63,6 +63,16 @@ type BoardServiceServer struct {
 	unlinkCards     *usecase.UnlinkCardsUseCase
 	getCardChildren *usecase.GetCardChildrenUseCase
 	getCardParents  *usecase.GetCardParentsUseCase
+
+	// Checklist Use Cases
+	createChecklist     *usecase.CreateChecklistUseCase
+	getChecklists       *usecase.GetChecklistsUseCase
+	updateChecklist     *usecase.UpdateChecklistUseCase
+	deleteChecklist     *usecase.DeleteChecklistUseCase
+	createChecklistItem *usecase.CreateChecklistItemUseCase
+	updateChecklistItem *usecase.UpdateChecklistItemUseCase
+	deleteChecklistItem *usecase.DeleteChecklistItemUseCase
+	toggleChecklistItem *usecase.ToggleChecklistItemUseCase
 }
 
 // NewBoardServiceServer создает новый gRPC сервер с внедренными use cases
@@ -106,6 +116,14 @@ func NewBoardServiceServer(
 	unlinkCards *usecase.UnlinkCardsUseCase,
 	getCardChildren *usecase.GetCardChildrenUseCase,
 	getCardParents *usecase.GetCardParentsUseCase,
+	createChecklist *usecase.CreateChecklistUseCase,
+	getChecklists *usecase.GetChecklistsUseCase,
+	updateChecklist *usecase.UpdateChecklistUseCase,
+	deleteChecklist *usecase.DeleteChecklistUseCase,
+	createChecklistItem *usecase.CreateChecklistItemUseCase,
+	updateChecklistItem *usecase.UpdateChecklistItemUseCase,
+	deleteChecklistItem *usecase.DeleteChecklistItemUseCase,
+	toggleChecklistItem *usecase.ToggleChecklistItemUseCase,
 ) *BoardServiceServer {
 	return &BoardServiceServer{
 		createBoard:         createBoard,
@@ -147,6 +165,14 @@ func NewBoardServiceServer(
 		unlinkCards:          unlinkCards,
 		getCardChildren:     getCardChildren,
 		getCardParents:      getCardParents,
+		createChecklist:     createChecklist,
+		getChecklists:       getChecklists,
+		updateChecklist:     updateChecklist,
+		deleteChecklist:     deleteChecklist,
+		createChecklistItem: createChecklistItem,
+		updateChecklistItem: updateChecklistItem,
+		deleteChecklistItem: deleteChecklistItem,
+		toggleChecklistItem: toggleChecklistItem,
 	}
 }
 

@@ -150,6 +150,21 @@ type LabelRepository interface {
 	CountByBoardID(ctx context.Context, boardID string) (int, error)
 }
 
+// ChecklistRepository определяет интерфейс для работы с чек-листами
+type ChecklistRepository interface {
+	CreateChecklist(ctx context.Context, checklist *domain.Checklist) error
+	GetChecklistByID(ctx context.Context, checklistID, boardID string) (*domain.Checklist, error)
+	ListByCardID(ctx context.Context, cardID, boardID string) ([]*domain.Checklist, error)
+	UpdateChecklist(ctx context.Context, checklist *domain.Checklist) error
+	DeleteChecklist(ctx context.Context, checklistID, boardID string) error
+	CreateItem(ctx context.Context, item *domain.ChecklistItem) error
+	GetItemByID(ctx context.Context, itemID, boardID string) (*domain.ChecklistItem, error)
+	ListItemsByChecklistID(ctx context.Context, checklistID, boardID string) ([]domain.ChecklistItem, error)
+	UpdateItem(ctx context.Context, item *domain.ChecklistItem) error
+	DeleteItem(ctx context.Context, itemID, boardID string) error
+	ToggleItem(ctx context.Context, itemID, boardID string, isChecked bool) error
+}
+
 // CardLinkRepository определяет интерфейс для работы со связями карточек
 type CardLinkRepository interface {
 	// Create создает новую связь между карточками

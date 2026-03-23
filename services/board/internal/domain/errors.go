@@ -56,6 +56,14 @@ var (
 	ErrLabelAlreadyOnCard = errors.New("label already assigned to card")
 )
 
+// Checklist errors
+var (
+	ErrChecklistNotFound     = errors.New("checklist not found")
+	ErrChecklistItemNotFound = errors.New("checklist item not found")
+	ErrEmptyChecklistTitle   = errors.New("checklist title cannot be empty")
+	ErrEmptyItemTitle        = errors.New("checklist item title cannot be empty")
+)
+
 // Card Link errors
 var (
 	ErrCardLinkNotFound = errors.New("card link not found")

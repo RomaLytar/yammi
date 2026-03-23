@@ -272,6 +272,46 @@ type CardUnlinked struct {
 	ActorID      string    `json:"actor_id"`
 }
 
+type ChecklistCreated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	ChecklistID  string    `json:"checklist_id"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Title        string    `json:"title"`
+}
+
+type ChecklistUpdated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	ChecklistID  string    `json:"checklist_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Title        string    `json:"title"`
+}
+
+type ChecklistDeleted struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	ChecklistID  string    `json:"checklist_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type ChecklistItemToggled struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	ItemID       string    `json:"item_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	IsChecked    bool      `json:"is_checked"`
+}
+
 func generateEventID() string {
 	return uuid.New().String()
 }

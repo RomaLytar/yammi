@@ -210,6 +210,26 @@ func (m *MockEventPublisher) PublishCardUnlinked(ctx context.Context, event Card
 	return args.Error(0)
 }
 
+func (m *MockEventPublisher) PublishChecklistCreated(ctx context.Context, event ChecklistCreated) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishChecklistUpdated(ctx context.Context, event ChecklistUpdated) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishChecklistDeleted(ctx context.Context, event ChecklistDeleted) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishChecklistItemToggled(ctx context.Context, event ChecklistItemToggled) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
 func TestCreateBoardUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name        string

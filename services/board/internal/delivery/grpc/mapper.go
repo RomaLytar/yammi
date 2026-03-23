@@ -201,6 +201,55 @@ func mapCardLinksToProto(links []*domain.CardLink) []*boardpb.CardLink {
 	return result
 }
 
+func mapChecklistToProto(c *domain.Checklist) *boardpb.Checklist {
+	items := make([]*boardpb.ChecklistItem, len(c.Items))
+	for i, item := range c.Items {
+		items[i] = &boardpb.ChecklistItem{
+			Id:          item.ID,
+			ChecklistId: item.ChecklistID,
+			BoardId:     item.BoardID,
+			Title:       item.Title,
+			IsChecked:   item.IsChecked,
+			Position:    int32(item.Position),
+			CreatedAt:   timestamppb.New(item.CreatedAt),
+			UpdatedAt:   timestamppb.New(item.UpdatedAt),
+		}
+	}
+
+	return &boardpb.Checklist{
+		Id:        c.ID,
+		CardId:    c.CardID,
+		BoardId:   c.BoardID,
+		Title:     c.Title,
+		Position:  int32(c.Position),
+		Items:     items,
+		Progress:  int32(c.Progress()),
+		CreatedAt: timestamppb.New(c.CreatedAt),
+		UpdatedAt: timestamppb.New(c.UpdatedAt),
+	}
+}
+
+func mapChecklistsToProto(checklists []*domain.Checklist) []*boardpb.Checklist {
+	result := make([]*boardpb.Checklist, len(checklists))
+	for i, c := range checklists {
+		result[i] = mapChecklistToProto(c)
+	}
+	return result
+}
+
+func mapChecklistItemToProto(item *domain.ChecklistItem) *boardpb.ChecklistItem {
+	return &boardpb.ChecklistItem{
+		Id:          item.ID,
+		ChecklistId: item.ChecklistID,
+		BoardId:     item.BoardID,
+		Title:       item.Title,
+		IsChecked:   item.IsChecked,
+		Position:    int32(item.Position),
+		CreatedAt:   timestamppb.New(item.CreatedAt),
+		UpdatedAt:   timestamppb.New(item.UpdatedAt),
+	}
+}
+
 // ============================================================================
 // Error Mapping (domain errors → gRPC codes)
 // ============================================================================
@@ -213,7 +262,9 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrMemberNotFound) ||
 		errors.Is(err, domain.ErrAttachmentNotFound) ||
 		errors.Is(err, domain.ErrLabelNotFound) ||
-		errors.Is(err, domain.ErrCardLinkNotFound) {
+		errors.Is(err, domain.ErrCardLinkNotFound) ||
+		errors.Is(err, domain.ErrChecklistNotFound) ||
+		errors.Is(err, domain.ErrChecklistItemNotFound) {
 		return status.Error(codes.NotFound, err.Error())
 	}
 
@@ -240,7 +291,9 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrEmptyLabelName) ||
 		errors.Is(err, domain.ErrInvalidColor) ||
 		errors.Is(err, domain.ErrSelfLink) ||
-		errors.Is(err, domain.ErrInvalidLinkType) {
+		errors.Is(err, domain.ErrInvalidLinkType) ||
+		errors.Is(err, domain.ErrEmptyChecklistTitle) ||
+		errors.Is(err, domain.ErrEmptyItemTitle) {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 

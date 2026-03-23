@@ -59,6 +59,14 @@ const (
 	BoardService_UnlinkCards_FullMethodName         = "/board.v1.BoardService/UnlinkCards"
 	BoardService_GetCardChildren_FullMethodName     = "/board.v1.BoardService/GetCardChildren"
 	BoardService_GetCardParents_FullMethodName      = "/board.v1.BoardService/GetCardParents"
+	BoardService_CreateChecklist_FullMethodName     = "/board.v1.BoardService/CreateChecklist"
+	BoardService_GetChecklists_FullMethodName       = "/board.v1.BoardService/GetChecklists"
+	BoardService_UpdateChecklist_FullMethodName     = "/board.v1.BoardService/UpdateChecklist"
+	BoardService_DeleteChecklist_FullMethodName     = "/board.v1.BoardService/DeleteChecklist"
+	BoardService_CreateChecklistItem_FullMethodName = "/board.v1.BoardService/CreateChecklistItem"
+	BoardService_UpdateChecklistItem_FullMethodName = "/board.v1.BoardService/UpdateChecklistItem"
+	BoardService_DeleteChecklistItem_FullMethodName = "/board.v1.BoardService/DeleteChecklistItem"
+	BoardService_ToggleChecklistItem_FullMethodName = "/board.v1.BoardService/ToggleChecklistItem"
 )
 
 // BoardServiceClient is the client API for BoardService service.
@@ -111,6 +119,15 @@ type BoardServiceClient interface {
 	UnlinkCards(ctx context.Context, in *UnlinkCardsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetCardChildren(ctx context.Context, in *GetCardChildrenRequest, opts ...grpc.CallOption) (*GetCardChildrenResponse, error)
 	GetCardParents(ctx context.Context, in *GetCardParentsRequest, opts ...grpc.CallOption) (*GetCardParentsResponse, error)
+	// Checklist operations
+	CreateChecklist(ctx context.Context, in *CreateChecklistRequest, opts ...grpc.CallOption) (*CreateChecklistResponse, error)
+	GetChecklists(ctx context.Context, in *GetChecklistsRequest, opts ...grpc.CallOption) (*GetChecklistsResponse, error)
+	UpdateChecklist(ctx context.Context, in *UpdateChecklistRequest, opts ...grpc.CallOption) (*UpdateChecklistResponse, error)
+	DeleteChecklist(ctx context.Context, in *DeleteChecklistRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateChecklistItem(ctx context.Context, in *CreateChecklistItemRequest, opts ...grpc.CallOption) (*CreateChecklistItemResponse, error)
+	UpdateChecklistItem(ctx context.Context, in *UpdateChecklistItemRequest, opts ...grpc.CallOption) (*UpdateChecklistItemResponse, error)
+	DeleteChecklistItem(ctx context.Context, in *DeleteChecklistItemRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ToggleChecklistItem(ctx context.Context, in *ToggleChecklistItemRequest, opts ...grpc.CallOption) (*ToggleChecklistItemResponse, error)
 }
 
 type boardServiceClient struct {
@@ -511,6 +528,86 @@ func (c *boardServiceClient) GetCardParents(ctx context.Context, in *GetCardPare
 	return out, nil
 }
 
+func (c *boardServiceClient) CreateChecklist(ctx context.Context, in *CreateChecklistRequest, opts ...grpc.CallOption) (*CreateChecklistResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateChecklistResponse)
+	err := c.cc.Invoke(ctx, BoardService_CreateChecklist_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) GetChecklists(ctx context.Context, in *GetChecklistsRequest, opts ...grpc.CallOption) (*GetChecklistsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetChecklistsResponse)
+	err := c.cc.Invoke(ctx, BoardService_GetChecklists_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) UpdateChecklist(ctx context.Context, in *UpdateChecklistRequest, opts ...grpc.CallOption) (*UpdateChecklistResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateChecklistResponse)
+	err := c.cc.Invoke(ctx, BoardService_UpdateChecklist_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) DeleteChecklist(ctx context.Context, in *DeleteChecklistRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, BoardService_DeleteChecklist_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) CreateChecklistItem(ctx context.Context, in *CreateChecklistItemRequest, opts ...grpc.CallOption) (*CreateChecklistItemResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateChecklistItemResponse)
+	err := c.cc.Invoke(ctx, BoardService_CreateChecklistItem_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) UpdateChecklistItem(ctx context.Context, in *UpdateChecklistItemRequest, opts ...grpc.CallOption) (*UpdateChecklistItemResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateChecklistItemResponse)
+	err := c.cc.Invoke(ctx, BoardService_UpdateChecklistItem_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) DeleteChecklistItem(ctx context.Context, in *DeleteChecklistItemRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, BoardService_DeleteChecklistItem_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) ToggleChecklistItem(ctx context.Context, in *ToggleChecklistItemRequest, opts ...grpc.CallOption) (*ToggleChecklistItemResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ToggleChecklistItemResponse)
+	err := c.cc.Invoke(ctx, BoardService_ToggleChecklistItem_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BoardServiceServer is the server API for BoardService service.
 // All implementations must embed UnimplementedBoardServiceServer
 // for forward compatibility.
@@ -561,6 +658,15 @@ type BoardServiceServer interface {
 	UnlinkCards(context.Context, *UnlinkCardsRequest) (*emptypb.Empty, error)
 	GetCardChildren(context.Context, *GetCardChildrenRequest) (*GetCardChildrenResponse, error)
 	GetCardParents(context.Context, *GetCardParentsRequest) (*GetCardParentsResponse, error)
+	// Checklist operations
+	CreateChecklist(context.Context, *CreateChecklistRequest) (*CreateChecklistResponse, error)
+	GetChecklists(context.Context, *GetChecklistsRequest) (*GetChecklistsResponse, error)
+	UpdateChecklist(context.Context, *UpdateChecklistRequest) (*UpdateChecklistResponse, error)
+	DeleteChecklist(context.Context, *DeleteChecklistRequest) (*emptypb.Empty, error)
+	CreateChecklistItem(context.Context, *CreateChecklistItemRequest) (*CreateChecklistItemResponse, error)
+	UpdateChecklistItem(context.Context, *UpdateChecklistItemRequest) (*UpdateChecklistItemResponse, error)
+	DeleteChecklistItem(context.Context, *DeleteChecklistItemRequest) (*emptypb.Empty, error)
+	ToggleChecklistItem(context.Context, *ToggleChecklistItemRequest) (*ToggleChecklistItemResponse, error)
 	mustEmbedUnimplementedBoardServiceServer()
 }
 
@@ -687,6 +793,30 @@ func (UnimplementedBoardServiceServer) GetCardChildren(context.Context, *GetCard
 }
 func (UnimplementedBoardServiceServer) GetCardParents(context.Context, *GetCardParentsRequest) (*GetCardParentsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetCardParents not implemented")
+}
+func (UnimplementedBoardServiceServer) CreateChecklist(context.Context, *CreateChecklistRequest) (*CreateChecklistResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateChecklist not implemented")
+}
+func (UnimplementedBoardServiceServer) GetChecklists(context.Context, *GetChecklistsRequest) (*GetChecklistsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetChecklists not implemented")
+}
+func (UnimplementedBoardServiceServer) UpdateChecklist(context.Context, *UpdateChecklistRequest) (*UpdateChecklistResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateChecklist not implemented")
+}
+func (UnimplementedBoardServiceServer) DeleteChecklist(context.Context, *DeleteChecklistRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteChecklist not implemented")
+}
+func (UnimplementedBoardServiceServer) CreateChecklistItem(context.Context, *CreateChecklistItemRequest) (*CreateChecklistItemResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateChecklistItem not implemented")
+}
+func (UnimplementedBoardServiceServer) UpdateChecklistItem(context.Context, *UpdateChecklistItemRequest) (*UpdateChecklistItemResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateChecklistItem not implemented")
+}
+func (UnimplementedBoardServiceServer) DeleteChecklistItem(context.Context, *DeleteChecklistItemRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteChecklistItem not implemented")
+}
+func (UnimplementedBoardServiceServer) ToggleChecklistItem(context.Context, *ToggleChecklistItemRequest) (*ToggleChecklistItemResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ToggleChecklistItem not implemented")
 }
 func (UnimplementedBoardServiceServer) mustEmbedUnimplementedBoardServiceServer() {}
 func (UnimplementedBoardServiceServer) testEmbeddedByValue()                      {}
@@ -1411,6 +1541,150 @@ func _BoardService_GetCardParents_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BoardService_CreateChecklist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateChecklistRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).CreateChecklist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_CreateChecklist_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).CreateChecklist(ctx, req.(*CreateChecklistRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_GetChecklists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetChecklistsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).GetChecklists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_GetChecklists_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).GetChecklists(ctx, req.(*GetChecklistsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_UpdateChecklist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateChecklistRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).UpdateChecklist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_UpdateChecklist_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).UpdateChecklist(ctx, req.(*UpdateChecklistRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_DeleteChecklist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteChecklistRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).DeleteChecklist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_DeleteChecklist_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).DeleteChecklist(ctx, req.(*DeleteChecklistRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_CreateChecklistItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateChecklistItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).CreateChecklistItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_CreateChecklistItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).CreateChecklistItem(ctx, req.(*CreateChecklistItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_UpdateChecklistItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateChecklistItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).UpdateChecklistItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_UpdateChecklistItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).UpdateChecklistItem(ctx, req.(*UpdateChecklistItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_DeleteChecklistItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteChecklistItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).DeleteChecklistItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_DeleteChecklistItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).DeleteChecklistItem(ctx, req.(*DeleteChecklistItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_ToggleChecklistItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ToggleChecklistItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).ToggleChecklistItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_ToggleChecklistItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).ToggleChecklistItem(ctx, req.(*ToggleChecklistItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BoardService_ServiceDesc is the grpc.ServiceDesc for BoardService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1573,6 +1847,38 @@ var BoardService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCardParents",
 			Handler:    _BoardService_GetCardParents_Handler,
+		},
+		{
+			MethodName: "CreateChecklist",
+			Handler:    _BoardService_CreateChecklist_Handler,
+		},
+		{
+			MethodName: "GetChecklists",
+			Handler:    _BoardService_GetChecklists_Handler,
+		},
+		{
+			MethodName: "UpdateChecklist",
+			Handler:    _BoardService_UpdateChecklist_Handler,
+		},
+		{
+			MethodName: "DeleteChecklist",
+			Handler:    _BoardService_DeleteChecklist_Handler,
+		},
+		{
+			MethodName: "CreateChecklistItem",
+			Handler:    _BoardService_CreateChecklistItem_Handler,
+		},
+		{
+			MethodName: "UpdateChecklistItem",
+			Handler:    _BoardService_UpdateChecklistItem_Handler,
+		},
+		{
+			MethodName: "DeleteChecklistItem",
+			Handler:    _BoardService_DeleteChecklistItem_Handler,
+		},
+		{
+			MethodName: "ToggleChecklistItem",
+			Handler:    _BoardService_ToggleChecklistItem_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

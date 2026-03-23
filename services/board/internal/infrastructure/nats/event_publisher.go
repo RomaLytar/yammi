@@ -110,3 +110,19 @@ func (p *EventPublisher) PublishCardLinked(ctx context.Context, event usecase.Ca
 func (p *EventPublisher) PublishCardUnlinked(ctx context.Context, event usecase.CardUnlinked) error {
 	return p.publisher.Publish(ctx, "card.unlinked", event)
 }
+
+func (p *EventPublisher) PublishChecklistCreated(ctx context.Context, event usecase.ChecklistCreated) error {
+	return p.publisher.Publish(ctx, "checklist.created", event)
+}
+
+func (p *EventPublisher) PublishChecklistUpdated(ctx context.Context, event usecase.ChecklistUpdated) error {
+	return p.publisher.Publish(ctx, "checklist.updated", event)
+}
+
+func (p *EventPublisher) PublishChecklistDeleted(ctx context.Context, event usecase.ChecklistDeleted) error {
+	return p.publisher.Publish(ctx, "checklist.deleted", event)
+}
+
+func (p *EventPublisher) PublishChecklistItemToggled(ctx context.Context, event usecase.ChecklistItemToggled) error {
+	return p.publisher.Publish(ctx, "checklist.item.toggled", event)
+}

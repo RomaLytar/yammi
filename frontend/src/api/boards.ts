@@ -578,7 +578,7 @@ export async function deleteChecklistItem(boardId: string, itemId: string): Prom
 }
 
 export async function toggleChecklistItem(boardId: string, itemId: string): Promise<ChecklistItem> {
-  const { data } = await api.post<{ item: ChecklistItemResponse }>(
+  const { data } = await api.put<{ item: ChecklistItemResponse }>(
     `/v1/boards/${boardId}/checklist-items/${itemId}/toggle`,
   )
   return mapChecklistItem(data.item)

@@ -308,19 +308,10 @@ func (h *BoardHandler) ToggleChecklistItem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var req struct {
-		IsChecked bool `json:"is_checked"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
-		return
-	}
-
 	resp, err := h.client.ToggleChecklistItem(r.Context(), &boardpb.ToggleChecklistItemRequest{
-		ItemId:    itemID,
-		BoardId:   boardID,
-		UserId:    userID,
-		IsChecked: req.IsChecked,
+		ItemId:  itemID,
+		BoardId: boardID,
+		UserId:  userID,
 	})
 	if err != nil {
 		writeGRPCError(w, err)

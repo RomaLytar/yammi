@@ -446,12 +446,196 @@
       "targets": [
         { "expr": "histogram_quantile(0.95, sum(rate(board_grpc_request_duration_seconds_bucket[5m])) by (le, method))", "legendFormat": "{{ method }}" }
       ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 34 },
+      "id": 104,
+      "title": "Labels / Checklists / Card Links",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 35 },
+      "id": 18,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+      },
+      "title": "Labels Activity",
+      "description": "Скорость операций с метками (создание, обновление, удаление, привязка/отвязка)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(board_grpc_requests_total{method=~\"CreateLabel|UpdateLabel|DeleteLabel|AttachLabel|DetachLabel\"}[1m])) by (method)", "legendFormat": "{{ method }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 35 },
+      "id": 19,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+      },
+      "title": "Checklists Activity",
+      "description": "Скорость операций с чеклистами (toggle элементов, создание, удаление)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(board_grpc_requests_total{method=~\"CreateChecklist|DeleteChecklist|CreateChecklistItem|ToggleChecklistItem\"}[1m])) by (method)", "legendFormat": "{{ method }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "cyan", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 42 },
+      "id": 20,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Card Links Created",
+      "description": "Количество созданных связей между карточками (parent/child)",
+      "type": "stat",
+      "targets": [
+        { "expr": "board_grpc_requests_total{method=\"CreateCardLink\",code=\"OK\"}", "legendFormat": "" }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 49 },
+      "id": 105,
+      "title": "Custom Fields / Automations / Due Dates",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 50 },
+      "id": 21,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+      },
+      "title": "Custom Fields Usage",
+      "description": "Скорость операций set_value для кастомных полей",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(board_grpc_requests_total{method=~\"SetCardCustomFieldValue|CreateCustomField|UpdateCustomField|DeleteCustomField\"}[1m])) by (method)", "legendFormat": "{{ method }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 7, "w": 6, "x": 12, "y": 50 },
+      "id": 22,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Automation Rules",
+      "description": "Количество активных правил автоматизации",
+      "type": "stat",
+      "targets": [
+        { "expr": "board_automation_rules_active", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 57 },
+      "id": 23,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+      },
+      "title": "Automation Executions",
+      "description": "Скорость срабатываний автоматизации по статусу (success/failed)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(board_automation_executions_total[1m])) by (status)", "legendFormat": "{{ status }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "short",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
+            ]
+          },
+          "min": 0,
+          "max": 100
+        }
+      },
+      "gridPos": { "h": 7, "w": 6, "x": 12, "y": 57 },
+      "id": 24,
+      "options": {
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Overdue Cards",
+      "description": "Количество просроченных карточек (due_date < now())",
+      "type": "gauge",
+      "targets": [
+        { "expr": "board_cards_overdue_total", "legendFormat": "" }
+      ]
     }
   ],
   "refresh": "5s",
   "liveNow": true,
   "schemaVersion": 39,
-  "tags": ["board-service", "grpc", "events"],
+  "tags": ["board-service", "grpc", "events", "labels", "checklists", "automations"],
   "templating": { "list": [] },
   "time": { "from": "now-5m", "to": "now" },
   "timepicker": {
@@ -460,5 +644,5 @@
   "timezone": "browser",
   "title": "Board Service",
   "uid": "board-service",
-  "version": 2
+  "version": 3
 }

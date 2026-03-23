@@ -65,6 +65,41 @@
 			"key": "attachment_id",
 			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "label_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "checklist_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "item_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "link_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "field_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "rule_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "child_card_id",
+			"value": "",
+			"type": "string"
 		}
 	],
 	"item": [
@@ -1066,7 +1101,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Implement feature X\",\n  \"description\": \"Details here\",\n  \"position\": \"n\",\n  \"assignee_id\": null\n}"
+									"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Implement feature X\",\n  \"description\": \"Details here\",\n  \"position\": \"n\",\n  \"assignee_id\": null,\n  \"due_date\": \"2026-04-01T00:00:00Z\",\n  \"priority\": \"medium\",\n  \"task_type\": \"feature\"\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/columns/:id/cards",
@@ -1087,7 +1122,7 @@
 										}
 									]
 								},
-								"description": "Создать карточку в колонке.\n\ncard_id автоматически сохраняется в переменные коллекции.\n\nposition: 'n' (новая позиция с шагом), или LexoRank строка."
+								"description": "Создать карточку в колонке.\n\ncard_id автоматически сохраняется в переменные коллекции.\n\nposition: 'n' (новая позиция с шагом), или LexoRank строка.\n\npriority: low / medium / high / critical\ntask_type: bug / feature / task / improvement\ndue_date: ISO 8601 timestamp"
 							},
 							"response": [
 								{
@@ -1097,7 +1132,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Implement feature X\",\n  \"description\": \"Details here\",\n  \"position\": \"n\",\n  \"assignee_id\": null\n}"
+											"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Implement feature X\",\n  \"description\": \"Details here\",\n  \"position\": \"n\",\n  \"assignee_id\": null,\n  \"due_date\": \"2026-04-01T00:00:00Z\",\n  \"priority\": \"medium\",\n  \"task_type\": \"feature\"\n}"
 										},
 										"url": {
 											"raw": "{{base_url}}/api/v1/columns/:id/cards",
@@ -1290,7 +1325,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Updated title\",\n  \"description\": \"Updated description\",\n  \"assignee_id\": \"{{user_id}}\",\n  \"version\": 1\n}"
+									"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Updated title\",\n  \"description\": \"Updated description\",\n  \"assignee_id\": \"{{user_id}}\",\n  \"due_date\": \"2026-04-15T00:00:00Z\",\n  \"priority\": \"high\",\n  \"task_type\": \"bug\",\n  \"version\": 1\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/cards/:id",
@@ -1310,7 +1345,7 @@
 										}
 									]
 								},
-								"description": "Обновить карточку (title, description, assignee).\n\nТребуется version для optimistic locking."
+								"description": "Обновить карточку (title, description, assignee, due_date, priority, task_type).\n\nТребуется version для optimistic locking.\n\npriority: low / medium / high / critical\ntask_type: bug / feature / task / improvement\ndue_date: ISO 8601 timestamp"
 							},
 							"response": [
 								{
@@ -1320,7 +1355,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Updated title\",\n  \"description\": \"Updated description\",\n  \"assignee_id\": \"{{user_id}}\",\n  \"version\": 1\n}"
+											"raw": "{\n  \"board_id\": \"{{board_id}}\",\n  \"title\": \"Updated title\",\n  \"description\": \"Updated description\",\n  \"assignee_id\": \"{{user_id}}\",\n  \"due_date\": \"2026-04-15T00:00:00Z\",\n  \"priority\": \"high\",\n  \"task_type\": \"bug\",\n  \"version\": 1\n}"
 										},
 										"url": {
 											"raw": "{{base_url}}/api/v1/cards/:id",
@@ -2276,6 +2311,1520 @@
 						}
 					],
 					"description": "Управление вложениями к карточкам."
+				},
+				{
+					"name": "Labels",
+					"item": [
+						{
+							"name": "Create Label",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var json = pm.response.json();",
+											"    pm.collectionVariables.set('label_id', json.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Bug\",\n  \"color\": \"#ef4444\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/labels",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"labels"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Создать метку для доски.\n\nlabel_id автоматически сохраняется в переменные коллекции."
+							},
+							"response": []
+						},
+						{
+							"name": "List Labels",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/labels",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"labels"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Получить список меток доски."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Label",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Feature\",\n  \"color\": \"#22c55e\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/labels/:labelId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"labels",
+										":labelId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "labelId",
+											"value": "{{label_id}}"
+										}
+									]
+								},
+								"description": "Обновить метку (название, цвет)."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Label",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/labels/:labelId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"labels",
+										":labelId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "labelId",
+											"value": "{{label_id}}"
+										}
+									]
+								},
+								"description": "Удалить метку."
+							},
+							"response": []
+						},
+						{
+							"name": "Attach Label to Card",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"label_id\": \"{{label_id}}\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/cards/:cardId/labels",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"cards",
+										":cardId",
+										"labels"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Прикрепить метку к карточке."
+							},
+							"response": []
+						},
+						{
+							"name": "Detach Label from Card",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/cards/:cardId/labels/:labelId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"cards",
+										":cardId",
+										"labels",
+										":labelId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										},
+										{
+											"key": "labelId",
+											"value": "{{label_id}}"
+										}
+									]
+								},
+								"description": "Открепить метку от карточки."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Card Labels",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/cards/:cardId/labels",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"cards",
+										":cardId",
+										"labels"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Получить метки карточки."
+							},
+							"response": []
+						}
+					],
+					"description": "Управление метками доски и привязка к карточкам."
+				},
+				{
+					"name": "Checklists",
+					"item": [
+						{
+							"name": "Create Checklist",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var json = pm.response.json();",
+											"    pm.collectionVariables.set('checklist_id', json.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"TODO\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/cards/:cardId/checklists",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"cards",
+										":cardId",
+										"checklists"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Создать чеклист для карточки.\n\nchecklist_id автоматически сохраняется в переменные коллекции."
+							},
+							"response": []
+						},
+						{
+							"name": "List Checklists",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/cards/:cardId/checklists",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"cards",
+										":cardId",
+										"checklists"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Получить чеклисты карточки."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Checklist",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Updated\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/checklists/:checklistId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"checklists",
+										":checklistId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "checklistId",
+											"value": "{{checklist_id}}"
+										}
+									]
+								},
+								"description": "Обновить название чеклиста."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Checklist",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/checklists/:checklistId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"checklists",
+										":checklistId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "checklistId",
+											"value": "{{checklist_id}}"
+										}
+									]
+								},
+								"description": "Удалить чеклист."
+							},
+							"response": []
+						},
+						{
+							"name": "Create Checklist Item",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var json = pm.response.json();",
+											"    pm.collectionVariables.set('item_id', json.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Item 1\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/checklists/:checklistId/items",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"checklists",
+										":checklistId",
+										"items"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "checklistId",
+											"value": "{{checklist_id}}"
+										}
+									]
+								},
+								"description": "Создать элемент чеклиста.\n\nitem_id автоматически сохраняется в переменные коллекции."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Checklist Item",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Updated item\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/checklist-items/:itemId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"checklist-items",
+										":itemId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "itemId",
+											"value": "{{item_id}}"
+										}
+									]
+								},
+								"description": "Обновить элемент чеклиста."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Checklist Item",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/checklist-items/:itemId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"checklist-items",
+										":itemId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "itemId",
+											"value": "{{item_id}}"
+										}
+									]
+								},
+								"description": "Удалить элемент чеклиста."
+							},
+							"response": []
+						},
+						{
+							"name": "Toggle Checklist Item",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/checklist-items/:itemId/toggle",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"checklist-items",
+										":itemId",
+										"toggle"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "itemId",
+											"value": "{{item_id}}"
+										}
+									]
+								},
+								"description": "Переключить состояние элемента чеклиста (done/undone)."
+							},
+							"response": []
+						}
+					],
+					"description": "Управление чеклистами и их элементами."
+				},
+				{
+					"name": "Card Links (Subtasks)",
+					"item": [
+						{
+							"name": "Create Card Link",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var json = pm.response.json();",
+											"    pm.collectionVariables.set('link_id', json.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"child_id\": \"{{child_card_id}}\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/cards/:cardId/links",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"cards",
+										":cardId",
+										"links"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Создать связь родитель-потомок между карточками.\n\nlink_id автоматически сохраняется в переменные коллекции."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Card Link",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/card-links/:linkId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"card-links",
+										":linkId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "linkId",
+											"value": "{{link_id}}"
+										}
+									]
+								},
+								"description": "Удалить связь между карточками."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Card Children",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/cards/:cardId/children",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"cards",
+										":cardId",
+										"children"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Получить дочерние карточки (подзадачи)."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Card Parents",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/cards/:cardId/parents",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"cards",
+										":cardId",
+										"parents"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Получить родительские карточки."
+							},
+							"response": []
+						}
+					],
+					"description": "Управление связями между карточками (parent/child, подзадачи)."
+				},
+				{
+					"name": "Custom Fields",
+					"item": [
+						{
+							"name": "Create Custom Field",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var json = pm.response.json();",
+											"    pm.collectionVariables.set('field_id', json.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Sprint\",\n  \"field_type\": \"dropdown\",\n  \"options\": [\"Sprint 1\", \"Sprint 2\"]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/custom-fields",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"custom-fields"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Создать кастомное поле для доски.\n\nfield_type: text, number, date, dropdown\n\nfield_id автоматически сохраняется в переменные коллекции."
+							},
+							"response": []
+						},
+						{
+							"name": "List Custom Fields",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/custom-fields",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"custom-fields"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Получить список кастомных полей доски."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Custom Field",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated\",\n  \"options\": [\"Sprint 1\", \"Sprint 2\", \"Sprint 3\"]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/custom-fields/:fieldId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"custom-fields",
+										":fieldId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "fieldId",
+											"value": "{{field_id}}"
+										}
+									]
+								},
+								"description": "Обновить кастомное поле (название, опции)."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Custom Field",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/custom-fields/:fieldId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"custom-fields",
+										":fieldId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "fieldId",
+											"value": "{{field_id}}"
+										}
+									]
+								},
+								"description": "Удалить кастомное поле."
+							},
+							"response": []
+						},
+						{
+							"name": "Set Card Custom Field Value",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"value_text\": \"Sprint 1\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/cards/:cardId/custom-fields/:fieldId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"cards",
+										":cardId",
+										"custom-fields",
+										":fieldId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										},
+										{
+											"key": "fieldId",
+											"value": "{{field_id}}"
+										}
+									]
+								},
+								"description": "Установить значение кастомного поля для карточки."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Card Custom Fields",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/cards/:cardId/custom-fields",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"cards",
+										":cardId",
+										"custom-fields"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "cardId",
+											"value": "{{card_id}}"
+										}
+									]
+								},
+								"description": "Получить значения кастомных полей карточки."
+							},
+							"response": []
+						}
+					],
+					"description": "Управление кастомными полями доски и значениями на карточках."
+				},
+				{
+					"name": "Automation Rules",
+					"item": [
+						{
+							"name": "Create Automation Rule",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var json = pm.response.json();",
+											"    pm.collectionVariables.set('rule_id', json.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Auto-move done\",\n  \"trigger_type\": \"card_moved_to_column\",\n  \"trigger_config\": {\"column_id\": \"{{column_id}}\"},\n  \"action_type\": \"set_priority\",\n  \"action_config\": {\"priority\": \"high\"}\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/automations",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"automations"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Создать правило автоматизации.\n\ntrigger_type: card_moved_to_column, card_created, label_added, due_date_approaching, checklist_completed\naction_type: set_priority, move_card, add_label, assign_member, send_notification\n\nrule_id автоматически сохраняется в переменные коллекции."
+							},
+							"response": []
+						},
+						{
+							"name": "List Automation Rules",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/automations",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"automations"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Получить список правил автоматизации доски."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Automation Rule",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated\",\n  \"enabled\": false\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/automations/:ruleId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"automations",
+										":ruleId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "ruleId",
+											"value": "{{rule_id}}"
+										}
+									]
+								},
+								"description": "Обновить правило автоматизации (название, вкл/выкл)."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Automation Rule",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/automations/:ruleId",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"automations",
+										":ruleId"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "ruleId",
+											"value": "{{rule_id}}"
+										}
+									]
+								},
+								"description": "Удалить правило автоматизации."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Automation Rule History",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/automations/:ruleId/history",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"automations",
+										":ruleId",
+										"history"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										},
+										{
+											"key": "ruleId",
+											"value": "{{rule_id}}"
+										}
+									]
+								},
+								"description": "Получить историю срабатываний правила автоматизации."
+							},
+							"response": []
+						}
+					],
+					"description": "Управление правилами автоматизации доски."
 				}
 			],
 			"description": "Эндпоинты Board Service для управления досками, колонками, карточками и участниками.",

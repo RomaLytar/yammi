@@ -3319,7 +3319,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"name\": \"Sprint\",\n  \"field_type\": \"dropdown\",\n  \"options\": [\"Sprint 1\", \"Sprint 2\"]\n}"
+									"raw": "{\n  \"name\": \"Sprint\",\n  \"field_type\": \"dropdown\",\n  \"options\": [\"Sprint 1\", \"Sprint 2\"],\n  \"required\": false\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/boards/:boardId/custom-fields",
@@ -3404,7 +3404,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"name\": \"Updated\",\n  \"options\": [\"Sprint 1\", \"Sprint 2\", \"Sprint 3\"]\n}"
+									"raw": "{\n  \"name\": \"Updated\",\n  \"options\": [\"A\", \"B\", \"C\"],\n  \"required\": true\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/boards/:boardId/custom-fields/:fieldId",
@@ -3621,7 +3621,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"name\": \"Auto-move done\",\n  \"trigger_type\": \"card_moved_to_column\",\n  \"trigger_config\": {\"column_id\": \"{{column_id}}\"},\n  \"action_type\": \"set_priority\",\n  \"action_config\": {\"priority\": \"high\"}\n}"
+									"raw": "{\n  \"name\": \"Auto-move done\",\n  \"trigger_type\": \"card_moved_to_column\",\n  \"trigger_config\": {\"column_id\": \"uuid-here\"},\n  \"action_type\": \"set_priority\",\n  \"action_config\": {\"priority\": \"high\"}\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/boards/:boardId/automations",

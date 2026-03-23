@@ -90,6 +90,15 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("GET /api/v1/cards/{id}/attachments", rateLimit(requireAuth(http.HandlerFunc(board.ListAttachments))))
 	mux.Handle("DELETE /api/v1/attachments/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteAttachment))))
 
+	// Label routes
+	mux.Handle("POST /api/v1/boards/{id}/labels", rateLimit(requireAuth(http.HandlerFunc(board.CreateLabel))))
+	mux.Handle("GET /api/v1/boards/{id}/labels", rateLimit(requireAuth(http.HandlerFunc(board.ListLabels))))
+	mux.Handle("PUT /api/v1/boards/{boardId}/labels/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateLabel))))
+	mux.Handle("DELETE /api/v1/boards/{boardId}/labels/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteLabel))))
+	mux.Handle("POST /api/v1/boards/{boardId}/cards/{cardId}/labels", rateLimit(requireAuth(http.HandlerFunc(board.AddLabelToCard))))
+	mux.Handle("DELETE /api/v1/boards/{boardId}/cards/{cardId}/labels/{labelId}", rateLimit(requireAuth(http.HandlerFunc(board.RemoveLabelFromCard))))
+	mux.Handle("GET /api/v1/boards/{boardId}/cards/{cardId}/labels", rateLimit(requireAuth(http.HandlerFunc(board.GetCardLabels))))
+
 	// Comment routes
 	comment := NewCommentHandler(clients.CommentClient)
 	mux.Handle("POST /api/v1/cards/{id}/comments", rateLimit(requireAuth(http.HandlerFunc(comment.CreateComment))))

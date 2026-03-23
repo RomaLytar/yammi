@@ -164,6 +164,24 @@ func mapActivitiesToProto(activities []*domain.Activity) []*boardpb.ActivityEntr
 	return result
 }
 
+func mapLabelToProto(l *domain.Label) *boardpb.Label {
+	return &boardpb.Label{
+		Id:        l.ID,
+		BoardId:   l.BoardID,
+		Name:      l.Name,
+		Color:     l.Color,
+		CreatedAt: timestamppb.New(l.CreatedAt),
+	}
+}
+
+func mapLabelsToProto(labels []*domain.Label) []*boardpb.Label {
+	result := make([]*boardpb.Label, len(labels))
+	for i, l := range labels {
+		result[i] = mapLabelToProto(l)
+	}
+	return result
+}
+
 // ============================================================================
 // Error Mapping (domain errors → gRPC codes)
 // ============================================================================
@@ -174,7 +192,8 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrColumnNotFound) ||
 		errors.Is(err, domain.ErrCardNotFound) ||
 		errors.Is(err, domain.ErrMemberNotFound) ||
-		errors.Is(err, domain.ErrAttachmentNotFound) {
+		errors.Is(err, domain.ErrAttachmentNotFound) ||
+		errors.Is(err, domain.ErrLabelNotFound) {
 		return status.Error(codes.NotFound, err.Error())
 	}
 
@@ -197,17 +216,22 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrFileTooLarge) ||
 		errors.Is(err, domain.ErrEmptyFileName) ||
 		errors.Is(err, domain.ErrInvalidPriority) ||
-		errors.Is(err, domain.ErrInvalidTaskType) {
+		errors.Is(err, domain.ErrInvalidTaskType) ||
+		errors.Is(err, domain.ErrEmptyLabelName) ||
+		errors.Is(err, domain.ErrInvalidColor) {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	// ResourceExhausted errors
-	if errors.Is(err, domain.ErrMaxAttachmentsReached) {
+	if errors.Is(err, domain.ErrMaxAttachmentsReached) ||
+		errors.Is(err, domain.ErrMaxLabelsReached) {
 		return status.Error(codes.ResourceExhausted, err.Error())
 	}
 
 	// AlreadyExists errors
-	if errors.Is(err, domain.ErrMemberExists) {
+	if errors.Is(err, domain.ErrMemberExists) ||
+		errors.Is(err, domain.ErrLabelExists) ||
+		errors.Is(err, domain.ErrLabelAlreadyOnCard) {
 		return status.Error(codes.AlreadyExists, err.Error())
 	}
 

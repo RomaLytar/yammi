@@ -46,6 +46,15 @@ service BoardService {
   rpc GetDownloadURL(GetDownloadURLRequest) returns (GetDownloadURLResponse);
   rpc ListAttachments(ListAttachmentsRequest) returns (ListAttachmentsResponse);
   rpc DeleteAttachment(DeleteAttachmentRequest) returns (google.protobuf.Empty);
+
+  // Label operations
+  rpc CreateLabel(CreateLabelRequest) returns (CreateLabelResponse);
+  rpc ListLabels(ListLabelsRequest) returns (ListLabelsResponse);
+  rpc UpdateLabel(UpdateLabelRequest) returns (UpdateLabelResponse);
+  rpc DeleteLabel(DeleteLabelRequest) returns (google.protobuf.Empty);
+  rpc AddLabelToCard(AddLabelToCardRequest) returns (google.protobuf.Empty);
+  rpc RemoveLabelFromCard(RemoveLabelFromCardRequest) returns (google.protobuf.Empty);
+  rpc GetCardLabels(GetCardLabelsRequest) returns (GetCardLabelsResponse);
 }
 
 // ============================================================================
@@ -439,4 +448,78 @@ message Attachment {
   string storage_key = 7;
   string uploader_id = 8;
   google.protobuf.Timestamp created_at = 9;
+}
+
+message Label {
+  string id = 1;
+  string board_id = 2;
+  string name = 3;
+  string color = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+// ============================================================================
+// Label Messages
+// ============================================================================
+
+message CreateLabelRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string name = 3;
+  string color = 4;
+}
+
+message CreateLabelResponse {
+  Label label = 1;
+}
+
+message ListLabelsRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message ListLabelsResponse {
+  repeated Label labels = 1;
+}
+
+message UpdateLabelRequest {
+  string label_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string name = 4;
+  string color = 5;
+}
+
+message UpdateLabelResponse {
+  Label label = 1;
+}
+
+message DeleteLabelRequest {
+  string label_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message AddLabelToCardRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string label_id = 3;
+  string user_id = 4;
+}
+
+message RemoveLabelFromCardRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string label_id = 3;
+  string user_id = 4;
+}
+
+message GetCardLabelsRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetCardLabelsResponse {
+  repeated Label labels = 1;
 }

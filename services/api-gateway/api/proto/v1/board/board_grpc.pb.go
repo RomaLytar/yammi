@@ -23,34 +23,41 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BoardService_CreateBoard_FullMethodName      = "/board.v1.BoardService/CreateBoard"
-	BoardService_GetBoard_FullMethodName         = "/board.v1.BoardService/GetBoard"
-	BoardService_ListBoards_FullMethodName       = "/board.v1.BoardService/ListBoards"
-	BoardService_UpdateBoard_FullMethodName      = "/board.v1.BoardService/UpdateBoard"
-	BoardService_DeleteBoard_FullMethodName      = "/board.v1.BoardService/DeleteBoard"
-	BoardService_AddColumn_FullMethodName        = "/board.v1.BoardService/AddColumn"
-	BoardService_GetColumns_FullMethodName       = "/board.v1.BoardService/GetColumns"
-	BoardService_UpdateColumn_FullMethodName     = "/board.v1.BoardService/UpdateColumn"
-	BoardService_DeleteColumn_FullMethodName     = "/board.v1.BoardService/DeleteColumn"
-	BoardService_ReorderColumns_FullMethodName   = "/board.v1.BoardService/ReorderColumns"
-	BoardService_CreateCard_FullMethodName       = "/board.v1.BoardService/CreateCard"
-	BoardService_GetCard_FullMethodName          = "/board.v1.BoardService/GetCard"
-	BoardService_GetCards_FullMethodName         = "/board.v1.BoardService/GetCards"
-	BoardService_UpdateCard_FullMethodName       = "/board.v1.BoardService/UpdateCard"
-	BoardService_MoveCard_FullMethodName         = "/board.v1.BoardService/MoveCard"
-	BoardService_DeleteCard_FullMethodName       = "/board.v1.BoardService/DeleteCard"
-	BoardService_AssignCard_FullMethodName       = "/board.v1.BoardService/AssignCard"
-	BoardService_UnassignCard_FullMethodName     = "/board.v1.BoardService/UnassignCard"
-	BoardService_GetCardActivity_FullMethodName  = "/board.v1.BoardService/GetCardActivity"
-	BoardService_AddMember_FullMethodName        = "/board.v1.BoardService/AddMember"
-	BoardService_RemoveMember_FullMethodName     = "/board.v1.BoardService/RemoveMember"
-	BoardService_ListMembers_FullMethodName      = "/board.v1.BoardService/ListMembers"
-	BoardService_IsMember_FullMethodName         = "/board.v1.BoardService/IsMember"
-	BoardService_CreateUploadURL_FullMethodName  = "/board.v1.BoardService/CreateUploadURL"
-	BoardService_ConfirmUpload_FullMethodName    = "/board.v1.BoardService/ConfirmUpload"
-	BoardService_GetDownloadURL_FullMethodName   = "/board.v1.BoardService/GetDownloadURL"
-	BoardService_ListAttachments_FullMethodName  = "/board.v1.BoardService/ListAttachments"
-	BoardService_DeleteAttachment_FullMethodName = "/board.v1.BoardService/DeleteAttachment"
+	BoardService_CreateBoard_FullMethodName         = "/board.v1.BoardService/CreateBoard"
+	BoardService_GetBoard_FullMethodName            = "/board.v1.BoardService/GetBoard"
+	BoardService_ListBoards_FullMethodName          = "/board.v1.BoardService/ListBoards"
+	BoardService_UpdateBoard_FullMethodName         = "/board.v1.BoardService/UpdateBoard"
+	BoardService_DeleteBoard_FullMethodName         = "/board.v1.BoardService/DeleteBoard"
+	BoardService_AddColumn_FullMethodName           = "/board.v1.BoardService/AddColumn"
+	BoardService_GetColumns_FullMethodName          = "/board.v1.BoardService/GetColumns"
+	BoardService_UpdateColumn_FullMethodName        = "/board.v1.BoardService/UpdateColumn"
+	BoardService_DeleteColumn_FullMethodName        = "/board.v1.BoardService/DeleteColumn"
+	BoardService_ReorderColumns_FullMethodName      = "/board.v1.BoardService/ReorderColumns"
+	BoardService_CreateCard_FullMethodName          = "/board.v1.BoardService/CreateCard"
+	BoardService_GetCard_FullMethodName             = "/board.v1.BoardService/GetCard"
+	BoardService_GetCards_FullMethodName            = "/board.v1.BoardService/GetCards"
+	BoardService_UpdateCard_FullMethodName          = "/board.v1.BoardService/UpdateCard"
+	BoardService_MoveCard_FullMethodName            = "/board.v1.BoardService/MoveCard"
+	BoardService_DeleteCard_FullMethodName          = "/board.v1.BoardService/DeleteCard"
+	BoardService_AssignCard_FullMethodName          = "/board.v1.BoardService/AssignCard"
+	BoardService_UnassignCard_FullMethodName        = "/board.v1.BoardService/UnassignCard"
+	BoardService_GetCardActivity_FullMethodName     = "/board.v1.BoardService/GetCardActivity"
+	BoardService_AddMember_FullMethodName           = "/board.v1.BoardService/AddMember"
+	BoardService_RemoveMember_FullMethodName        = "/board.v1.BoardService/RemoveMember"
+	BoardService_ListMembers_FullMethodName         = "/board.v1.BoardService/ListMembers"
+	BoardService_IsMember_FullMethodName            = "/board.v1.BoardService/IsMember"
+	BoardService_CreateUploadURL_FullMethodName     = "/board.v1.BoardService/CreateUploadURL"
+	BoardService_ConfirmUpload_FullMethodName       = "/board.v1.BoardService/ConfirmUpload"
+	BoardService_GetDownloadURL_FullMethodName      = "/board.v1.BoardService/GetDownloadURL"
+	BoardService_ListAttachments_FullMethodName     = "/board.v1.BoardService/ListAttachments"
+	BoardService_DeleteAttachment_FullMethodName    = "/board.v1.BoardService/DeleteAttachment"
+	BoardService_CreateLabel_FullMethodName         = "/board.v1.BoardService/CreateLabel"
+	BoardService_ListLabels_FullMethodName          = "/board.v1.BoardService/ListLabels"
+	BoardService_UpdateLabel_FullMethodName         = "/board.v1.BoardService/UpdateLabel"
+	BoardService_DeleteLabel_FullMethodName         = "/board.v1.BoardService/DeleteLabel"
+	BoardService_AddLabelToCard_FullMethodName      = "/board.v1.BoardService/AddLabelToCard"
+	BoardService_RemoveLabelFromCard_FullMethodName = "/board.v1.BoardService/RemoveLabelFromCard"
+	BoardService_GetCardLabels_FullMethodName       = "/board.v1.BoardService/GetCardLabels"
 )
 
 // BoardServiceClient is the client API for BoardService service.
@@ -90,6 +97,14 @@ type BoardServiceClient interface {
 	GetDownloadURL(ctx context.Context, in *GetDownloadURLRequest, opts ...grpc.CallOption) (*GetDownloadURLResponse, error)
 	ListAttachments(ctx context.Context, in *ListAttachmentsRequest, opts ...grpc.CallOption) (*ListAttachmentsResponse, error)
 	DeleteAttachment(ctx context.Context, in *DeleteAttachmentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Label operations
+	CreateLabel(ctx context.Context, in *CreateLabelRequest, opts ...grpc.CallOption) (*CreateLabelResponse, error)
+	ListLabels(ctx context.Context, in *ListLabelsRequest, opts ...grpc.CallOption) (*ListLabelsResponse, error)
+	UpdateLabel(ctx context.Context, in *UpdateLabelRequest, opts ...grpc.CallOption) (*UpdateLabelResponse, error)
+	DeleteLabel(ctx context.Context, in *DeleteLabelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	AddLabelToCard(ctx context.Context, in *AddLabelToCardRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	RemoveLabelFromCard(ctx context.Context, in *RemoveLabelFromCardRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetCardLabels(ctx context.Context, in *GetCardLabelsRequest, opts ...grpc.CallOption) (*GetCardLabelsResponse, error)
 }
 
 type boardServiceClient struct {
@@ -380,6 +395,76 @@ func (c *boardServiceClient) DeleteAttachment(ctx context.Context, in *DeleteAtt
 	return out, nil
 }
 
+func (c *boardServiceClient) CreateLabel(ctx context.Context, in *CreateLabelRequest, opts ...grpc.CallOption) (*CreateLabelResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateLabelResponse)
+	err := c.cc.Invoke(ctx, BoardService_CreateLabel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) ListLabels(ctx context.Context, in *ListLabelsRequest, opts ...grpc.CallOption) (*ListLabelsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListLabelsResponse)
+	err := c.cc.Invoke(ctx, BoardService_ListLabels_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) UpdateLabel(ctx context.Context, in *UpdateLabelRequest, opts ...grpc.CallOption) (*UpdateLabelResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateLabelResponse)
+	err := c.cc.Invoke(ctx, BoardService_UpdateLabel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) DeleteLabel(ctx context.Context, in *DeleteLabelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, BoardService_DeleteLabel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) AddLabelToCard(ctx context.Context, in *AddLabelToCardRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, BoardService_AddLabelToCard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) RemoveLabelFromCard(ctx context.Context, in *RemoveLabelFromCardRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, BoardService_RemoveLabelFromCard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) GetCardLabels(ctx context.Context, in *GetCardLabelsRequest, opts ...grpc.CallOption) (*GetCardLabelsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCardLabelsResponse)
+	err := c.cc.Invoke(ctx, BoardService_GetCardLabels_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BoardServiceServer is the server API for BoardService service.
 // All implementations must embed UnimplementedBoardServiceServer
 // for forward compatibility.
@@ -417,6 +502,14 @@ type BoardServiceServer interface {
 	GetDownloadURL(context.Context, *GetDownloadURLRequest) (*GetDownloadURLResponse, error)
 	ListAttachments(context.Context, *ListAttachmentsRequest) (*ListAttachmentsResponse, error)
 	DeleteAttachment(context.Context, *DeleteAttachmentRequest) (*emptypb.Empty, error)
+	// Label operations
+	CreateLabel(context.Context, *CreateLabelRequest) (*CreateLabelResponse, error)
+	ListLabels(context.Context, *ListLabelsRequest) (*ListLabelsResponse, error)
+	UpdateLabel(context.Context, *UpdateLabelRequest) (*UpdateLabelResponse, error)
+	DeleteLabel(context.Context, *DeleteLabelRequest) (*emptypb.Empty, error)
+	AddLabelToCard(context.Context, *AddLabelToCardRequest) (*emptypb.Empty, error)
+	RemoveLabelFromCard(context.Context, *RemoveLabelFromCardRequest) (*emptypb.Empty, error)
+	GetCardLabels(context.Context, *GetCardLabelsRequest) (*GetCardLabelsResponse, error)
 	mustEmbedUnimplementedBoardServiceServer()
 }
 
@@ -510,6 +603,27 @@ func (UnimplementedBoardServiceServer) ListAttachments(context.Context, *ListAtt
 }
 func (UnimplementedBoardServiceServer) DeleteAttachment(context.Context, *DeleteAttachmentRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteAttachment not implemented")
+}
+func (UnimplementedBoardServiceServer) CreateLabel(context.Context, *CreateLabelRequest) (*CreateLabelResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateLabel not implemented")
+}
+func (UnimplementedBoardServiceServer) ListLabels(context.Context, *ListLabelsRequest) (*ListLabelsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListLabels not implemented")
+}
+func (UnimplementedBoardServiceServer) UpdateLabel(context.Context, *UpdateLabelRequest) (*UpdateLabelResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateLabel not implemented")
+}
+func (UnimplementedBoardServiceServer) DeleteLabel(context.Context, *DeleteLabelRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteLabel not implemented")
+}
+func (UnimplementedBoardServiceServer) AddLabelToCard(context.Context, *AddLabelToCardRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method AddLabelToCard not implemented")
+}
+func (UnimplementedBoardServiceServer) RemoveLabelFromCard(context.Context, *RemoveLabelFromCardRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method RemoveLabelFromCard not implemented")
+}
+func (UnimplementedBoardServiceServer) GetCardLabels(context.Context, *GetCardLabelsRequest) (*GetCardLabelsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetCardLabels not implemented")
 }
 func (UnimplementedBoardServiceServer) mustEmbedUnimplementedBoardServiceServer() {}
 func (UnimplementedBoardServiceServer) testEmbeddedByValue()                      {}
@@ -1036,6 +1150,132 @@ func _BoardService_DeleteAttachment_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BoardService_CreateLabel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateLabelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).CreateLabel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_CreateLabel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).CreateLabel(ctx, req.(*CreateLabelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_ListLabels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListLabelsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).ListLabels(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_ListLabels_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).ListLabels(ctx, req.(*ListLabelsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_UpdateLabel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateLabelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).UpdateLabel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_UpdateLabel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).UpdateLabel(ctx, req.(*UpdateLabelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_DeleteLabel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteLabelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).DeleteLabel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_DeleteLabel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).DeleteLabel(ctx, req.(*DeleteLabelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_AddLabelToCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddLabelToCardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).AddLabelToCard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_AddLabelToCard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).AddLabelToCard(ctx, req.(*AddLabelToCardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_RemoveLabelFromCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveLabelFromCardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).RemoveLabelFromCard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_RemoveLabelFromCard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).RemoveLabelFromCard(ctx, req.(*RemoveLabelFromCardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_GetCardLabels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCardLabelsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).GetCardLabels(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_GetCardLabels_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).GetCardLabels(ctx, req.(*GetCardLabelsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BoardService_ServiceDesc is the grpc.ServiceDesc for BoardService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1154,6 +1394,34 @@ var BoardService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteAttachment",
 			Handler:    _BoardService_DeleteAttachment_Handler,
+		},
+		{
+			MethodName: "CreateLabel",
+			Handler:    _BoardService_CreateLabel_Handler,
+		},
+		{
+			MethodName: "ListLabels",
+			Handler:    _BoardService_ListLabels_Handler,
+		},
+		{
+			MethodName: "UpdateLabel",
+			Handler:    _BoardService_UpdateLabel_Handler,
+		},
+		{
+			MethodName: "DeleteLabel",
+			Handler:    _BoardService_DeleteLabel_Handler,
+		},
+		{
+			MethodName: "AddLabelToCard",
+			Handler:    _BoardService_AddLabelToCard_Handler,
+		},
+		{
+			MethodName: "RemoveLabelFromCard",
+			Handler:    _BoardService_RemoveLabelFromCard_Handler,
+		},
+		{
+			MethodName: "GetCardLabels",
+			Handler:    _BoardService_GetCardLabels_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

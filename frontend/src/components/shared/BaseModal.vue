@@ -3,7 +3,7 @@ import { onMounted, onUnmounted } from 'vue'
 
 defineProps<{
   title?: string
-  size?: 'default' | 'large' | 'fullscreen'
+  size?: 'default' | 'medium' | 'large' | 'fullscreen'
 }>()
 const emit = defineEmits<{ close: [] }>()
 
@@ -71,6 +71,10 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   border: 1px solid var(--color-border-light);
   display: flex;
   flex-direction: column;
+}
+
+.modal--medium {
+  max-width: 720px;
 }
 
 .modal--large {

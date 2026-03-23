@@ -20,6 +20,11 @@ const (
 	SubjectMemberRemoved        = "member.removed"
 	SubjectAttachmentUploaded   = "attachment.uploaded"
 	SubjectAttachmentDeleted    = "attachment.deleted"
+	SubjectLabelCreated         = "label.created"
+	SubjectLabelUpdated         = "label.updated"
+	SubjectLabelDeleted         = "label.deleted"
+	SubjectCardLabelAdded       = "card.label.added"
+	SubjectCardLabelRemoved     = "card.label.removed"
 	StreamBoards                = "BOARDS"
 )
 
@@ -229,4 +234,60 @@ type AttachmentDeleted struct {
 	BoardID      string    `json:"board_id"`
 	ActorID      string    `json:"actor_id"`
 	FileName     string    `json:"file_name"`
+}
+
+// LabelCreated событие создания метки
+type LabelCreated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	LabelID      string    `json:"label_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Name         string    `json:"name"`
+	Color        string    `json:"color"`
+}
+
+// LabelUpdated событие обновления метки
+type LabelUpdated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	LabelID      string    `json:"label_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Name         string    `json:"name"`
+	Color        string    `json:"color"`
+}
+
+// LabelDeleted событие удаления метки
+type LabelDeleted struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	LabelID      string    `json:"label_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+// CardLabelAdded событие назначения метки на карточку
+type CardLabelAdded struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	LabelID      string    `json:"label_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+// CardLabelRemoved событие снятия метки с карточки
+type CardLabelRemoved struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	LabelID      string    `json:"label_id"`
+	ActorID      string    `json:"actor_id"`
 }

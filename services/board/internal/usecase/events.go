@@ -198,6 +198,57 @@ type AttachmentDeleted struct {
 	FileName     string    `json:"file_name"`
 }
 
+type LabelCreated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	LabelID      string    `json:"label_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Name         string    `json:"name"`
+	Color        string    `json:"color"`
+}
+
+type LabelUpdated struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	LabelID      string    `json:"label_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+	Name         string    `json:"name"`
+	Color        string    `json:"color"`
+}
+
+type LabelDeleted struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	LabelID      string    `json:"label_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type CardLabelAdded struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	LabelID      string    `json:"label_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type CardLabelRemoved struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	CardID       string    `json:"card_id"`
+	BoardID      string    `json:"board_id"`
+	LabelID      string    `json:"label_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
 func generateEventID() string {
 	return uuid.New().String()
 }

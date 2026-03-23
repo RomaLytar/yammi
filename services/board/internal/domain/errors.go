@@ -46,6 +46,16 @@ var (
 	ErrEmptyFileName         = errors.New("file name cannot be empty")
 )
 
+// Label errors
+var (
+	ErrLabelNotFound      = errors.New("label not found")
+	ErrLabelExists        = errors.New("label with this name already exists")
+	ErrEmptyLabelName     = errors.New("label name cannot be empty")
+	ErrInvalidColor       = errors.New("invalid color format")
+	ErrMaxLabelsReached   = errors.New("maximum labels per board reached")
+	ErrLabelAlreadyOnCard = errors.New("label already assigned to card")
+)
+
 // Activity errors
 var (
 	ErrEmptyActorID      = errors.New("actor ID cannot be empty")

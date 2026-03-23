@@ -1,0 +1,4 @@
+[     166ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/v1/notifications/unread-count:0
+[   37832ms] [WARNING] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues. @ http://localhost:5173/node_modules/.vite/deps/chunk-ICIV7LIQ.js?v=7fd4eefd:13663
+[  142778ms] [WARNING] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues. @ http://localhost:5173/node_modules/.vite/deps/chunk-ICIV7LIQ.js?v=7fd4eefd:13663
+[  177887ms] [WARNING] [tiptap warn]: Duplicate extension names found: ['link', 'underline']. This can lead to issues. @ http://localhost:5173/node_modules/.vite/deps/chunk-ICIV7LIQ.js?v=7fd4eefd:13663

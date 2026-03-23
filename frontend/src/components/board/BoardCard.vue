@@ -49,9 +49,7 @@ const boardStore = useBoardStore()
           ×
         </button>
       </div>
-      <p v-if="card.description" class="board-card__description">
-        {{ card.description }}
-      </p>
+      <div v-if="card.description" class="board-card__description" v-html="card.description" />
     </div>
     <!-- Assignee avatar (right side) -->
     <div class="board-card__avatar-wrap">

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useRealtimeConnection } from '@/composables/useRealtimeBoard'
 import { registerHandler, unregisterHandler } from '@/services/realtimeService'
 import type { Card } from '@/types/domain'
+import * as boardsApi from '@/api/boards'
 import type {
   CardCreatedData, CardUpdatedData, CardDeletedData, CardMovedData,
   ColumnCreatedData, ColumnUpdatedData, ColumnDeletedData,
@@ -285,12 +286,44 @@ function handleAddCard(columnId: string) {
   showCreateCardModal.value = true
 }
 
-async function handleCreateCard(data: { title: string; description: string }) {
+async function handleCreateCard(data: { title: string; description: string; assigneeId?: string; files?: File[] }) {
   if (!activeColumnId.value) return
 
   try {
     await boardStore.createCard(activeColumnId.value, data.title, data.description)
     showCreateCardModal.value = false
+
+    // Находим только что созданную карточку
+    const column = boardStore.columns.find(c => c.id === activeColumnId.value)
+    const newCard = column?.cards[column.cards.length - 1]
+
+    if (newCard && boardStore.boardId) {
+      // Назначаем исполнителя если выбран
+      if (data.assigneeId) {
+        try {
+          await boardStore.assignCard(newCard.id, data.assigneeId)
+        } catch (err) {
+          console.error('Failed to assign card:', err)
+        }
+      }
+
+      // Загружаем файлы
+      if (data.files?.length) {
+        for (const file of data.files) {
+          try {
+            const { attachment, uploadUrl } = await boardsApi.createUploadURL(
+              newCard.id, boardStore.boardId, file.name,
+              file.type || 'application/octet-stream', file.size,
+            )
+            await boardsApi.uploadFileToPresignedUrl(uploadUrl, file)
+            await boardsApi.confirmUpload(attachment.id, boardStore.boardId!)
+          } catch (err) {
+            console.error('Failed to upload file:', file.name, err)
+          }
+        }
+      }
+    }
+
     activeColumnId.value = null
   } catch (error) {
     console.error('Failed to create card:', error)
@@ -365,6 +398,44 @@ function closeEditCardModal() {
   showEditCardModal.value = false
   activeCardId.value = null
 }
+
+// --- Drag-to-scroll ---
+const boardContentRef = ref<HTMLElement | null>(null)
+const isDragScrolling = ref(false)
+let dragStartX = 0
+let dragScrollLeft = 0
+let dragMoved = false
+
+function onDragStart(e: MouseEvent) {
+  // Only activate on left mouse button and on the background (not on interactive elements)
+  if (e.button !== 0) return
+  const target = e.target as HTMLElement
+  if (target.closest('button, a, input, textarea, .board-card, .search-select')) return
+
+  const el = boardContentRef.value
+  if (!el) return
+
+  isDragScrolling.value = true
+  dragStartX = e.pageX - el.offsetLeft
+  dragScrollLeft = el.scrollLeft
+  dragMoved = false
+}
+
+function onDragMove(e: MouseEvent) {
+  if (!isDragScrolling.value) return
+  const el = boardContentRef.value
+  if (!el) return
+
+  e.preventDefault()
+  const x = e.pageX - el.offsetLeft
+  const walk = x - dragStartX
+  if (Math.abs(walk) > 3) dragMoved = true
+  el.scrollLeft = dragScrollLeft - walk
+}
+
+function onDragEnd() {
+  isDragScrolling.value = false
+}
 </script>
 
 <template>
@@ -413,7 +484,15 @@ function closeEditCardModal() {
         </div>
       </div>
 
-      <div class="board-page__content">
+      <div
+        ref="boardContentRef"
+        class="board-page__content"
+        :class="{ 'board-page__content--grabbing': isDragScrolling }"
+        @mousedown="onDragStart"
+        @mousemove="onDragMove"
+        @mouseup="onDragEnd"
+        @mouseleave="onDragEnd"
+      >
         <div class="board-columns">
           <BoardColumn
             v-for="column in boardStore.columns"
@@ -492,7 +571,7 @@ function closeEditCardModal() {
 .board-page {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--color-bg);
   overflow: hidden;
   position: relative;
@@ -577,11 +656,18 @@ function closeEditCardModal() {
 
 .board-page__content {
   flex: 1;
+  min-height: 0;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 20px 0;
   position: relative;
   z-index: 1;
+  cursor: grab;
+}
+
+.board-page__content--grabbing {
+  cursor: grabbing;
+  user-select: none;
 }
 
 .board-columns {

@@ -126,6 +126,16 @@ type commentResponse struct {
 	UpdatedAt  string `json:"updated_at"`
 }
 
+// --- Label responses ---
+
+type labelResponse struct {
+	ID        string `json:"id"`
+	BoardID   string `json:"board_id"`
+	Name      string `json:"name"`
+	Color     string `json:"color"`
+	CreatedAt string `json:"created_at"`
+}
+
 // --- Generic responses ---
 
 type statusResponse struct {

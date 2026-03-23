@@ -5,6 +5,7 @@ import BaseModal from '@/components/shared/BaseModal.vue'
 import BaseInput from '@/components/shared/BaseInput.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSearchSelect from '@/components/shared/BaseSearchSelect.vue'
+import RichTextEditor from '@/components/shared/RichTextEditor.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
 import { useBoardStore } from '@/stores/board'
@@ -519,32 +520,50 @@ onMounted(() => {
 <template>
   <BaseModal size="large" @close="handleClose">
     <template #header>
-      <h2 class="ecm-header__title">Карточка</h2>
+      <div class="ecm-header">
+        <div class="ecm-header__icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+          </svg>
+        </div>
+        <h2 class="ecm-header__title">Редактирование</h2>
+      </div>
     </template>
 
     <div class="ecm-layout">
-      <!-- Left column: main content (60%) -->
+      <!-- Left column: main content -->
       <div class="ecm-main">
         <!-- Title -->
         <BaseInput
           v-model="title"
-          label="Название"
           :disabled="loading"
           placeholder="Название карточки"
         />
 
         <!-- Description -->
-        <BaseInput
-          v-model="description"
-          label="Описание"
-          :disabled="loading"
-          type="textarea"
-          placeholder="Описание карточки..."
-        />
+        <div class="ecm-section">
+          <div class="ecm-section__label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="17" y1="10" x2="3" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="17" y1="18" x2="3" y2="18" />
+            </svg>
+            Описание
+          </div>
+          <RichTextEditor
+            v-model="description"
+            :disabled="loading"
+            placeholder="Описание карточки..."
+          />
+        </div>
 
         <!-- Files section -->
         <div class="ecm-section">
-          <h3 class="ecm-section__title">Файлы</h3>
+          <div class="ecm-section__label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            </svg>
+            Файлы
+            <span v-if="attachments.length" class="ecm-badge">{{ attachments.length }}</span>
+          </div>
 
           <!-- Upload area -->
           <div class="ecm-upload">
@@ -556,11 +575,13 @@ onMounted(() => {
                 @change="handleFileSelect"
               />
               <span class="ecm-upload__zone">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/>
-                  <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
+                <div class="ecm-upload__zone-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
                 <span>Прикрепить файл</span>
               </span>
             </label>
@@ -622,7 +643,13 @@ onMounted(() => {
 
         <!-- Comments section -->
         <div class="ecm-section">
-          <h3 class="ecm-section__title">Комментарии</h3>
+          <div class="ecm-section__label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            Комментарии
+            <span v-if="comments.length" class="ecm-badge">{{ comments.length }}</span>
+          </div>
 
           <!-- Comment form -->
           <div class="ecm-comment-form">
@@ -775,7 +802,6 @@ onMounted(() => {
           <BaseButton
             :loading="loading"
             :disabled="!title.trim()"
-            block
             @click="handleUpdate"
           >
             Сохранить
@@ -784,7 +810,6 @@ onMounted(() => {
             v-if="canDelete"
             variant="danger"
             :disabled="loading"
-            block
             @click="handleDelete"
           >
             Удалить
@@ -864,13 +889,30 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* BaseModal size="large" handles width (960px) */
+/* ===== Header ===== */
+.ecm-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-/* ===== Layout ===== */
+.ecm-header__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .ecm-header__title {
   font-size: var(--font-size-lg, 18px);
-  font-weight: 600;
-  letter-spacing: var(--letter-spacing-tight, -0.01em);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .ecm-layout {
@@ -1057,14 +1099,34 @@ onMounted(() => {
 .ecm-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-.ecm-section__title {
-  font-size: 14px;
+.ecm-section__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--color-text, #111827);
-  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+}
+
+.ecm-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--color-primary);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .ecm-section__center {
@@ -1108,20 +1170,37 @@ onMounted(() => {
 .ecm-upload__zone {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px;
-  border: 2px dashed var(--color-border, #d1d5db);
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px dashed var(--color-border, #d1d5db);
   border-radius: var(--radius-md, 10px);
-  font-size: 14px;
-  color: var(--color-text-secondary, #6b7280);
-  transition: all 0.15s;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-tertiary, #9ca3af);
+  transition: all 0.2s;
+}
+
+.ecm-upload__zone-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
 }
 
 .ecm-upload__zone:hover {
-  border-color: var(--color-primary, #6b7c4e);
-  color: var(--color-primary, #6b7c4e);
-  background: rgba(99, 102, 241, 0.04);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.ecm-upload__zone:hover .ecm-upload__zone-icon {
+  background: var(--color-primary);
+  color: white;
 }
 
 .ecm-upload__progress {

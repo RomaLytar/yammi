@@ -82,3 +82,23 @@ func (p *EventPublisher) PublishAttachmentUploaded(ctx context.Context, event us
 func (p *EventPublisher) PublishAttachmentDeleted(ctx context.Context, event usecase.AttachmentDeleted) error {
 	return p.publisher.Publish(ctx, "attachment.deleted", event)
 }
+
+func (p *EventPublisher) PublishLabelCreated(ctx context.Context, event usecase.LabelCreated) error {
+	return p.publisher.Publish(ctx, "label.created", event)
+}
+
+func (p *EventPublisher) PublishLabelUpdated(ctx context.Context, event usecase.LabelUpdated) error {
+	return p.publisher.Publish(ctx, "label.updated", event)
+}
+
+func (p *EventPublisher) PublishLabelDeleted(ctx context.Context, event usecase.LabelDeleted) error {
+	return p.publisher.Publish(ctx, "label.deleted", event)
+}
+
+func (p *EventPublisher) PublishCardLabelAdded(ctx context.Context, event usecase.CardLabelAdded) error {
+	return p.publisher.Publish(ctx, "card.label.added", event)
+}
+
+func (p *EventPublisher) PublishCardLabelRemoved(ctx context.Context, event usecase.CardLabelRemoved) error {
+	return p.publisher.Publish(ctx, "card.label.removed", event)
+}

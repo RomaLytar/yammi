@@ -200,6 +200,16 @@ func (m *MockEventPublisher) PublishCardLabelRemoved(ctx context.Context, event 
 	return args.Error(0)
 }
 
+func (m *MockEventPublisher) PublishCardLinked(ctx context.Context, event CardLinked) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishCardUnlinked(ctx context.Context, event CardUnlinked) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
 func TestCreateBoardUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name        string

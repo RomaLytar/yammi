@@ -249,6 +249,29 @@ type CardLabelRemoved struct {
 	ActorID      string    `json:"actor_id"`
 }
 
+type CardLinked struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	LinkID       string    `json:"link_id"`
+	ParentID     string    `json:"parent_id"`
+	ChildID      string    `json:"child_id"`
+	BoardID      string    `json:"board_id"`
+	LinkType     string    `json:"link_type"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type CardUnlinked struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	LinkID       string    `json:"link_id"`
+	ParentID     string    `json:"parent_id"`
+	ChildID      string    `json:"child_id"`
+	BoardID      string    `json:"board_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
 func generateEventID() string {
 	return uuid.New().String()
 }

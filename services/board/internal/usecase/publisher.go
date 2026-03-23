@@ -26,4 +26,6 @@ type EventPublisher interface {
 	PublishLabelDeleted(ctx context.Context, event LabelDeleted) error
 	PublishCardLabelAdded(ctx context.Context, event CardLabelAdded) error
 	PublishCardLabelRemoved(ctx context.Context, event CardLabelRemoved) error
+	PublishCardLinked(ctx context.Context, event CardLinked) error
+	PublishCardUnlinked(ctx context.Context, event CardUnlinked) error
 }

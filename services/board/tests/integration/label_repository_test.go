@@ -238,7 +238,7 @@ func TestLabelRepository_AddToCard(t *testing.T) {
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
-	card, _ := domain.NewCard(column.ID, "Task 1", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column.ID, "Task 1", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	label, _ := domain.NewLabel("", board.ID, "Bug", "#ef4444")
@@ -291,7 +291,7 @@ func TestLabelRepository_AddToCard_Duplicate(t *testing.T) {
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
-	card, _ := domain.NewCard(column.ID, "Task 1", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column.ID, "Task 1", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	label, _ := domain.NewLabel("", board.ID, "Bug", "#ef4444")
@@ -333,7 +333,7 @@ func TestLabelRepository_RemoveFromCard(t *testing.T) {
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
-	card, _ := domain.NewCard(column.ID, "Task 1", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column.ID, "Task 1", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	label, _ := domain.NewLabel("", board.ID, "Bug", "#ef4444")
@@ -379,7 +379,7 @@ func TestLabelRepository_ListByCardID(t *testing.T) {
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
-	card, _ := domain.NewCard(column.ID, "Task 1", "Desc", "n", nil, ownerID)
+	card, _ := domain.NewCard(column.ID, "Task 1", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
 	// Create multiple labels and assign to card

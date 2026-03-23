@@ -4378,6 +4378,486 @@ func (x *GetCardLabelsResponse) GetLabels() []*Label {
 	return nil
 }
 
+type CardLink struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Id              string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ParentId        string                 `protobuf:"bytes,2,opt,name=parent_id,json=parentId,proto3" json:"parent_id,omitempty"`
+	ChildId         string                 `protobuf:"bytes,3,opt,name=child_id,json=childId,proto3" json:"child_id,omitempty"`
+	BoardId         string                 `protobuf:"bytes,4,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	LinkType        string                 `protobuf:"bytes,5,opt,name=link_type,json=linkType,proto3" json:"link_type,omitempty"`
+	ChildTitle      string                 `protobuf:"bytes,6,opt,name=child_title,json=childTitle,proto3" json:"child_title,omitempty"`                  // denormalized for display
+	ChildColumnName string                 `protobuf:"bytes,7,opt,name=child_column_name,json=childColumnName,proto3" json:"child_column_name,omitempty"` // denormalized for display
+	CreatedAt       *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *CardLink) Reset() {
+	*x = CardLink{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[70]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CardLink) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CardLink) ProtoMessage() {}
+
+func (x *CardLink) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[70]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CardLink.ProtoReflect.Descriptor instead.
+func (*CardLink) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{70}
+}
+
+func (x *CardLink) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CardLink) GetParentId() string {
+	if x != nil {
+		return x.ParentId
+	}
+	return ""
+}
+
+func (x *CardLink) GetChildId() string {
+	if x != nil {
+		return x.ChildId
+	}
+	return ""
+}
+
+func (x *CardLink) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *CardLink) GetLinkType() string {
+	if x != nil {
+		return x.LinkType
+	}
+	return ""
+}
+
+func (x *CardLink) GetChildTitle() string {
+	if x != nil {
+		return x.ChildTitle
+	}
+	return ""
+}
+
+func (x *CardLink) GetChildColumnName() string {
+	if x != nil {
+		return x.ChildColumnName
+	}
+	return ""
+}
+
+func (x *CardLink) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+type LinkCardsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BoardId       string                 `protobuf:"bytes,1,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ParentId      string                 `protobuf:"bytes,3,opt,name=parent_id,json=parentId,proto3" json:"parent_id,omitempty"`
+	ChildId       string                 `protobuf:"bytes,4,opt,name=child_id,json=childId,proto3" json:"child_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LinkCardsRequest) Reset() {
+	*x = LinkCardsRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[71]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LinkCardsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LinkCardsRequest) ProtoMessage() {}
+
+func (x *LinkCardsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[71]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LinkCardsRequest.ProtoReflect.Descriptor instead.
+func (*LinkCardsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{71}
+}
+
+func (x *LinkCardsRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *LinkCardsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *LinkCardsRequest) GetParentId() string {
+	if x != nil {
+		return x.ParentId
+	}
+	return ""
+}
+
+func (x *LinkCardsRequest) GetChildId() string {
+	if x != nil {
+		return x.ChildId
+	}
+	return ""
+}
+
+type LinkCardsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Link          *CardLink              `protobuf:"bytes,1,opt,name=link,proto3" json:"link,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LinkCardsResponse) Reset() {
+	*x = LinkCardsResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[72]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LinkCardsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LinkCardsResponse) ProtoMessage() {}
+
+func (x *LinkCardsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[72]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LinkCardsResponse.ProtoReflect.Descriptor instead.
+func (*LinkCardsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{72}
+}
+
+func (x *LinkCardsResponse) GetLink() *CardLink {
+	if x != nil {
+		return x.Link
+	}
+	return nil
+}
+
+type UnlinkCardsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	LinkId        string                 `protobuf:"bytes,1,opt,name=link_id,json=linkId,proto3" json:"link_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnlinkCardsRequest) Reset() {
+	*x = UnlinkCardsRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[73]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnlinkCardsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnlinkCardsRequest) ProtoMessage() {}
+
+func (x *UnlinkCardsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[73]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnlinkCardsRequest.ProtoReflect.Descriptor instead.
+func (*UnlinkCardsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{73}
+}
+
+func (x *UnlinkCardsRequest) GetLinkId() string {
+	if x != nil {
+		return x.LinkId
+	}
+	return ""
+}
+
+func (x *UnlinkCardsRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *UnlinkCardsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetCardChildrenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CardId        string                 `protobuf:"bytes,1,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCardChildrenRequest) Reset() {
+	*x = GetCardChildrenRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[74]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCardChildrenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCardChildrenRequest) ProtoMessage() {}
+
+func (x *GetCardChildrenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[74]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCardChildrenRequest.ProtoReflect.Descriptor instead.
+func (*GetCardChildrenRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{74}
+}
+
+func (x *GetCardChildrenRequest) GetCardId() string {
+	if x != nil {
+		return x.CardId
+	}
+	return ""
+}
+
+func (x *GetCardChildrenRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *GetCardChildrenRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetCardChildrenResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Links         []*CardLink            `protobuf:"bytes,1,rep,name=links,proto3" json:"links,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCardChildrenResponse) Reset() {
+	*x = GetCardChildrenResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[75]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCardChildrenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCardChildrenResponse) ProtoMessage() {}
+
+func (x *GetCardChildrenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[75]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCardChildrenResponse.ProtoReflect.Descriptor instead.
+func (*GetCardChildrenResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{75}
+}
+
+func (x *GetCardChildrenResponse) GetLinks() []*CardLink {
+	if x != nil {
+		return x.Links
+	}
+	return nil
+}
+
+type GetCardParentsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CardId        string                 `protobuf:"bytes,1,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
+	BoardId       string                 `protobuf:"bytes,2,opt,name=board_id,json=boardId,proto3" json:"board_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCardParentsRequest) Reset() {
+	*x = GetCardParentsRequest{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[76]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCardParentsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCardParentsRequest) ProtoMessage() {}
+
+func (x *GetCardParentsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[76]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCardParentsRequest.ProtoReflect.Descriptor instead.
+func (*GetCardParentsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{76}
+}
+
+func (x *GetCardParentsRequest) GetCardId() string {
+	if x != nil {
+		return x.CardId
+	}
+	return ""
+}
+
+func (x *GetCardParentsRequest) GetBoardId() string {
+	if x != nil {
+		return x.BoardId
+	}
+	return ""
+}
+
+func (x *GetCardParentsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetCardParentsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Links         []*CardLink            `protobuf:"bytes,1,rep,name=links,proto3" json:"links,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCardParentsResponse) Reset() {
+	*x = GetCardParentsResponse{}
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[77]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCardParentsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCardParentsResponse) ProtoMessage() {}
+
+func (x *GetCardParentsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_v1_board_board_proto_msgTypes[77]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCardParentsResponse.ProtoReflect.Descriptor instead.
+func (*GetCardParentsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_v1_board_board_proto_rawDescGZIP(), []int{77}
+}
+
+func (x *GetCardParentsResponse) GetLinks() []*CardLink {
+	if x != nil {
+		return x.Links
+	}
+	return nil
+}
+
 var File_api_proto_v1_board_board_proto protoreflect.FileDescriptor
 
 const file_api_proto_v1_board_board_proto_rawDesc = "" +
@@ -4714,7 +5194,41 @@ const file_api_proto_v1_board_board_proto_rawDesc = "" +
 	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
 	"\auser_id\x18\x03 \x01(\tR\x06userId\"@\n" +
 	"\x15GetCardLabelsResponse\x12'\n" +
-	"\x06labels\x18\x01 \x03(\v2\x0f.board.v1.LabelR\x06labels2\xd6\x14\n" +
+	"\x06labels\x18\x01 \x03(\v2\x0f.board.v1.LabelR\x06labels\"\x92\x02\n" +
+	"\bCardLink\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
+	"\tparent_id\x18\x02 \x01(\tR\bparentId\x12\x19\n" +
+	"\bchild_id\x18\x03 \x01(\tR\achildId\x12\x19\n" +
+	"\bboard_id\x18\x04 \x01(\tR\aboardId\x12\x1b\n" +
+	"\tlink_type\x18\x05 \x01(\tR\blinkType\x12\x1f\n" +
+	"\vchild_title\x18\x06 \x01(\tR\n" +
+	"childTitle\x12*\n" +
+	"\x11child_column_name\x18\a \x01(\tR\x0fchildColumnName\x129\n" +
+	"\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"~\n" +
+	"\x10LinkCardsRequest\x12\x19\n" +
+	"\bboard_id\x18\x01 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1b\n" +
+	"\tparent_id\x18\x03 \x01(\tR\bparentId\x12\x19\n" +
+	"\bchild_id\x18\x04 \x01(\tR\achildId\";\n" +
+	"\x11LinkCardsResponse\x12&\n" +
+	"\x04link\x18\x01 \x01(\v2\x12.board.v1.CardLinkR\x04link\"a\n" +
+	"\x12UnlinkCardsRequest\x12\x17\n" +
+	"\alink_id\x18\x01 \x01(\tR\x06linkId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\"e\n" +
+	"\x16GetCardChildrenRequest\x12\x17\n" +
+	"\acard_id\x18\x01 \x01(\tR\x06cardId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\"C\n" +
+	"\x17GetCardChildrenResponse\x12(\n" +
+	"\x05links\x18\x01 \x03(\v2\x12.board.v1.CardLinkR\x05links\"d\n" +
+	"\x15GetCardParentsRequest\x12\x17\n" +
+	"\acard_id\x18\x01 \x01(\tR\x06cardId\x12\x19\n" +
+	"\bboard_id\x18\x02 \x01(\tR\aboardId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\"B\n" +
+	"\x16GetCardParentsResponse\x12(\n" +
+	"\x05links\x18\x01 \x03(\v2\x12.board.v1.CardLinkR\x05links2\x8e\x17\n" +
 	"\fBoardService\x12J\n" +
 	"\vCreateBoard\x12\x1c.board.v1.CreateBoardRequest\x1a\x1d.board.v1.CreateBoardResponse\x12A\n" +
 	"\bGetBoard\x12\x19.board.v1.GetBoardRequest\x1a\x1a.board.v1.GetBoardResponse\x12G\n" +
@@ -4757,7 +5271,11 @@ const file_api_proto_v1_board_board_proto_rawDesc = "" +
 	"\vDeleteLabel\x12\x1c.board.v1.DeleteLabelRequest\x1a\x16.google.protobuf.Empty\x12I\n" +
 	"\x0eAddLabelToCard\x12\x1f.board.v1.AddLabelToCardRequest\x1a\x16.google.protobuf.Empty\x12S\n" +
 	"\x13RemoveLabelFromCard\x12$.board.v1.RemoveLabelFromCardRequest\x1a\x16.google.protobuf.Empty\x12P\n" +
-	"\rGetCardLabels\x12\x1e.board.v1.GetCardLabelsRequest\x1a\x1f.board.v1.GetCardLabelsResponseBLZJgithub.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board;boardpbb\x06proto3"
+	"\rGetCardLabels\x12\x1e.board.v1.GetCardLabelsRequest\x1a\x1f.board.v1.GetCardLabelsResponse\x12D\n" +
+	"\tLinkCards\x12\x1a.board.v1.LinkCardsRequest\x1a\x1b.board.v1.LinkCardsResponse\x12C\n" +
+	"\vUnlinkCards\x12\x1c.board.v1.UnlinkCardsRequest\x1a\x16.google.protobuf.Empty\x12V\n" +
+	"\x0fGetCardChildren\x12 .board.v1.GetCardChildrenRequest\x1a!.board.v1.GetCardChildrenResponse\x12S\n" +
+	"\x0eGetCardParents\x12\x1f.board.v1.GetCardParentsRequest\x1a .board.v1.GetCardParentsResponseBLZJgithub.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board;boardpbb\x06proto3"
 
 var (
 	file_api_proto_v1_board_board_proto_rawDescOnce sync.Once
@@ -4771,7 +5289,7 @@ func file_api_proto_v1_board_board_proto_rawDescGZIP() []byte {
 	return file_api_proto_v1_board_board_proto_rawDescData
 }
 
-var file_api_proto_v1_board_board_proto_msgTypes = make([]protoimpl.MessageInfo, 71)
+var file_api_proto_v1_board_board_proto_msgTypes = make([]protoimpl.MessageInfo, 79)
 var file_api_proto_v1_board_board_proto_goTypes = []any{
 	(*CreateBoardRequest)(nil),         // 0: board.v1.CreateBoardRequest
 	(*CreateBoardResponse)(nil),        // 1: board.v1.CreateBoardResponse
@@ -4843,9 +5361,17 @@ var file_api_proto_v1_board_board_proto_goTypes = []any{
 	(*RemoveLabelFromCardRequest)(nil), // 67: board.v1.RemoveLabelFromCardRequest
 	(*GetCardLabelsRequest)(nil),       // 68: board.v1.GetCardLabelsRequest
 	(*GetCardLabelsResponse)(nil),      // 69: board.v1.GetCardLabelsResponse
-	nil,                                // 70: board.v1.ActivityEntry.ChangesEntry
-	(*timestamppb.Timestamp)(nil),      // 71: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),              // 72: google.protobuf.Empty
+	(*CardLink)(nil),                   // 70: board.v1.CardLink
+	(*LinkCardsRequest)(nil),           // 71: board.v1.LinkCardsRequest
+	(*LinkCardsResponse)(nil),          // 72: board.v1.LinkCardsResponse
+	(*UnlinkCardsRequest)(nil),         // 73: board.v1.UnlinkCardsRequest
+	(*GetCardChildrenRequest)(nil),     // 74: board.v1.GetCardChildrenRequest
+	(*GetCardChildrenResponse)(nil),    // 75: board.v1.GetCardChildrenResponse
+	(*GetCardParentsRequest)(nil),      // 76: board.v1.GetCardParentsRequest
+	(*GetCardParentsResponse)(nil),     // 77: board.v1.GetCardParentsResponse
+	nil,                                // 78: board.v1.ActivityEntry.ChangesEntry
+	(*timestamppb.Timestamp)(nil),      // 79: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),              // 80: google.protobuf.Empty
 }
 var file_api_proto_v1_board_board_proto_depIdxs = []int32{
 	53, // 0: board.v1.CreateBoardResponse.board:type_name -> board.v1.Board
@@ -4859,113 +5385,125 @@ var file_api_proto_v1_board_board_proto_depIdxs = []int32{
 	54, // 8: board.v1.UpdateColumnResponse.column:type_name -> board.v1.Column
 	17, // 9: board.v1.ReorderColumnsRequest.positions:type_name -> board.v1.ColumnPosition
 	54, // 10: board.v1.ReorderColumnsResponse.columns:type_name -> board.v1.Column
-	71, // 11: board.v1.CreateCardRequest.due_date:type_name -> google.protobuf.Timestamp
+	79, // 11: board.v1.CreateCardRequest.due_date:type_name -> google.protobuf.Timestamp
 	55, // 12: board.v1.CreateCardResponse.card:type_name -> board.v1.Card
 	55, // 13: board.v1.GetCardResponse.card:type_name -> board.v1.Card
 	55, // 14: board.v1.GetCardsResponse.cards:type_name -> board.v1.Card
-	71, // 15: board.v1.UpdateCardRequest.due_date:type_name -> google.protobuf.Timestamp
+	79, // 15: board.v1.UpdateCardRequest.due_date:type_name -> google.protobuf.Timestamp
 	55, // 16: board.v1.UpdateCardResponse.card:type_name -> board.v1.Card
 	55, // 17: board.v1.MoveCardResponse.card:type_name -> board.v1.Card
 	55, // 18: board.v1.MoveCardResponse.cards_in_column:type_name -> board.v1.Card
 	55, // 19: board.v1.AssignCardResponse.card:type_name -> board.v1.Card
 	55, // 20: board.v1.UnassignCardResponse.card:type_name -> board.v1.Card
 	36, // 21: board.v1.GetCardActivityResponse.entries:type_name -> board.v1.ActivityEntry
-	70, // 22: board.v1.ActivityEntry.changes:type_name -> board.v1.ActivityEntry.ChangesEntry
-	71, // 23: board.v1.ActivityEntry.created_at:type_name -> google.protobuf.Timestamp
+	78, // 22: board.v1.ActivityEntry.changes:type_name -> board.v1.ActivityEntry.ChangesEntry
+	79, // 23: board.v1.ActivityEntry.created_at:type_name -> google.protobuf.Timestamp
 	56, // 24: board.v1.AddMemberResponse.member:type_name -> board.v1.BoardMember
 	56, // 25: board.v1.ListMembersResponse.members:type_name -> board.v1.BoardMember
 	57, // 26: board.v1.CreateUploadURLResponse.attachment:type_name -> board.v1.Attachment
 	57, // 27: board.v1.ConfirmUploadResponse.attachment:type_name -> board.v1.Attachment
 	57, // 28: board.v1.ListAttachmentsResponse.attachments:type_name -> board.v1.Attachment
-	71, // 29: board.v1.Board.created_at:type_name -> google.protobuf.Timestamp
-	71, // 30: board.v1.Board.updated_at:type_name -> google.protobuf.Timestamp
-	71, // 31: board.v1.Column.created_at:type_name -> google.protobuf.Timestamp
-	71, // 32: board.v1.Column.updated_at:type_name -> google.protobuf.Timestamp
-	71, // 33: board.v1.Card.created_at:type_name -> google.protobuf.Timestamp
-	71, // 34: board.v1.Card.updated_at:type_name -> google.protobuf.Timestamp
-	71, // 35: board.v1.Card.due_date:type_name -> google.protobuf.Timestamp
-	71, // 36: board.v1.BoardMember.joined_at:type_name -> google.protobuf.Timestamp
-	71, // 37: board.v1.Attachment.created_at:type_name -> google.protobuf.Timestamp
-	71, // 38: board.v1.Label.created_at:type_name -> google.protobuf.Timestamp
+	79, // 29: board.v1.Board.created_at:type_name -> google.protobuf.Timestamp
+	79, // 30: board.v1.Board.updated_at:type_name -> google.protobuf.Timestamp
+	79, // 31: board.v1.Column.created_at:type_name -> google.protobuf.Timestamp
+	79, // 32: board.v1.Column.updated_at:type_name -> google.protobuf.Timestamp
+	79, // 33: board.v1.Card.created_at:type_name -> google.protobuf.Timestamp
+	79, // 34: board.v1.Card.updated_at:type_name -> google.protobuf.Timestamp
+	79, // 35: board.v1.Card.due_date:type_name -> google.protobuf.Timestamp
+	79, // 36: board.v1.BoardMember.joined_at:type_name -> google.protobuf.Timestamp
+	79, // 37: board.v1.Attachment.created_at:type_name -> google.protobuf.Timestamp
+	79, // 38: board.v1.Label.created_at:type_name -> google.protobuf.Timestamp
 	58, // 39: board.v1.CreateLabelResponse.label:type_name -> board.v1.Label
 	58, // 40: board.v1.ListLabelsResponse.labels:type_name -> board.v1.Label
 	58, // 41: board.v1.UpdateLabelResponse.label:type_name -> board.v1.Label
 	58, // 42: board.v1.GetCardLabelsResponse.labels:type_name -> board.v1.Label
-	0,  // 43: board.v1.BoardService.CreateBoard:input_type -> board.v1.CreateBoardRequest
-	2,  // 44: board.v1.BoardService.GetBoard:input_type -> board.v1.GetBoardRequest
-	4,  // 45: board.v1.BoardService.ListBoards:input_type -> board.v1.ListBoardsRequest
-	6,  // 46: board.v1.BoardService.UpdateBoard:input_type -> board.v1.UpdateBoardRequest
-	8,  // 47: board.v1.BoardService.DeleteBoard:input_type -> board.v1.DeleteBoardRequest
-	9,  // 48: board.v1.BoardService.AddColumn:input_type -> board.v1.AddColumnRequest
-	11, // 49: board.v1.BoardService.GetColumns:input_type -> board.v1.GetColumnsRequest
-	13, // 50: board.v1.BoardService.UpdateColumn:input_type -> board.v1.UpdateColumnRequest
-	15, // 51: board.v1.BoardService.DeleteColumn:input_type -> board.v1.DeleteColumnRequest
-	16, // 52: board.v1.BoardService.ReorderColumns:input_type -> board.v1.ReorderColumnsRequest
-	19, // 53: board.v1.BoardService.CreateCard:input_type -> board.v1.CreateCardRequest
-	21, // 54: board.v1.BoardService.GetCard:input_type -> board.v1.GetCardRequest
-	23, // 55: board.v1.BoardService.GetCards:input_type -> board.v1.GetCardsRequest
-	25, // 56: board.v1.BoardService.UpdateCard:input_type -> board.v1.UpdateCardRequest
-	27, // 57: board.v1.BoardService.MoveCard:input_type -> board.v1.MoveCardRequest
-	29, // 58: board.v1.BoardService.DeleteCard:input_type -> board.v1.DeleteCardRequest
-	30, // 59: board.v1.BoardService.AssignCard:input_type -> board.v1.AssignCardRequest
-	32, // 60: board.v1.BoardService.UnassignCard:input_type -> board.v1.UnassignCardRequest
-	34, // 61: board.v1.BoardService.GetCardActivity:input_type -> board.v1.GetCardActivityRequest
-	37, // 62: board.v1.BoardService.AddMember:input_type -> board.v1.AddMemberRequest
-	39, // 63: board.v1.BoardService.RemoveMember:input_type -> board.v1.RemoveMemberRequest
-	40, // 64: board.v1.BoardService.ListMembers:input_type -> board.v1.ListMembersRequest
-	42, // 65: board.v1.BoardService.IsMember:input_type -> board.v1.IsMemberRequest
-	44, // 66: board.v1.BoardService.CreateUploadURL:input_type -> board.v1.CreateUploadURLRequest
-	46, // 67: board.v1.BoardService.ConfirmUpload:input_type -> board.v1.ConfirmUploadRequest
-	48, // 68: board.v1.BoardService.GetDownloadURL:input_type -> board.v1.GetDownloadURLRequest
-	50, // 69: board.v1.BoardService.ListAttachments:input_type -> board.v1.ListAttachmentsRequest
-	52, // 70: board.v1.BoardService.DeleteAttachment:input_type -> board.v1.DeleteAttachmentRequest
-	59, // 71: board.v1.BoardService.CreateLabel:input_type -> board.v1.CreateLabelRequest
-	61, // 72: board.v1.BoardService.ListLabels:input_type -> board.v1.ListLabelsRequest
-	63, // 73: board.v1.BoardService.UpdateLabel:input_type -> board.v1.UpdateLabelRequest
-	65, // 74: board.v1.BoardService.DeleteLabel:input_type -> board.v1.DeleteLabelRequest
-	66, // 75: board.v1.BoardService.AddLabelToCard:input_type -> board.v1.AddLabelToCardRequest
-	67, // 76: board.v1.BoardService.RemoveLabelFromCard:input_type -> board.v1.RemoveLabelFromCardRequest
-	68, // 77: board.v1.BoardService.GetCardLabels:input_type -> board.v1.GetCardLabelsRequest
-	1,  // 78: board.v1.BoardService.CreateBoard:output_type -> board.v1.CreateBoardResponse
-	3,  // 79: board.v1.BoardService.GetBoard:output_type -> board.v1.GetBoardResponse
-	5,  // 80: board.v1.BoardService.ListBoards:output_type -> board.v1.ListBoardsResponse
-	7,  // 81: board.v1.BoardService.UpdateBoard:output_type -> board.v1.UpdateBoardResponse
-	72, // 82: board.v1.BoardService.DeleteBoard:output_type -> google.protobuf.Empty
-	10, // 83: board.v1.BoardService.AddColumn:output_type -> board.v1.AddColumnResponse
-	12, // 84: board.v1.BoardService.GetColumns:output_type -> board.v1.GetColumnsResponse
-	14, // 85: board.v1.BoardService.UpdateColumn:output_type -> board.v1.UpdateColumnResponse
-	72, // 86: board.v1.BoardService.DeleteColumn:output_type -> google.protobuf.Empty
-	18, // 87: board.v1.BoardService.ReorderColumns:output_type -> board.v1.ReorderColumnsResponse
-	20, // 88: board.v1.BoardService.CreateCard:output_type -> board.v1.CreateCardResponse
-	22, // 89: board.v1.BoardService.GetCard:output_type -> board.v1.GetCardResponse
-	24, // 90: board.v1.BoardService.GetCards:output_type -> board.v1.GetCardsResponse
-	26, // 91: board.v1.BoardService.UpdateCard:output_type -> board.v1.UpdateCardResponse
-	28, // 92: board.v1.BoardService.MoveCard:output_type -> board.v1.MoveCardResponse
-	72, // 93: board.v1.BoardService.DeleteCard:output_type -> google.protobuf.Empty
-	31, // 94: board.v1.BoardService.AssignCard:output_type -> board.v1.AssignCardResponse
-	33, // 95: board.v1.BoardService.UnassignCard:output_type -> board.v1.UnassignCardResponse
-	35, // 96: board.v1.BoardService.GetCardActivity:output_type -> board.v1.GetCardActivityResponse
-	38, // 97: board.v1.BoardService.AddMember:output_type -> board.v1.AddMemberResponse
-	72, // 98: board.v1.BoardService.RemoveMember:output_type -> google.protobuf.Empty
-	41, // 99: board.v1.BoardService.ListMembers:output_type -> board.v1.ListMembersResponse
-	43, // 100: board.v1.BoardService.IsMember:output_type -> board.v1.IsMemberResponse
-	45, // 101: board.v1.BoardService.CreateUploadURL:output_type -> board.v1.CreateUploadURLResponse
-	47, // 102: board.v1.BoardService.ConfirmUpload:output_type -> board.v1.ConfirmUploadResponse
-	49, // 103: board.v1.BoardService.GetDownloadURL:output_type -> board.v1.GetDownloadURLResponse
-	51, // 104: board.v1.BoardService.ListAttachments:output_type -> board.v1.ListAttachmentsResponse
-	72, // 105: board.v1.BoardService.DeleteAttachment:output_type -> google.protobuf.Empty
-	60, // 106: board.v1.BoardService.CreateLabel:output_type -> board.v1.CreateLabelResponse
-	62, // 107: board.v1.BoardService.ListLabels:output_type -> board.v1.ListLabelsResponse
-	64, // 108: board.v1.BoardService.UpdateLabel:output_type -> board.v1.UpdateLabelResponse
-	72, // 109: board.v1.BoardService.DeleteLabel:output_type -> google.protobuf.Empty
-	72, // 110: board.v1.BoardService.AddLabelToCard:output_type -> google.protobuf.Empty
-	72, // 111: board.v1.BoardService.RemoveLabelFromCard:output_type -> google.protobuf.Empty
-	69, // 112: board.v1.BoardService.GetCardLabels:output_type -> board.v1.GetCardLabelsResponse
-	78, // [78:113] is the sub-list for method output_type
-	43, // [43:78] is the sub-list for method input_type
-	43, // [43:43] is the sub-list for extension type_name
-	43, // [43:43] is the sub-list for extension extendee
-	0,  // [0:43] is the sub-list for field type_name
+	79, // 43: board.v1.CardLink.created_at:type_name -> google.protobuf.Timestamp
+	70, // 44: board.v1.LinkCardsResponse.link:type_name -> board.v1.CardLink
+	70, // 45: board.v1.GetCardChildrenResponse.links:type_name -> board.v1.CardLink
+	70, // 46: board.v1.GetCardParentsResponse.links:type_name -> board.v1.CardLink
+	0,  // 47: board.v1.BoardService.CreateBoard:input_type -> board.v1.CreateBoardRequest
+	2,  // 48: board.v1.BoardService.GetBoard:input_type -> board.v1.GetBoardRequest
+	4,  // 49: board.v1.BoardService.ListBoards:input_type -> board.v1.ListBoardsRequest
+	6,  // 50: board.v1.BoardService.UpdateBoard:input_type -> board.v1.UpdateBoardRequest
+	8,  // 51: board.v1.BoardService.DeleteBoard:input_type -> board.v1.DeleteBoardRequest
+	9,  // 52: board.v1.BoardService.AddColumn:input_type -> board.v1.AddColumnRequest
+	11, // 53: board.v1.BoardService.GetColumns:input_type -> board.v1.GetColumnsRequest
+	13, // 54: board.v1.BoardService.UpdateColumn:input_type -> board.v1.UpdateColumnRequest
+	15, // 55: board.v1.BoardService.DeleteColumn:input_type -> board.v1.DeleteColumnRequest
+	16, // 56: board.v1.BoardService.ReorderColumns:input_type -> board.v1.ReorderColumnsRequest
+	19, // 57: board.v1.BoardService.CreateCard:input_type -> board.v1.CreateCardRequest
+	21, // 58: board.v1.BoardService.GetCard:input_type -> board.v1.GetCardRequest
+	23, // 59: board.v1.BoardService.GetCards:input_type -> board.v1.GetCardsRequest
+	25, // 60: board.v1.BoardService.UpdateCard:input_type -> board.v1.UpdateCardRequest
+	27, // 61: board.v1.BoardService.MoveCard:input_type -> board.v1.MoveCardRequest
+	29, // 62: board.v1.BoardService.DeleteCard:input_type -> board.v1.DeleteCardRequest
+	30, // 63: board.v1.BoardService.AssignCard:input_type -> board.v1.AssignCardRequest
+	32, // 64: board.v1.BoardService.UnassignCard:input_type -> board.v1.UnassignCardRequest
+	34, // 65: board.v1.BoardService.GetCardActivity:input_type -> board.v1.GetCardActivityRequest
+	37, // 66: board.v1.BoardService.AddMember:input_type -> board.v1.AddMemberRequest
+	39, // 67: board.v1.BoardService.RemoveMember:input_type -> board.v1.RemoveMemberRequest
+	40, // 68: board.v1.BoardService.ListMembers:input_type -> board.v1.ListMembersRequest
+	42, // 69: board.v1.BoardService.IsMember:input_type -> board.v1.IsMemberRequest
+	44, // 70: board.v1.BoardService.CreateUploadURL:input_type -> board.v1.CreateUploadURLRequest
+	46, // 71: board.v1.BoardService.ConfirmUpload:input_type -> board.v1.ConfirmUploadRequest
+	48, // 72: board.v1.BoardService.GetDownloadURL:input_type -> board.v1.GetDownloadURLRequest
+	50, // 73: board.v1.BoardService.ListAttachments:input_type -> board.v1.ListAttachmentsRequest
+	52, // 74: board.v1.BoardService.DeleteAttachment:input_type -> board.v1.DeleteAttachmentRequest
+	59, // 75: board.v1.BoardService.CreateLabel:input_type -> board.v1.CreateLabelRequest
+	61, // 76: board.v1.BoardService.ListLabels:input_type -> board.v1.ListLabelsRequest
+	63, // 77: board.v1.BoardService.UpdateLabel:input_type -> board.v1.UpdateLabelRequest
+	65, // 78: board.v1.BoardService.DeleteLabel:input_type -> board.v1.DeleteLabelRequest
+	66, // 79: board.v1.BoardService.AddLabelToCard:input_type -> board.v1.AddLabelToCardRequest
+	67, // 80: board.v1.BoardService.RemoveLabelFromCard:input_type -> board.v1.RemoveLabelFromCardRequest
+	68, // 81: board.v1.BoardService.GetCardLabels:input_type -> board.v1.GetCardLabelsRequest
+	71, // 82: board.v1.BoardService.LinkCards:input_type -> board.v1.LinkCardsRequest
+	73, // 83: board.v1.BoardService.UnlinkCards:input_type -> board.v1.UnlinkCardsRequest
+	74, // 84: board.v1.BoardService.GetCardChildren:input_type -> board.v1.GetCardChildrenRequest
+	76, // 85: board.v1.BoardService.GetCardParents:input_type -> board.v1.GetCardParentsRequest
+	1,  // 86: board.v1.BoardService.CreateBoard:output_type -> board.v1.CreateBoardResponse
+	3,  // 87: board.v1.BoardService.GetBoard:output_type -> board.v1.GetBoardResponse
+	5,  // 88: board.v1.BoardService.ListBoards:output_type -> board.v1.ListBoardsResponse
+	7,  // 89: board.v1.BoardService.UpdateBoard:output_type -> board.v1.UpdateBoardResponse
+	80, // 90: board.v1.BoardService.DeleteBoard:output_type -> google.protobuf.Empty
+	10, // 91: board.v1.BoardService.AddColumn:output_type -> board.v1.AddColumnResponse
+	12, // 92: board.v1.BoardService.GetColumns:output_type -> board.v1.GetColumnsResponse
+	14, // 93: board.v1.BoardService.UpdateColumn:output_type -> board.v1.UpdateColumnResponse
+	80, // 94: board.v1.BoardService.DeleteColumn:output_type -> google.protobuf.Empty
+	18, // 95: board.v1.BoardService.ReorderColumns:output_type -> board.v1.ReorderColumnsResponse
+	20, // 96: board.v1.BoardService.CreateCard:output_type -> board.v1.CreateCardResponse
+	22, // 97: board.v1.BoardService.GetCard:output_type -> board.v1.GetCardResponse
+	24, // 98: board.v1.BoardService.GetCards:output_type -> board.v1.GetCardsResponse
+	26, // 99: board.v1.BoardService.UpdateCard:output_type -> board.v1.UpdateCardResponse
+	28, // 100: board.v1.BoardService.MoveCard:output_type -> board.v1.MoveCardResponse
+	80, // 101: board.v1.BoardService.DeleteCard:output_type -> google.protobuf.Empty
+	31, // 102: board.v1.BoardService.AssignCard:output_type -> board.v1.AssignCardResponse
+	33, // 103: board.v1.BoardService.UnassignCard:output_type -> board.v1.UnassignCardResponse
+	35, // 104: board.v1.BoardService.GetCardActivity:output_type -> board.v1.GetCardActivityResponse
+	38, // 105: board.v1.BoardService.AddMember:output_type -> board.v1.AddMemberResponse
+	80, // 106: board.v1.BoardService.RemoveMember:output_type -> google.protobuf.Empty
+	41, // 107: board.v1.BoardService.ListMembers:output_type -> board.v1.ListMembersResponse
+	43, // 108: board.v1.BoardService.IsMember:output_type -> board.v1.IsMemberResponse
+	45, // 109: board.v1.BoardService.CreateUploadURL:output_type -> board.v1.CreateUploadURLResponse
+	47, // 110: board.v1.BoardService.ConfirmUpload:output_type -> board.v1.ConfirmUploadResponse
+	49, // 111: board.v1.BoardService.GetDownloadURL:output_type -> board.v1.GetDownloadURLResponse
+	51, // 112: board.v1.BoardService.ListAttachments:output_type -> board.v1.ListAttachmentsResponse
+	80, // 113: board.v1.BoardService.DeleteAttachment:output_type -> google.protobuf.Empty
+	60, // 114: board.v1.BoardService.CreateLabel:output_type -> board.v1.CreateLabelResponse
+	62, // 115: board.v1.BoardService.ListLabels:output_type -> board.v1.ListLabelsResponse
+	64, // 116: board.v1.BoardService.UpdateLabel:output_type -> board.v1.UpdateLabelResponse
+	80, // 117: board.v1.BoardService.DeleteLabel:output_type -> google.protobuf.Empty
+	80, // 118: board.v1.BoardService.AddLabelToCard:output_type -> google.protobuf.Empty
+	80, // 119: board.v1.BoardService.RemoveLabelFromCard:output_type -> google.protobuf.Empty
+	69, // 120: board.v1.BoardService.GetCardLabels:output_type -> board.v1.GetCardLabelsResponse
+	72, // 121: board.v1.BoardService.LinkCards:output_type -> board.v1.LinkCardsResponse
+	80, // 122: board.v1.BoardService.UnlinkCards:output_type -> google.protobuf.Empty
+	75, // 123: board.v1.BoardService.GetCardChildren:output_type -> board.v1.GetCardChildrenResponse
+	77, // 124: board.v1.BoardService.GetCardParents:output_type -> board.v1.GetCardParentsResponse
+	86, // [86:125] is the sub-list for method output_type
+	47, // [47:86] is the sub-list for method input_type
+	47, // [47:47] is the sub-list for extension type_name
+	47, // [47:47] is the sub-list for extension extendee
+	0,  // [0:47] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_v1_board_board_proto_init() }
@@ -4979,7 +5517,7 @@ func file_api_proto_v1_board_board_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_v1_board_board_proto_rawDesc), len(file_api_proto_v1_board_board_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   71,
+			NumMessages:   79,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

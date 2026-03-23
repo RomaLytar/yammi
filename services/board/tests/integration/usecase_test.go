@@ -126,6 +126,16 @@ func (m *mockPublisher) PublishCardLabelRemoved(ctx context.Context, event useca
 	return nil
 }
 
+func (m *mockPublisher) PublishCardLinked(ctx context.Context, event usecase.CardLinked) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCardUnlinked(ctx context.Context, event usecase.CardUnlinked) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
 func TestCreateBoardUseCase_Integration(t *testing.T) {
 	dsn, cleanup := setupPostgresContainer(t)
 	defer cleanup()

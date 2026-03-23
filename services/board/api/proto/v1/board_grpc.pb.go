@@ -55,6 +55,10 @@ const (
 	BoardService_AddLabelToCard_FullMethodName      = "/board.v1.BoardService/AddLabelToCard"
 	BoardService_RemoveLabelFromCard_FullMethodName = "/board.v1.BoardService/RemoveLabelFromCard"
 	BoardService_GetCardLabels_FullMethodName       = "/board.v1.BoardService/GetCardLabels"
+	BoardService_LinkCards_FullMethodName           = "/board.v1.BoardService/LinkCards"
+	BoardService_UnlinkCards_FullMethodName         = "/board.v1.BoardService/UnlinkCards"
+	BoardService_GetCardChildren_FullMethodName     = "/board.v1.BoardService/GetCardChildren"
+	BoardService_GetCardParents_FullMethodName      = "/board.v1.BoardService/GetCardParents"
 )
 
 // BoardServiceClient is the client API for BoardService service.
@@ -102,6 +106,11 @@ type BoardServiceClient interface {
 	AddLabelToCard(ctx context.Context, in *AddLabelToCardRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	RemoveLabelFromCard(ctx context.Context, in *RemoveLabelFromCardRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetCardLabels(ctx context.Context, in *GetCardLabelsRequest, opts ...grpc.CallOption) (*GetCardLabelsResponse, error)
+	// Card Link operations
+	LinkCards(ctx context.Context, in *LinkCardsRequest, opts ...grpc.CallOption) (*LinkCardsResponse, error)
+	UnlinkCards(ctx context.Context, in *UnlinkCardsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetCardChildren(ctx context.Context, in *GetCardChildrenRequest, opts ...grpc.CallOption) (*GetCardChildrenResponse, error)
+	GetCardParents(ctx context.Context, in *GetCardParentsRequest, opts ...grpc.CallOption) (*GetCardParentsResponse, error)
 }
 
 type boardServiceClient struct {
@@ -462,6 +471,46 @@ func (c *boardServiceClient) GetCardLabels(ctx context.Context, in *GetCardLabel
 	return out, nil
 }
 
+func (c *boardServiceClient) LinkCards(ctx context.Context, in *LinkCardsRequest, opts ...grpc.CallOption) (*LinkCardsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LinkCardsResponse)
+	err := c.cc.Invoke(ctx, BoardService_LinkCards_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) UnlinkCards(ctx context.Context, in *UnlinkCardsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, BoardService_UnlinkCards_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) GetCardChildren(ctx context.Context, in *GetCardChildrenRequest, opts ...grpc.CallOption) (*GetCardChildrenResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCardChildrenResponse)
+	err := c.cc.Invoke(ctx, BoardService_GetCardChildren_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *boardServiceClient) GetCardParents(ctx context.Context, in *GetCardParentsRequest, opts ...grpc.CallOption) (*GetCardParentsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCardParentsResponse)
+	err := c.cc.Invoke(ctx, BoardService_GetCardParents_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BoardServiceServer is the server API for BoardService service.
 // All implementations must embed UnimplementedBoardServiceServer
 // for forward compatibility.
@@ -507,6 +556,11 @@ type BoardServiceServer interface {
 	AddLabelToCard(context.Context, *AddLabelToCardRequest) (*emptypb.Empty, error)
 	RemoveLabelFromCard(context.Context, *RemoveLabelFromCardRequest) (*emptypb.Empty, error)
 	GetCardLabels(context.Context, *GetCardLabelsRequest) (*GetCardLabelsResponse, error)
+	// Card Link operations
+	LinkCards(context.Context, *LinkCardsRequest) (*LinkCardsResponse, error)
+	UnlinkCards(context.Context, *UnlinkCardsRequest) (*emptypb.Empty, error)
+	GetCardChildren(context.Context, *GetCardChildrenRequest) (*GetCardChildrenResponse, error)
+	GetCardParents(context.Context, *GetCardParentsRequest) (*GetCardParentsResponse, error)
 	mustEmbedUnimplementedBoardServiceServer()
 }
 
@@ -621,6 +675,18 @@ func (UnimplementedBoardServiceServer) RemoveLabelFromCard(context.Context, *Rem
 }
 func (UnimplementedBoardServiceServer) GetCardLabels(context.Context, *GetCardLabelsRequest) (*GetCardLabelsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetCardLabels not implemented")
+}
+func (UnimplementedBoardServiceServer) LinkCards(context.Context, *LinkCardsRequest) (*LinkCardsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method LinkCards not implemented")
+}
+func (UnimplementedBoardServiceServer) UnlinkCards(context.Context, *UnlinkCardsRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method UnlinkCards not implemented")
+}
+func (UnimplementedBoardServiceServer) GetCardChildren(context.Context, *GetCardChildrenRequest) (*GetCardChildrenResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetCardChildren not implemented")
+}
+func (UnimplementedBoardServiceServer) GetCardParents(context.Context, *GetCardParentsRequest) (*GetCardParentsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetCardParents not implemented")
 }
 func (UnimplementedBoardServiceServer) mustEmbedUnimplementedBoardServiceServer() {}
 func (UnimplementedBoardServiceServer) testEmbeddedByValue()                      {}
@@ -1273,6 +1339,78 @@ func _BoardService_GetCardLabels_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BoardService_LinkCards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinkCardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).LinkCards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_LinkCards_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).LinkCards(ctx, req.(*LinkCardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_UnlinkCards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnlinkCardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).UnlinkCards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_UnlinkCards_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).UnlinkCards(ctx, req.(*UnlinkCardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_GetCardChildren_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCardChildrenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).GetCardChildren(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_GetCardChildren_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).GetCardChildren(ctx, req.(*GetCardChildrenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BoardService_GetCardParents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCardParentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardServiceServer).GetCardParents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BoardService_GetCardParents_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardServiceServer).GetCardParents(ctx, req.(*GetCardParentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BoardService_ServiceDesc is the grpc.ServiceDesc for BoardService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1419,6 +1557,22 @@ var BoardService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCardLabels",
 			Handler:    _BoardService_GetCardLabels_Handler,
+		},
+		{
+			MethodName: "LinkCards",
+			Handler:    _BoardService_LinkCards_Handler,
+		},
+		{
+			MethodName: "UnlinkCards",
+			Handler:    _BoardService_UnlinkCards_Handler,
+		},
+		{
+			MethodName: "GetCardChildren",
+			Handler:    _BoardService_GetCardChildren_Handler,
+		},
+		{
+			MethodName: "GetCardParents",
+			Handler:    _BoardService_GetCardParents_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

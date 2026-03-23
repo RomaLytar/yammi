@@ -25,6 +25,8 @@ const (
 	SubjectLabelDeleted         = "label.deleted"
 	SubjectCardLabelAdded       = "card.label.added"
 	SubjectCardLabelRemoved     = "card.label.removed"
+	SubjectCardLinked           = "card.linked"
+	SubjectCardUnlinked         = "card.unlinked"
 	StreamBoards                = "BOARDS"
 )
 
@@ -289,5 +291,30 @@ type CardLabelRemoved struct {
 	CardID       string    `json:"card_id"`
 	BoardID      string    `json:"board_id"`
 	LabelID      string    `json:"label_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+// CardLinked событие создания связи между карточками
+type CardLinked struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	LinkID       string    `json:"link_id"`
+	ParentID     string    `json:"parent_id"`
+	ChildID      string    `json:"child_id"`
+	BoardID      string    `json:"board_id"`
+	LinkType     string    `json:"link_type"`
+	ActorID      string    `json:"actor_id"`
+}
+
+// CardUnlinked событие удаления связи между карточками
+type CardUnlinked struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	LinkID       string    `json:"link_id"`
+	ParentID     string    `json:"parent_id"`
+	ChildID      string    `json:"child_id"`
+	BoardID      string    `json:"board_id"`
 	ActorID      string    `json:"actor_id"`
 }

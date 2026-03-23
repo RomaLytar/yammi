@@ -55,6 +55,12 @@ service BoardService {
   rpc AddLabelToCard(AddLabelToCardRequest) returns (google.protobuf.Empty);
   rpc RemoveLabelFromCard(RemoveLabelFromCardRequest) returns (google.protobuf.Empty);
   rpc GetCardLabels(GetCardLabelsRequest) returns (GetCardLabelsResponse);
+
+  // Card Link operations
+  rpc LinkCards(LinkCardsRequest) returns (LinkCardsResponse);
+  rpc UnlinkCards(UnlinkCardsRequest) returns (google.protobuf.Empty);
+  rpc GetCardChildren(GetCardChildrenRequest) returns (GetCardChildrenResponse);
+  rpc GetCardParents(GetCardParentsRequest) returns (GetCardParentsResponse);
 }
 
 // ============================================================================
@@ -522,4 +528,56 @@ message GetCardLabelsRequest {
 
 message GetCardLabelsResponse {
   repeated Label labels = 1;
+}
+
+// ============================================================================
+// Card Link Messages
+// ============================================================================
+
+message CardLink {
+  string id = 1;
+  string parent_id = 2;
+  string child_id = 3;
+  string board_id = 4;
+  string link_type = 5;
+  string child_title = 6;       // denormalized for display
+  string child_column_name = 7;  // denormalized for display
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message LinkCardsRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string parent_id = 3;
+  string child_id = 4;
+}
+
+message LinkCardsResponse {
+  CardLink link = 1;
+}
+
+message UnlinkCardsRequest {
+  string link_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetCardChildrenRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetCardChildrenResponse {
+  repeated CardLink links = 1;
+}
+
+message GetCardParentsRequest {
+  string card_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetCardParentsResponse {
+  repeated CardLink links = 1;
 }

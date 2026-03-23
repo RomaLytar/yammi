@@ -138,6 +138,24 @@ func mapAttachmentsFromProto(pbs []*boardpb.Attachment) []attachmentResponse {
 	return attachments
 }
 
+func mapLabelFromProto(pb *boardpb.Label) labelResponse {
+	return labelResponse{
+		ID:        pb.Id,
+		BoardID:   pb.BoardId,
+		Name:      pb.Name,
+		Color:     pb.Color,
+		CreatedAt: pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+func mapLabelsFromProto(pbs []*boardpb.Label) []labelResponse {
+	labels := make([]labelResponse, len(pbs))
+	for i, pb := range pbs {
+		labels[i] = mapLabelFromProto(pb)
+	}
+	return labels
+}
+
 func parseIntQueryParam(r *http.Request, key string, defaultValue int) int {
 	val := r.URL.Query().Get(key)
 	if val == "" {

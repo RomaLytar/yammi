@@ -101,6 +101,31 @@ func (m *mockPublisher) PublishAttachmentDeleted(ctx context.Context, event usec
 	return nil
 }
 
+func (m *mockPublisher) PublishLabelCreated(ctx context.Context, event usecase.LabelCreated) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishLabelUpdated(ctx context.Context, event usecase.LabelUpdated) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishLabelDeleted(ctx context.Context, event usecase.LabelDeleted) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCardLabelAdded(ctx context.Context, event usecase.CardLabelAdded) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCardLabelRemoved(ctx context.Context, event usecase.CardLabelRemoved) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
 func TestCreateBoardUseCase_Integration(t *testing.T) {
 	dsn, cleanup := setupPostgresContainer(t)
 	defer cleanup()

@@ -120,6 +120,36 @@ type AttachmentRepository interface {
 	CountByCardID(ctx context.Context, cardID, boardID string) (int, error)
 }
 
+// LabelRepository определяет интерфейс для работы с метками
+type LabelRepository interface {
+	// Create создает новую метку
+	Create(ctx context.Context, label *domain.Label) error
+
+	// GetByID возвращает метку по ID
+	GetByID(ctx context.Context, labelID string) (*domain.Label, error)
+
+	// ListByBoardID возвращает все метки доски
+	ListByBoardID(ctx context.Context, boardID string) ([]*domain.Label, error)
+
+	// Update обновляет метку
+	Update(ctx context.Context, label *domain.Label) error
+
+	// Delete удаляет метку по ID
+	Delete(ctx context.Context, labelID string) error
+
+	// AddToCard назначает метку на карточку
+	AddToCard(ctx context.Context, cardID, boardID, labelID string) error
+
+	// RemoveFromCard снимает метку с карточки
+	RemoveFromCard(ctx context.Context, cardID, boardID, labelID string) error
+
+	// ListByCardID возвращает все метки карточки
+	ListByCardID(ctx context.Context, cardID, boardID string) ([]*domain.Label, error)
+
+	// CountByBoardID возвращает количество меток доски
+	CountByBoardID(ctx context.Context, boardID string) (int, error)
+}
+
 // FileStorage определяет интерфейс для работы с файловым хранилищем
 type FileStorage interface {
 	// GenerateUploadURL генерирует pre-signed URL для загрузки файла

@@ -121,6 +121,7 @@ func main() {
 	memberRepo := postgres.NewMembershipRepository(db)
 	attachmentRepo := postgres.NewAttachmentRepository(db)
 	activityRepo := postgres.NewActivityRepository(db)
+	labelRepo := postgres.NewLabelRepository(db)
 
 	// Use Cases
 	createBoardUC := usecase.NewCreateBoardUseCase(boardRepo, memberRepo, publisher)
@@ -156,6 +157,14 @@ func main() {
 	listAttachmentsUC := usecase.NewListAttachmentsUseCase(attachmentRepo, memberRepo)
 	deleteAttachmentUC := usecase.NewDeleteAttachmentUseCase(attachmentRepo, activityRepo, memberRepo, fileStorage, publisher)
 
+	createLabelUC := usecase.NewCreateLabelUseCase(labelRepo, memberRepo, publisher)
+	listLabelsUC := usecase.NewListLabelsUseCase(labelRepo, memberRepo)
+	updateLabelUC := usecase.NewUpdateLabelUseCase(labelRepo, memberRepo, publisher)
+	deleteLabelUC := usecase.NewDeleteLabelUseCase(labelRepo, memberRepo, publisher)
+	addLabelToCardUC := usecase.NewAddLabelToCardUseCase(labelRepo, memberRepo, publisher)
+	removeLabelFromCardUC := usecase.NewRemoveLabelFromCardUseCase(labelRepo, memberRepo, publisher)
+	getCardLabelsUC := usecase.NewGetCardLabelsUseCase(labelRepo, memberRepo)
+
 	// gRPC server
 	handler := delivery.NewBoardServiceServer(
 		createBoardUC,
@@ -186,6 +195,13 @@ func main() {
 		getDownloadURLUC,
 		listAttachmentsUC,
 		deleteAttachmentUC,
+		createLabelUC,
+		listLabelsUC,
+		updateLabelUC,
+		deleteLabelUC,
+		addLabelToCardUC,
+		removeLabelFromCardUC,
+		getCardLabelsUC,
 	)
 
 	grpcServer := grpc.NewServer(

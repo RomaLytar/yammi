@@ -5,6 +5,7 @@ defineProps<{
   placeholder?: string
   error?: string
   disabled?: boolean
+  maxlength?: number
 }>()
 
 const model = defineModel<string>({ required: true })
@@ -28,6 +29,7 @@ const model = defineModel<string>({ required: true })
       :type="type || 'text'"
       :placeholder="placeholder"
       :disabled="disabled"
+      :maxlength="maxlength"
     />
     <span v-if="error" class="base-input__error">{{ error }}</span>
   </div>

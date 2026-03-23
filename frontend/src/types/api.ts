@@ -61,6 +61,7 @@ export interface CreateBoardRequest {
 export interface UpdateBoardRequest {
   title: string
   description: string
+  version: number
 }
 
 export interface BoardResponse {

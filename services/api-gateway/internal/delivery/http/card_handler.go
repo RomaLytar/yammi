@@ -233,6 +233,10 @@ func (h *BoardHandler) DeleteCards(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "card_ids is required")
 		return
 	}
+	if len(req.CardIDs) > 100 {
+		writeError(w, http.StatusBadRequest, "too many card_ids, max 100")
+		return
+	}
 	if req.BoardID == "" {
 		writeError(w, http.StatusBadRequest, "board_id is required")
 		return

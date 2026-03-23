@@ -88,7 +88,6 @@ type attachmentResponse struct {
 	FileName   string `json:"file_name"`
 	FileSize   int64  `json:"file_size"`
 	MimeType   string `json:"mime_type"`
-	StorageKey string `json:"storage_key"`
 	UploaderID string `json:"uploader_id"`
 	CreatedAt  string `json:"created_at"`
 }

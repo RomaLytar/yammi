@@ -7,21 +7,15 @@ import (
 )
 
 func (uc *AuthUseCase) RefreshToken(ctx context.Context, token string) (accessToken, newRefreshToken string, err error) {
-	rt, err := uc.refreshTokenRepo.GetByToken(ctx, token)
+	// Атомарная операция: ревокаем и получаем токен за один SQL-запрос.
+	// Гарантирует, что при конкурентных запросах только один из них успешно ревокнет токен (TOCTOU protection).
+	rt, err := uc.refreshTokenRepo.RevokeAndReturn(ctx, token)
 	if err != nil {
-		return "", "", err
-	}
-
-	if err := rt.IsValid(); err != nil {
 		return "", "", err
 	}
 
 	user, err := uc.userRepo.GetByID(ctx, rt.UserID)
 	if err != nil {
-		return "", "", err
-	}
-
-	if err := uc.refreshTokenRepo.RevokeByToken(ctx, token); err != nil {
 		return "", "", err
 	}
 

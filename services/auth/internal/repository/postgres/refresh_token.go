@@ -58,6 +58,31 @@ func (r *RefreshTokenRepo) RevokeByToken(ctx context.Context, token string) erro
 	return nil
 }
 
+func (r *RefreshTokenRepo) RevokeAndReturn(ctx context.Context, token string) (*domain.RefreshToken, error) {
+	query := `UPDATE refresh_tokens SET revoked = TRUE
+		WHERE token = $1 AND revoked = FALSE AND expires_at > NOW()
+		RETURNING id, user_id, token, expires_at, revoked, created_at`
+
+	rt := &domain.RefreshToken{}
+	err := r.db.QueryRowContext(ctx, query, token).Scan(
+		&rt.ID, &rt.UserID, &rt.Token, &rt.ExpiresAt, &rt.Revoked, &rt.CreatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// Токен не найден, уже revoked, или expired — проверяем причину
+			existing, getErr := r.GetByToken(ctx, token)
+			if getErr != nil {
+				return nil, getErr // ErrTokenNotFound если вообще нет
+			}
+			if existing.Revoked {
+				return nil, domain.ErrTokenRevoked
+			}
+			return nil, domain.ErrTokenExpired
+		}
+		return nil, err
+	}
+	return rt, nil
+}
+
 func (r *RefreshTokenRepo) RevokeAllByUserID(ctx context.Context, userID string) error {
 	query := `UPDATE refresh_tokens SET revoked = TRUE WHERE user_id = $1 AND revoked = FALSE`
 	_, err := r.db.ExecContext(ctx, query, userID)

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	delivery "github.com/RomaLytar/yammi/services/api-gateway/internal/delivery/http"
 	"github.com/RomaLytar/yammi/services/api-gateway/internal/infrastructure"
@@ -56,8 +57,12 @@ func main() {
 	router, shutdownLimiters := delivery.NewRouter(clients, verifier)
 
 	server := &http.Server{
-		Addr:    ":" + port,
-		Handler: router,
+		Addr:           ":" + port,
+		Handler:        router,
+		ReadTimeout:    15 * time.Second,
+		WriteTimeout:   15 * time.Second,
+		IdleTimeout:    60 * time.Second,
+		MaxHeaderBytes: 1 << 20,
 	}
 
 	go func() {

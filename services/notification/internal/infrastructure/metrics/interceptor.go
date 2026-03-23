@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"path"
 	"runtime/debug"
@@ -61,7 +60,7 @@ func RecoveryInterceptor() grpc.UnaryServerInterceptor {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Printf("PANIC recovered in %s: %v\n%s", info.FullMethod, r, debug.Stack())
-				err = status.Errorf(codes.Internal, fmt.Sprintf("internal error: %v", r))
+				err = status.Errorf(codes.Internal, "internal server error")
 			}
 		}()
 		return handler(ctx, req)

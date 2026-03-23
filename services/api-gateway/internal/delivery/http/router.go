@@ -114,5 +114,11 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 		defaultLimiter.Stop()
 	}
 
-	return mux, shutdown
+	// Оборачиваем в security middlewares
+	var handler http.Handler = mux
+	handler = MaxBodyMiddleware(1 << 20)(handler) // 1 MB
+	handler = SecurityHeadersMiddleware(handler)
+	handler = CORSMiddleware(handler)
+
+	return handler, shutdown
 }

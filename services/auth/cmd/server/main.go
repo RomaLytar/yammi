@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/ed25519"
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -141,7 +140,7 @@ func recoveryInterceptor() grpc.UnaryServerInterceptor {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Printf("PANIC recovered in %s: %v\n%s", info.FullMethod, r, debug.Stack())
-				err = status.Errorf(codes.Internal, fmt.Sprintf("internal error: %v", r))
+				err = status.Errorf(codes.Internal, "internal server error")
 			}
 		}()
 		return handler(ctx, req)

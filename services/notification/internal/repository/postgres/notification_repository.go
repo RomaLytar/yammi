@@ -17,6 +17,14 @@ type NotificationRepo struct {
 	db *sql.DB
 }
 
+// escapeLikePattern экранирует спецсимволы LIKE/ILIKE в пользовательском вводе.
+func escapeLikePattern(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `%`, `\%`)
+	s = strings.ReplaceAll(s, `_`, `\_`)
+	return s
+}
+
 func NewNotificationRepo(db *sql.DB) *NotificationRepo {
 	return &NotificationRepo{db: db}
 }
@@ -94,7 +102,7 @@ func (r *NotificationRepo) ListByUserID(ctx context.Context, userID string, limi
 	// Search by title
 	if search != "" {
 		conditions = append(conditions, fmt.Sprintf("title ILIKE $%d", argIdx))
-		args = append(args, "%"+search+"%")
+		args = append(args, "%"+escapeLikePattern(search)+"%")
 		argIdx++
 	}
 

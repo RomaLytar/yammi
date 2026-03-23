@@ -4,10 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
+
+// escapeLikePattern экранирует спецсимволы LIKE/ILIKE в пользовательском вводе.
+func escapeLikePattern(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `%`, `\%`)
+	s = strings.ReplaceAll(s, `_`, `\_`)
+	return s
+}
 
 type BoardRepository struct {
 	db *sql.DB
@@ -94,7 +103,7 @@ func (r *BoardRepository) ListByUserID(ctx context.Context, userID string, limit
 
 	if search != "" {
 		where += fmt.Sprintf(" AND b.title ILIKE $%d", argIdx)
-		args = append(args, "%"+search+"%")
+		args = append(args, "%"+escapeLikePattern(search)+"%")
 		argIdx++
 	}
 

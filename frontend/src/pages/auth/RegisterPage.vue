@@ -39,7 +39,7 @@ async function handleSubmit(): Promise<void> {
     <form class="register-page__form" @submit.prevent="handleSubmit">
       <BaseInput v-model="name" label="Имя" placeholder="Ваше имя" />
       <BaseInput v-model="email" label="Email" type="email" placeholder="you@example.com" />
-      <BaseInput v-model="password" label="Пароль" type="password" placeholder="Минимум 8 символов" />
+      <BaseInput v-model="password" label="Пароль" type="password" placeholder="От 8 до 72 символов" :maxlength="72" />
 
       <p v-if="error" class="register-page__error">{{ error }}</p>
 

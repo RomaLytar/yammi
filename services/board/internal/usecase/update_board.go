@@ -39,8 +39,11 @@ func (uc *UpdateBoardUseCase) Execute(ctx context.Context, boardID, userID, titl
 		return nil, err
 	}
 
-	// 3. Проверка optimistic locking — клиент должен передать актуальную версию
-	if version > 0 && board.Version != version {
+	// 3. Проверка optimistic locking — клиент обязан передать актуальную версию
+	if version == 0 {
+		return nil, domain.ErrInvalidVersion
+	}
+	if board.Version != version {
 		return nil, domain.ErrInvalidVersion
 	}
 

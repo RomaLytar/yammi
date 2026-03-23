@@ -17,6 +17,9 @@ type RefreshTokenRepository interface {
 	Create(ctx context.Context, token *domain.RefreshToken) error
 	GetByToken(ctx context.Context, token string) (*domain.RefreshToken, error)
 	RevokeByToken(ctx context.Context, token string) error
+	// RevokeAndReturn атомарно ревокает токен (только если не revoked и не expired) и возвращает его данные.
+	// Гарантирует, что только один конкурентный вызов успешно ревокнет токен (защита от TOCTOU).
+	RevokeAndReturn(ctx context.Context, token string) (*domain.RefreshToken, error)
 	RevokeAllByUserID(ctx context.Context, userID string) error
 }
 

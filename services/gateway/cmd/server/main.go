@@ -12,6 +12,7 @@ import (
 
 	"github.com/RomaLytar/yammi/services/gateway/internal/delivery/websocket"
 	"github.com/RomaLytar/yammi/services/gateway/internal/infrastructure/auth"
+	"github.com/RomaLytar/yammi/services/gateway/internal/infrastructure/board"
 	"github.com/RomaLytar/yammi/services/gateway/internal/infrastructure/queue"
 )
 
@@ -31,6 +32,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("ws-gateway: failed to create JWT verifier: %v", err)
 	}
+
+	// Board membership checker — для проверки доступа при подписке на доску.
+	apiGatewayURL := os.Getenv("API_GATEWAY_URL")
+	if apiGatewayURL == "" {
+		apiGatewayURL = "http://api-gateway:8080"
+	}
+	membershipChecker := board.NewHTTPMembershipChecker(apiGatewayURL)
 
 	// Hub — управление соединениями и маршрутизация.
 	hub := websocket.NewHub()
@@ -59,12 +67,16 @@ func main() {
 	})
 
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		websocket.ServeWS(hub, verifier, w, r)
+		websocket.ServeWS(hub, verifier, membershipChecker, w, r)
 	})
 
 	server := &http.Server{
-		Addr:    ":" + port,
-		Handler: mux,
+		Addr:           ":" + port,
+		Handler:        mux,
+		ReadTimeout:    15 * time.Second,
+		WriteTimeout:   60 * time.Second,
+		IdleTimeout:    120 * time.Second,
+		MaxHeaderBytes: 1 << 20,
 	}
 
 	go func() {

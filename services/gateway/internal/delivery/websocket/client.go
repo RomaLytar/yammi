@@ -23,10 +23,12 @@ const (
 
 // Client — одно WebSocket-соединение.
 type Client struct {
-	hub    *Hub
-	conn   *websocket.Conn
-	userID string
-	send   chan []byte
+	hub     *Hub
+	conn    *websocket.Conn
+	userID  string
+	token   string // JWT токен для проверки доступа к доскам
+	checker BoardAccessChecker
+	send    chan []byte
 	// boards — множество досок, на которые подписан клиент (для быстрой очистки при отключении).
 	boards map[string]bool
 }
@@ -46,13 +48,15 @@ type serverMessage struct {
 }
 
 // NewClient создаёт нового клиента.
-func NewClient(hub *Hub, conn *websocket.Conn, userID string) *Client {
+func NewClient(hub *Hub, conn *websocket.Conn, userID, token string, checker BoardAccessChecker) *Client {
 	return &Client{
-		hub:    hub,
-		conn:   conn,
-		userID: userID,
-		send:   make(chan []byte, sendBufferSize),
-		boards: make(map[string]bool),
+		hub:     hub,
+		conn:    conn,
+		userID:  userID,
+		token:   token,
+		checker: checker,
+		send:    make(chan []byte, sendBufferSize),
+		boards:  make(map[string]bool),
 	}
 }
 
@@ -89,6 +93,15 @@ func (c *Client) ReadPump() {
 		switch msg.Type {
 		case "subscribe":
 			if msg.BoardID == "" {
+				continue
+			}
+			// Проверяем, является ли пользователь членом доски
+			if c.checker != nil && !c.checker.IsMember(msg.BoardID, c.token) {
+				errMsg, _ := json.Marshal(serverMessage{Type: "error", BoardID: msg.BoardID, Data: json.RawMessage(`"access denied"`)})
+				select {
+				case c.send <- errMsg:
+				default:
+				}
 				continue
 			}
 			c.hub.subscribe <- &Subscription{Client: c, BoardID: msg.BoardID}

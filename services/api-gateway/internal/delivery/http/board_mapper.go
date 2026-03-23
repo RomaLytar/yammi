@@ -125,7 +125,6 @@ func mapAttachmentFromProto(pb *boardpb.Attachment) attachmentResponse {
 		FileName:   pb.FileName,
 		FileSize:   pb.FileSize,
 		MimeType:   pb.MimeType,
-		StorageKey: pb.StorageKey,
 		UploaderID: pb.UploaderId,
 		CreatedAt:  pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
 	}

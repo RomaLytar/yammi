@@ -2,6 +2,9 @@
 **/README.md
 !/README.md
 
+# Environment (secrets)
+.env
+
 # IDE
 .idea/
 

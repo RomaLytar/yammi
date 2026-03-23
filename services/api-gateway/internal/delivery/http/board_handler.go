@@ -211,6 +211,10 @@ func (h *BoardHandler) DeleteBoards(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "board_ids is required")
 		return
 	}
+	if len(req.BoardIDs) > 100 {
+		writeError(w, http.StatusBadRequest, "too many board_ids, max 100")
+		return
+	}
 
 	_, err := h.client.DeleteBoard(r.Context(), &boardpb.DeleteBoardRequest{
 		BoardIds: req.BoardIDs,

@@ -130,24 +130,9 @@ func RateLimitHandlerFunc(limiter *RateLimiter, handler http.HandlerFunc) http.H
 	}
 }
 
-// extractIP извлекает IP-адрес клиента из запроса, отбрасывая порт.
+// extractIP извлекает IP-адрес клиента из RemoteAddr, отбрасывая порт.
+// X-Forwarded-For и X-Real-IP не используются — без доверенного прокси они легко подделываются.
 func extractIP(r *http.Request) string {
-	// Пробуем X-Forwarded-For (первый IP в цепочке — оригинальный клиент)
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		for i := 0; i < len(xff); i++ {
-			if xff[i] == ',' {
-				return xff[:i]
-			}
-		}
-		return xff
-	}
-
-	// X-Real-IP
-	if xri := r.Header.Get("X-Real-IP"); xri != "" {
-		return xri
-	}
-
-	// Фоллбэк на RemoteAddr, отбрасываем порт
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		return r.RemoteAddr

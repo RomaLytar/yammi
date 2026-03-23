@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"github.com/RomaLytar/yammi/services/auth/internal/domain"
@@ -96,6 +97,13 @@ func (h *AuthHandler) DeleteUser(ctx context.Context, req *authpb.DeleteUserRequ
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
+	// Defense-in-depth: проверяем что caller == target user (через gRPC metadata)
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if callerIDs := md.Get("x-caller-id"); len(callerIDs) > 0 && callerIDs[0] != req.GetUserId() {
+			return nil, status.Error(codes.PermissionDenied, "can only delete own account")
+		}
+	}
+
 	if err := h.uc.DeleteUser(ctx, req.GetUserId()); err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -115,7 +123,7 @@ func mapDomainError(err error) error {
 		return status.Error(codes.Unauthenticated, err.Error())
 	case errors.Is(err, domain.ErrEmptyEmail), errors.Is(err, domain.ErrInvalidEmail),
 		errors.Is(err, domain.ErrEmptyPassword), errors.Is(err, domain.ErrEmptyName),
-		errors.Is(err, domain.ErrWeakPassword):
+		errors.Is(err, domain.ErrWeakPassword), errors.Is(err, domain.ErrPasswordTooLong):
 		return status.Error(codes.InvalidArgument, err.Error())
 	default:
 		return status.Error(codes.Internal, "internal error")

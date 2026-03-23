@@ -20,7 +20,8 @@ func ValidateRegistration(email, password, name string) error {
 	if email == "" {
 		return ErrEmptyEmail
 	}
-	if !strings.Contains(email, "@") {
+	if !strings.Contains(email, "@") || len(email) < 3 ||
+		strings.HasPrefix(email, "@") || strings.HasSuffix(email, "@") {
 		return ErrInvalidEmail
 	}
 	if password == "" {
@@ -28,6 +29,9 @@ func ValidateRegistration(email, password, name string) error {
 	}
 	if len(password) < 8 {
 		return ErrWeakPassword
+	}
+	if len(password) > 72 {
+		return ErrPasswordTooLong
 	}
 	if name == "" {
 		return ErrEmptyName

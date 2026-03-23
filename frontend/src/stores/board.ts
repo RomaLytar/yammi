@@ -53,11 +53,11 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   async function updateBoardInfo(title: string, description: string): Promise<void> {
-    if (!boardId.value) return
+    if (!boardId.value || !board.value) return
 
     try {
       error.value = null
-      const updated = await boardsApi.updateBoard(boardId.value, { title, description })
+      const updated = await boardsApi.updateBoard(boardId.value, { title, description, version: board.value.version })
       board.value = updated
     } catch (err) {
       error.value = err instanceof ApiError ? err.message : 'Ошибка обновления доски'

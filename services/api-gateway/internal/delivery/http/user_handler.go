@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	grpcmetadata "google.golang.org/grpc/metadata"
+
 	authpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1"
 	userpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/user"
 )
@@ -44,13 +46,22 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	callerID, _ := UserIDFromContext(r.Context())
+
 	userID := r.PathValue("id")
 	if userID == "" {
 		writeError(w, http.StatusBadRequest, "user id is required")
 		return
 	}
 
-	_, err := h.authClient.DeleteUser(r.Context(), &authpb.DeleteUserRequest{
+	// Передаём caller_id в gRPC metadata для defense-in-depth проверки в auth service
+	ctx := r.Context()
+	if callerID != "" {
+		md := grpcmetadata.Pairs("x-caller-id", callerID)
+		ctx = grpcmetadata.NewOutgoingContext(ctx, md)
+	}
+
+	_, err := h.authClient.DeleteUser(ctx, &authpb.DeleteUserRequest{
 		UserId: userID,
 	})
 	if err != nil {

@@ -178,12 +178,12 @@ function handleBackdrop(e: MouseEvent) {
 }
 
 .stat-row--summary {
-  background: #eff6ff;
+  background: var(--color-primary-light);
 }
 
 .stat-value {
   font-weight: 600;
-  color: #3b82f6;
+  color: var(--color-primary);
 }
 
 .columns-section h4 {

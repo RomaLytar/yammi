@@ -78,14 +78,14 @@ const boardStore = useBoardStore()
 
 <style scoped>
 .board-card {
-  background: white;
-  border: 1px solid transparent;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-light);
   border-radius: 12px;
   padding: 14px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-xs);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -94,8 +94,8 @@ const boardStore = useBoardStore()
 }
 
 .board-card--selected {
-  border-color: #3b82f6;
-  background: #eff6ff;
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 
 .board-card--select-mode {
@@ -109,7 +109,7 @@ const boardStore = useBoardStore()
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -132,14 +132,14 @@ const boardStore = useBoardStore()
 .board-card__checkbox input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: #3b82f6;
+  accent-color: var(--color-primary);
   cursor: pointer;
 }
 
 .checkbox-placeholder {
   width: 16px;
   height: 16px;
-  border: 1.5px solid #d1d5db;
+  border: 1.5px solid var(--color-border);
   border-radius: 3px;
   opacity: 0.3;
 }
@@ -225,7 +225,7 @@ const boardStore = useBoardStore()
 }
 
 .board-card__avatar--assigned {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: var(--gradient-primary);
   color: white;
 }
 

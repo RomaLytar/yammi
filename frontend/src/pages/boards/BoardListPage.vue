@@ -272,7 +272,7 @@ async function handleDeleteBoard() {
     <div v-else-if="boardsStore.boards.length === 0" class="board-list-empty">
       <div class="empty-state">
         <div class="empty-state__icon">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
             <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
           </svg>
@@ -435,7 +435,7 @@ async function handleDeleteBoard() {
 /* Toggle */
 .toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
 .toggle-track { width: 36px; height: 20px; background: #d1d5db; border-radius: 10px; position: relative; transition: background 0.2s; }
-.toggle-track--active { background: #3b82f6; }
+.toggle-track--active { background: var(--color-primary); }
 .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.2s; }
 .toggle-track--active .toggle-thumb { transform: translateX(16px); }
 .toggle-label { font-size: 13px; color: #6b7280; white-space: nowrap; }
@@ -452,14 +452,14 @@ async function handleDeleteBoard() {
 .search-box { position: relative; flex: 1; max-width: 320px; }
 .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; }
 .search-field { width: 100%; padding: 8px 32px 8px 36px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: rgba(255,255,255,0.7); transition: border-color 0.2s; box-sizing: border-box; }
-.search-field:focus { border-color: #3b82f6; background: white; }
+.search-field:focus { border-color: var(--color-primary); background: white; }
 .search-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
 .search-clear:hover { color: #374151; }
 
 /* Bulk */
 .bulk-toggle { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; color: #6b7280; background: rgba(255,255,255,0.7); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
 .bulk-toggle:hover { border-color: #9ca3af; color: #374151; }
-.bulk-toggle--active { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+.bulk-toggle--active { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-light); }
 .bulk-btn { padding: 7px 14px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
 .bulk-btn--select-all { background: rgba(255,255,255,0.7); color: #374151; border: 1px solid #d1d5db; }
 .bulk-btn--select-all:hover { background: white; }
@@ -469,13 +469,13 @@ async function handleDeleteBoard() {
 /* Board grid */
 .board-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
 .board-item { background: var(--color-surface, #fff); border: 1px solid var(--color-border, #e5e7eb); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s; position: relative; display: flex; gap: 12px; }
-.board-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: var(--color-primary, #3b82f6); }
+.board-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: var(--color-primary, #6b7c4e); }
 .board-item--select-mode { cursor: default; }
-.board-item--selected { border-color: #3b82f6; background: #eff6ff; }
+.board-item--selected { border-color: var(--color-primary); background: var(--color-primary-light); }
 .board-item__body { flex: 1; min-width: 0; }
 
 .board-checkbox { display: flex; align-items: flex-start; padding-top: 2px; }
-.board-checkbox input[type="checkbox"] { width: 18px; height: 18px; accent-color: #3b82f6; cursor: pointer; }
+.board-checkbox input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--color-primary); cursor: pointer; }
 .checkbox-disabled { width: 18px; height: 18px; border: 1.5px solid #d1d5db; border-radius: 4px; opacity: 0.3; }
 
 .board-item__header { display: flex; justify-content: space-between; align-items: flex-start; position: relative; }
@@ -499,7 +499,7 @@ async function handleDeleteBoard() {
 .board-item__date { font-size: 12px; color: var(--color-text-tertiary, #9ca3af); }
 
 /* Owner avatar */
-.owner-avatar { width: 28px; height: 28px; border-radius: 50%; background: #dbeafe; color: #3b82f6; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: default; flex-shrink: 0; transition: transform 0.15s; }
+.owner-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: default; flex-shrink: 0; transition: transform 0.15s; }
 .owner-avatar:hover { transform: scale(1.15); }
 .owner-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .avatar-initials { font-size: 11px; font-weight: 600; line-height: 1; }

@@ -4,6 +4,10 @@ import { useRoute } from 'vue-router'
 import DefaultLayout from './layouts/DefaultLayout.vue'
 import AuthLayout from './layouts/AuthLayout.vue'
 import BoardLayout from './layouts/BoardLayout.vue'
+import { useTheme } from './composables/useTheme'
+
+// Инициализация темы при старте приложения
+useTheme()
 
 const route = useRoute()
 

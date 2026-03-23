@@ -4,6 +4,7 @@ import { useUserStore } from '@/stores/user'
 import BaseAvatar from '@/components/shared/BaseAvatar.vue'
 import NotificationBell from '@/components/notification/NotificationBell.vue'
 import NotificationPanel from '@/components/notification/NotificationPanel.vue'
+import ThemeSwitcher from '@/components/layout/ThemeSwitcher.vue'
 
 const userStore = useUserStore()
 
@@ -24,6 +25,7 @@ function toggleNotifications() {
     </nav>
 
     <div class="app-header__right">
+      <ThemeSwitcher />
       <div ref="notificationsRef" class="app-header__notifications">
         <NotificationBell @toggle="toggleNotifications" />
         <Teleport to="body">

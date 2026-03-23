@@ -167,7 +167,7 @@ function handleBackdropClick(event: MouseEvent) {
 }
 
 .confirm-modal__button--primary {
-  background: var(--color-primary, #3b82f6);
+  background: var(--color-primary, #6b7c4e);
   color: white;
 }
 

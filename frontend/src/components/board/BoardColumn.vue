@@ -145,8 +145,8 @@ function onDragChange(event: any) {
 
 <style scoped>
 .board-column {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
   border-radius: 16px;
   padding: 16px;
   min-width: 300px;
@@ -154,7 +154,7 @@ function onDragChange(event: any) {
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 180px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
@@ -206,10 +206,11 @@ function onDragChange(event: any) {
   font-size: 15px;
   font-weight: 700;
   padding: 8px 10px;
-  border: 2px solid var(--color-primary, #3b82f6);
+  border: 2px solid var(--color-primary, #6b7c4e);
   border-radius: 8px;
   outline: none;
-  background: white;
+  background: var(--color-input-bg);
+  color: var(--color-text-primary);
 }
 
 .board-column__actions {
@@ -263,12 +264,12 @@ function onDragChange(event: any) {
 }
 
 .board-column__cards::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: var(--color-text-tertiary);
   border-radius: 4px;
 }
 
 .board-column__cards::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: var(--color-text-secondary);
 }
 
 .board-column__add-card {
@@ -285,9 +286,9 @@ function onDragChange(event: any) {
 }
 
 .board-column__add-card:hover {
-  border-color: var(--color-primary, #3b82f6);
-  color: var(--color-primary, #3b82f6);
-  background: var(--color-primary-light, #eff6ff);
+  border-color: var(--color-primary, #6b7c4e);
+  color: var(--color-primary, #6b7c4e);
+  background: var(--color-primary-light, #f0f4e8);
   transform: translateY(-1px);
 }
 
@@ -297,8 +298,8 @@ function onDragChange(event: any) {
 
 .ghost-card {
   opacity: 0.4;
-  background: var(--color-primary-light, #dbeafe);
-  border: 2px dashed var(--color-primary, #3b82f6);
+  background: var(--color-primary-light, #e2ebd3);
+  border: 2px dashed var(--color-primary, #6b7c4e);
   border-radius: 12px;
 }
 </style>

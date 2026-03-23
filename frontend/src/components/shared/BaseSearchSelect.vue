@@ -182,7 +182,7 @@ onUnmounted(() => {
 }
 
 .search-select__trigger--open {
-  border-color: var(--color-input-focus, #6366f1);
+  border-color: var(--color-input-focus, #6b7c4e);
   background: var(--color-surface, #fff);
   box-shadow: var(--shadow-focus, 0 0 0 3px rgba(99, 102, 241, 0.15));
 }
@@ -311,7 +311,7 @@ onUnmounted(() => {
 }
 
 .search-select__check {
-  color: var(--color-primary, #6366f1);
+  color: var(--color-primary, #6b7c4e);
   flex-shrink: 0;
 }
 

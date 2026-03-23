@@ -493,33 +493,9 @@ function closeEditCardModal() {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--gradient-auth-bg);
+  background: var(--color-bg);
   overflow: hidden;
   position: relative;
-}
-
-.board-page::before {
-  content: '';
-  position: absolute;
-  width: 800px;
-  height: 800px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
-  top: -200px;
-  right: -200px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.board-page::after {
-  content: '';
-  position: absolute;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
-  bottom: -150px;
-  left: -150px;
-  pointer-events: none;
-  z-index: 0;
 }
 
 .board-page__loading,
@@ -528,7 +504,7 @@ function closeEditCardModal() {
   align-items: center;
   justify-content: center;
   flex: 1;
-  color: white;
+  color: var(--color-text-secondary);
 }
 
 .board-page__error {
@@ -541,10 +517,8 @@ function closeEditCardModal() {
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(139, 92, 246, 0.1);
-  box-shadow: 0 1px 3px rgba(139, 92, 246, 0.1);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   position: relative;
   z-index: 1;
 }
@@ -560,17 +534,17 @@ function closeEditCardModal() {
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  border: 1px solid rgba(255,255,255,0.4);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 13px;
-  color: #6b7280;
-  background: rgba(255,255,255,0.5);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-alt);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
 }
-.select-toggle:hover { border-color: #9ca3af; color: #374151; }
-.select-toggle--active { border-color: #3b82f6; color: #3b82f6; background: rgba(219,234,254,0.6); }
+.select-toggle:hover { border-color: var(--color-text-tertiary); color: var(--color-text-primary); }
+.select-toggle--active { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-soft); }
 
 .bulk-delete-btn {
   padding: 7px 14px;
@@ -626,23 +600,21 @@ function closeEditCardModal() {
 .add-column-button {
   width: 100%;
   padding: 14px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  border: 2px dashed rgba(99, 102, 241, 0.3);
+  background: var(--color-surface-alt);
+  border: 2px dashed var(--color-border);
   border-radius: 16px;
   color: var(--color-primary);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .add-column-button:hover {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--color-surface);
   border-color: var(--color-primary);
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1), 0 2px 4px -1px rgba(99, 102, 241, 0.06);
+  box-shadow: var(--shadow-md);
 }
 
 .add-column-button:active {
@@ -655,18 +627,18 @@ function closeEditCardModal() {
 }
 
 .board-page__content::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-bg-subtle);
   border-radius: 6px;
   margin: 0 24px;
 }
 
 .board-page__content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--color-text-tertiary);
   border-radius: 6px;
   transition: background 0.2s;
 }
 
 .board-page__content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: var(--color-text-secondary);
 }
 </style>

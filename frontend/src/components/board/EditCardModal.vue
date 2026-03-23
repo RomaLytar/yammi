@@ -1000,7 +1000,7 @@ onMounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--gradient-primary, linear-gradient(135deg, #6366f1, #8b5cf6));
+  background: var(--gradient-primary, linear-gradient(135deg, #6b7c4e, var(--color-primary)));
   color: white;
   font-size: 13px;
   font-weight: 700;
@@ -1049,8 +1049,8 @@ onMounted(() => {
 }
 
 .ecm-sidebar__tab--active {
-  color: var(--color-primary, #6366f1);
-  border-bottom-color: var(--color-primary, #6366f1);
+  color: var(--color-primary, #6b7c4e);
+  border-bottom-color: var(--color-primary, #6b7c4e);
 }
 
 /* ===== Sections ===== */
@@ -1119,8 +1119,8 @@ onMounted(() => {
 }
 
 .ecm-upload__zone:hover {
-  border-color: var(--color-primary, #6366f1);
-  color: var(--color-primary, #6366f1);
+  border-color: var(--color-primary, #6b7c4e);
+  color: var(--color-primary, #6b7c4e);
   background: rgba(99, 102, 241, 0.04);
 }
 
@@ -1140,7 +1140,7 @@ onMounted(() => {
 
 .ecm-upload__progress-fill {
   height: 100%;
-  background: var(--color-primary, #6366f1);
+  background: var(--color-primary, #6b7c4e);
   border-radius: 3px;
   transition: width 0.2s;
 }
@@ -1205,7 +1205,7 @@ onMounted(() => {
   flex-shrink: 0;
   color: var(--color-text-tertiary, #9ca3af);
 }
-.ecm-file__icon:hover { color: var(--color-primary, #6366f1); }
+.ecm-file__icon:hover { color: var(--color-primary, #6b7c4e); }
 
 .ecm-file__body {
   display: flex;
@@ -1218,7 +1218,7 @@ onMounted(() => {
 .ecm-file__name {
   font-size: 13px;
   font-weight: 500;
-  color: var(--color-primary, #6366f1);
+  color: var(--color-primary, #6b7c4e);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1253,8 +1253,8 @@ onMounted(() => {
 
 .ecm-file__btn:hover {
   background: var(--color-primary-soft, rgba(99, 102, 241, 0.1));
-  border-color: var(--color-primary, #6366f1);
-  color: var(--color-primary, #6366f1);
+  border-color: var(--color-primary, #6b7c4e);
+  color: var(--color-primary, #6b7c4e);
 }
 
 .ecm-file__btn--danger:hover {
@@ -1293,7 +1293,7 @@ onMounted(() => {
 }
 
 .ecm-comment-form__textarea:focus {
-  border-color: var(--color-input-focus, #6366f1);
+  border-color: var(--color-input-focus, #6b7c4e);
   background: var(--color-surface, #fff);
   box-shadow: var(--shadow-focus, 0 0 0 3px rgba(99, 102, 241, 0.15));
 }
@@ -1390,7 +1390,7 @@ onMounted(() => {
 }
 
 .ecm-comment__action:hover {
-  color: var(--color-primary, #6366f1);
+  color: var(--color-primary, #6b7c4e);
 }
 
 .ecm-comment__action--danger:hover {

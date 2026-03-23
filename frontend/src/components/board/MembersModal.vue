@@ -227,7 +227,7 @@ function getInitials(name: string): string {
 }
 
 .search-input:focus {
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
 }
 
 .search-dropdown {
@@ -261,7 +261,7 @@ function getInitials(name: string): string {
 }
 
 .search-result-item:hover {
-  background: #f0fdf4;
+  background: var(--color-primary-light);
 }
 
 .search-result-item--adding {
@@ -296,8 +296,8 @@ function getInitials(name: string): string {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #dbeafe;
-  color: #3b82f6;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -346,8 +346,8 @@ function getInitials(name: string): string {
 }
 
 .role-badge--owner {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--color-primary-light);
+  color: var(--color-primary-hover);
 }
 
 .remove-btn {

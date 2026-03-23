@@ -53,6 +53,7 @@ const selectedPriority = ref<Priority>(props.card.priority || 'medium')
 const selectedTaskType = ref<TaskType>(props.card.taskType || 'task')
 const selectedDueDate = ref(props.card.dueDate || '')
 const loading = ref(false)
+const isDarkTheme = computed(() => document.documentElement.getAttribute('data-theme') === 'dark')
 const showConfirmDelete = ref(false)
 const lightboxUrl = ref<string | null>(null)
 
@@ -1228,7 +1229,7 @@ onMounted(() => {
                 placeholder="Выберите дату..."
                 locale="ru"
                 format="dd.MM.yyyy"
-                :dark="document.documentElement.getAttribute('data-theme') === 'dark'"
+                :dark="isDarkTheme"
                 input-class-name="ecm-datepicker-input"
               />
             </div>

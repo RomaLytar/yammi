@@ -99,6 +99,16 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("DELETE /api/v1/boards/{boardId}/cards/{cardId}/labels/{labelId}", rateLimit(requireAuth(http.HandlerFunc(board.RemoveLabelFromCard))))
 	mux.Handle("GET /api/v1/boards/{boardId}/cards/{cardId}/labels", rateLimit(requireAuth(http.HandlerFunc(board.GetCardLabels))))
 
+	// Checklist routes
+	mux.Handle("POST /api/v1/boards/{boardId}/cards/{cardId}/checklists", rateLimit(requireAuth(http.HandlerFunc(board.CreateChecklist))))
+	mux.Handle("GET /api/v1/boards/{boardId}/cards/{cardId}/checklists", rateLimit(requireAuth(http.HandlerFunc(board.GetChecklists))))
+	mux.Handle("PUT /api/v1/boards/{boardId}/checklists/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateChecklist))))
+	mux.Handle("DELETE /api/v1/boards/{boardId}/checklists/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteChecklist))))
+	mux.Handle("POST /api/v1/boards/{boardId}/checklists/{checklistId}/items", rateLimit(requireAuth(http.HandlerFunc(board.CreateChecklistItem))))
+	mux.Handle("PUT /api/v1/boards/{boardId}/checklist-items/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateChecklistItem))))
+	mux.Handle("DELETE /api/v1/boards/{boardId}/checklist-items/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteChecklistItem))))
+	mux.Handle("PUT /api/v1/boards/{boardId}/checklist-items/{id}/toggle", rateLimit(requireAuth(http.HandlerFunc(board.ToggleChecklistItem))))
+
 	// Card Link routes
 	mux.Handle("POST /api/v1/boards/{boardId}/cards/{cardId}/links", rateLimit(requireAuth(http.HandlerFunc(board.LinkCards))))
 	mux.Handle("DELETE /api/v1/boards/{boardId}/card-links/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UnlinkCards))))

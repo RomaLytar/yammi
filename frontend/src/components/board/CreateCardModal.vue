@@ -260,13 +260,26 @@ function handleClose() {
         </div>
 
         <div class="ccm-meta-group">
-          <span class="ccm-meta-label">Дедлайн</span>
-          <input
-            v-model="selectedDueDate"
-            type="date"
-            class="ccm-date-input"
-            :disabled="loading"
-          />
+          <span class="ccm-meta-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Дедлайн
+          </span>
+          <div class="ccm-date-wrap">
+            <input
+              v-model="selectedDueDate"
+              type="date"
+              class="ccm-date-input"
+              :disabled="loading"
+            />
+            <button
+              v-if="selectedDueDate"
+              class="ccm-date-clear"
+              type="button"
+              @click="selectedDueDate = ''"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -731,20 +744,59 @@ function handleClose() {
   color: var(--color-primary);
 }
 
+.ccm-date-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .ccm-date-input {
-  padding: 6px 10px;
+  flex: 1;
+  padding: 8px 12px;
   border: 1.5px solid var(--color-input-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--color-input-bg);
   color: var(--color-text);
   font-size: 13px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s;
+  transition: all 0.15s;
+  cursor: pointer;
 }
 
 .ccm-date-input:focus {
   border-color: var(--color-input-focus);
+  box-shadow: var(--shadow-focus);
+}
+
+.ccm-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.ccm-date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.ccm-date-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: var(--color-surface-alt);
+  border-radius: 50%;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.ccm-date-clear:hover {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 </style>
 

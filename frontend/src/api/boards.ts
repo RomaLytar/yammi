@@ -588,8 +588,8 @@ export async function toggleChecklistItem(boardId: string, itemId: string): Prom
 
 export async function linkCards(boardId: string, parentCardId: string, childCardId: string): Promise<CardLink> {
   const { data } = await api.post<{ link: CardLinkResponse }>(
-    `/v1/boards/${boardId}/card-links`,
-    { parent_id: parentCardId, child_id: childCardId },
+    `/v1/boards/${boardId}/cards/${parentCardId}/links`,
+    { child_id: childCardId },
   )
   return mapCardLink(data.link)
 }

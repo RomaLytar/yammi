@@ -11,8 +11,6 @@ import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSearchSelect from '@/components/shared/BaseSearchSelect.vue'
 import RichTextEditor from '@/components/shared/RichTextEditor.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
-import { VueDatePicker } from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
 import { useBoardStore } from '@/stores/board'
 import { useUserStore } from '@/stores/user'
@@ -53,7 +51,7 @@ const selectedPriority = ref<Priority>(props.card.priority || 'medium')
 const selectedTaskType = ref<TaskType>(props.card.taskType || 'task')
 const selectedDueDate = ref(props.card.dueDate || '')
 const loading = ref(false)
-const isDarkTheme = computed(() => document.documentElement.getAttribute('data-theme') === 'dark')
+
 const showConfirmDelete = ref(false)
 const lightboxUrl = ref<string | null>(null)
 
@@ -675,6 +673,27 @@ async function loadSubtasks() {
       boardsApi.getCardChildren(boardStore.boardId, props.card.id),
       boardsApi.getCardParents(boardStore.boardId, props.card.id),
     ])
+    // Enrich links with card titles and column names from store
+    for (const link of children) {
+      for (const col of boardStore.columns) {
+        const card = col.cards.find(c => c.id === link.childId)
+        if (card) {
+          link.childTitle = card.title
+          link.childColumnName = col.title
+          break
+        }
+      }
+    }
+    for (const link of parents) {
+      for (const col of boardStore.columns) {
+        const card = col.cards.find(c => c.id === link.parentId)
+        if (card) {
+          link.childTitle = card.title
+          link.childColumnName = col.title
+          break
+        }
+      }
+    }
     childLinks.value = children
     parentLinks.value = parents
     subtasksLoaded.value = true
@@ -962,8 +981,11 @@ onMounted(() => {
             </div>
             <div v-else class="ecm-subtask-list">
               <div v-for="link in childLinks" :key="link.id" class="ecm-subtask-item">
+                <div class="ecm-subtask-item__icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                </div>
                 <div class="ecm-subtask-item__body">
-                  <span class="ecm-subtask-item__title">{{ link.childTitle || link.childId.slice(0,8) }}</span>
+                  <span class="ecm-subtask-item__title">{{ link.childTitle || 'Без названия' }}</span>
                   <span v-if="link.childColumnName" class="ecm-subtask-item__column">{{ link.childColumnName }}</span>
                 </div>
                 <button class="ecm-subtask-item__unlink" title="Отвязать" @click="unlinkSubtask(link.id)">
@@ -1221,17 +1243,22 @@ onMounted(() => {
             <!-- Дедлайн -->
             <div class="ecm-field">
               <span class="ecm-field__label">Дедлайн</span>
-              <VueDatePicker
-                v-model="selectedDueDate"
-                :enable-time-picker="false"
-                auto-apply
-                :clearable="true"
-                placeholder="Выберите дату..."
-                locale="ru"
-                format="dd.MM.yyyy"
-                :dark="isDarkTheme"
-                input-class-name="ecm-datepicker-input"
-              />
+              <div class="ecm-date-wrap">
+                <input
+                  v-model="selectedDueDate"
+                  type="date"
+                  class="ecm-date-input"
+                />
+                <button
+                  v-if="selectedDueDate"
+                  class="ecm-date-clear"
+                  type="button"
+                  title="Убрать дедлайн"
+                  @click="selectedDueDate = ''"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
             </div>
 
             <!-- Метки -->
@@ -2655,34 +2682,67 @@ onMounted(() => {
   font-size: 13px;
   color: var(--color-text-tertiary, #9ca3af);
 }
+
+/* Date input */
+.ecm-date-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ecm-date-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1.5px solid var(--color-input-border, #d1d5db);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-input-bg, #f9fafb);
+  color: var(--color-text, #111827);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.15s;
+  cursor: pointer;
+  color-scheme: light;
+}
+
+[data-theme="dark"] .ecm-date-input {
+  color-scheme: dark;
+}
+
+.ecm-date-input:focus {
+  border-color: var(--color-input-focus, #7c5cfc);
+  box-shadow: var(--shadow-focus);
+}
+
+.ecm-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  filter: none;
+  transition: opacity 0.15s;
+}
+
+.ecm-date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.ecm-date-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: var(--color-surface-alt, #f3f4f6);
+  border-radius: 50%;
+  color: var(--color-text-tertiary, #9ca3af);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.ecm-date-clear:hover {
+  background: var(--color-danger-soft, #fef2f2);
+  color: var(--color-danger, #ef4444);
+}
 </style>
 
-<style>
-/* VueDatePicker theme overrides */
-.ecm-datepicker-input {
-  padding: 8px 12px !important;
-  border: 1.5px solid var(--color-input-border) !important;
-  border-radius: var(--radius-sm) !important;
-  background: var(--color-input-bg) !important;
-  color: var(--color-text) !important;
-  font-size: 13px !important;
-  font-family: inherit !important;
-}
-
-.ecm-datepicker-input:focus {
-  border-color: var(--color-input-focus) !important;
-  box-shadow: var(--shadow-focus) !important;
-}
-
-.dp__theme_light,
-.dp__theme_dark {
-  --dp-primary-color: var(--color-primary);
-  --dp-border-color: var(--color-border);
-  --dp-menu-border-color: var(--color-border-light);
-  --dp-background-color: var(--color-surface);
-  --dp-text-color: var(--color-text);
-  --dp-hover-color: var(--color-primary-soft);
-  --dp-hover-text-color: var(--color-text);
-  --dp-border-color-hover: var(--color-primary);
-}
-</style>

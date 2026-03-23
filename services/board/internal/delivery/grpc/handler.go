@@ -57,6 +57,12 @@ type BoardServiceServer struct {
 	addLabelToCard     *usecase.AddLabelToCardUseCase
 	removeLabelFromCard *usecase.RemoveLabelFromCardUseCase
 	getCardLabels      *usecase.GetCardLabelsUseCase
+
+	// Card Link Use Cases
+	linkCards       *usecase.LinkCardsUseCase
+	unlinkCards     *usecase.UnlinkCardsUseCase
+	getCardChildren *usecase.GetCardChildrenUseCase
+	getCardParents  *usecase.GetCardParentsUseCase
 }
 
 // NewBoardServiceServer создает новый gRPC сервер с внедренными use cases
@@ -96,6 +102,10 @@ func NewBoardServiceServer(
 	addLabelToCard *usecase.AddLabelToCardUseCase,
 	removeLabelFromCard *usecase.RemoveLabelFromCardUseCase,
 	getCardLabels *usecase.GetCardLabelsUseCase,
+	linkCards *usecase.LinkCardsUseCase,
+	unlinkCards *usecase.UnlinkCardsUseCase,
+	getCardChildren *usecase.GetCardChildrenUseCase,
+	getCardParents *usecase.GetCardParentsUseCase,
 ) *BoardServiceServer {
 	return &BoardServiceServer{
 		createBoard:         createBoard,
@@ -133,6 +143,10 @@ func NewBoardServiceServer(
 		addLabelToCard:      addLabelToCard,
 		removeLabelFromCard: removeLabelFromCard,
 		getCardLabels:       getCardLabels,
+		linkCards:            linkCards,
+		unlinkCards:          unlinkCards,
+		getCardChildren:     getCardChildren,
+		getCardParents:      getCardParents,
 	}
 }
 

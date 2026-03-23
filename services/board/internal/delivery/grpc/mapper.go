@@ -182,6 +182,25 @@ func mapLabelsToProto(labels []*domain.Label) []*boardpb.Label {
 	return result
 }
 
+func mapCardLinkToProto(l *domain.CardLink) *boardpb.CardLink {
+	return &boardpb.CardLink{
+		Id:        l.ID,
+		ParentId:  l.ParentID,
+		ChildId:   l.ChildID,
+		BoardId:   l.BoardID,
+		LinkType:  string(l.LinkType),
+		CreatedAt: timestamppb.New(l.CreatedAt),
+	}
+}
+
+func mapCardLinksToProto(links []*domain.CardLink) []*boardpb.CardLink {
+	result := make([]*boardpb.CardLink, len(links))
+	for i, l := range links {
+		result[i] = mapCardLinkToProto(l)
+	}
+	return result
+}
+
 // ============================================================================
 // Error Mapping (domain errors → gRPC codes)
 // ============================================================================
@@ -193,7 +212,8 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrCardNotFound) ||
 		errors.Is(err, domain.ErrMemberNotFound) ||
 		errors.Is(err, domain.ErrAttachmentNotFound) ||
-		errors.Is(err, domain.ErrLabelNotFound) {
+		errors.Is(err, domain.ErrLabelNotFound) ||
+		errors.Is(err, domain.ErrCardLinkNotFound) {
 		return status.Error(codes.NotFound, err.Error())
 	}
 
@@ -218,7 +238,9 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrInvalidPriority) ||
 		errors.Is(err, domain.ErrInvalidTaskType) ||
 		errors.Is(err, domain.ErrEmptyLabelName) ||
-		errors.Is(err, domain.ErrInvalidColor) {
+		errors.Is(err, domain.ErrInvalidColor) ||
+		errors.Is(err, domain.ErrSelfLink) ||
+		errors.Is(err, domain.ErrInvalidLinkType) {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 
@@ -231,7 +253,8 @@ func mapDomainError(err error) error {
 	// AlreadyExists errors
 	if errors.Is(err, domain.ErrMemberExists) ||
 		errors.Is(err, domain.ErrLabelExists) ||
-		errors.Is(err, domain.ErrLabelAlreadyOnCard) {
+		errors.Is(err, domain.ErrLabelAlreadyOnCard) ||
+		errors.Is(err, domain.ErrLinkAlreadyExists) {
 		return status.Error(codes.AlreadyExists, err.Error())
 	}
 

@@ -78,6 +78,7 @@ func runMigrations(t *testing.T, db *sql.DB) {
 		"../../migrations/000006_attachments.up.sql",
 		"../../migrations/000007_card_metadata.up.sql",
 		"../../migrations/000008_labels.up.sql",
+		"../../migrations/000010_card_links.up.sql",
 	}
 
 	for _, migrationPath := range migrationFiles {

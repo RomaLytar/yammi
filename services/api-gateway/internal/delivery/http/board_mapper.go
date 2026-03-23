@@ -162,6 +162,27 @@ func mapLabelsFromProto(pbs []*boardpb.Label) []labelResponse {
 	return labels
 }
 
+func mapCardLinkFromProto(pb *boardpb.CardLink) cardLinkResponse {
+	return cardLinkResponse{
+		ID:              pb.Id,
+		ParentID:        pb.ParentId,
+		ChildID:         pb.ChildId,
+		BoardID:         pb.BoardId,
+		LinkType:        pb.LinkType,
+		ChildTitle:      pb.ChildTitle,
+		ChildColumnName: pb.ChildColumnName,
+		CreatedAt:       pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+func mapCardLinksFromProto(pbs []*boardpb.CardLink) []cardLinkResponse {
+	links := make([]cardLinkResponse, len(pbs))
+	for i, pb := range pbs {
+		links[i] = mapCardLinkFromProto(pb)
+	}
+	return links
+}
+
 func parseIntQueryParam(r *http.Request, key string, defaultValue int) int {
 	val := r.URL.Query().Get(key)
 	if val == "" {

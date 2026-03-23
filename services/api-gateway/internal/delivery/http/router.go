@@ -99,6 +99,12 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("DELETE /api/v1/boards/{boardId}/cards/{cardId}/labels/{labelId}", rateLimit(requireAuth(http.HandlerFunc(board.RemoveLabelFromCard))))
 	mux.Handle("GET /api/v1/boards/{boardId}/cards/{cardId}/labels", rateLimit(requireAuth(http.HandlerFunc(board.GetCardLabels))))
 
+	// Card Link routes
+	mux.Handle("POST /api/v1/boards/{boardId}/cards/{cardId}/links", rateLimit(requireAuth(http.HandlerFunc(board.LinkCards))))
+	mux.Handle("DELETE /api/v1/boards/{boardId}/card-links/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UnlinkCards))))
+	mux.Handle("GET /api/v1/boards/{boardId}/cards/{cardId}/children", rateLimit(requireAuth(http.HandlerFunc(board.GetCardChildren))))
+	mux.Handle("GET /api/v1/boards/{boardId}/cards/{cardId}/parents", rateLimit(requireAuth(http.HandlerFunc(board.GetCardParents))))
+
 	// Comment routes
 	comment := NewCommentHandler(clients.CommentClient)
 	mux.Handle("POST /api/v1/cards/{id}/comments", rateLimit(requireAuth(http.HandlerFunc(comment.CreateComment))))

@@ -102,3 +102,11 @@ func (p *EventPublisher) PublishCardLabelAdded(ctx context.Context, event usecas
 func (p *EventPublisher) PublishCardLabelRemoved(ctx context.Context, event usecase.CardLabelRemoved) error {
 	return p.publisher.Publish(ctx, "card.label.removed", event)
 }
+
+func (p *EventPublisher) PublishCardLinked(ctx context.Context, event usecase.CardLinked) error {
+	return p.publisher.Publish(ctx, "card.linked", event)
+}
+
+func (p *EventPublisher) PublishCardUnlinked(ctx context.Context, event usecase.CardUnlinked) error {
+	return p.publisher.Publish(ctx, "card.unlinked", event)
+}

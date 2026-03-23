@@ -155,7 +155,9 @@ func TestUploadAttachmentUseCase_Execute(t *testing.T) {
 			tt.setupMocks(attachRepo, memberRepo, storage, publisher)
 			publisher.On("PublishAttachmentUploaded", mock.Anything, mock.Anything).Return(nil).Maybe()
 
-			useCase := NewUploadAttachmentUseCase(attachRepo, memberRepo, storage, publisher)
+			activityRepo := new(MockActivityRepository)
+			activityRepo.On("Create", mock.Anything, mock.Anything).Return(nil).Maybe()
+			useCase := NewUploadAttachmentUseCase(attachRepo, activityRepo, memberRepo, storage, publisher)
 			attachment, uploadURL, err := useCase.Execute(context.Background(), tt.cardID, tt.boardID, tt.userID, tt.fileName, tt.contentType, tt.fileSize)
 
 			if tt.wantErr {

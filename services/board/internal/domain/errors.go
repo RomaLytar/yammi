@@ -56,6 +56,14 @@ var (
 	ErrLabelAlreadyOnCard = errors.New("label already assigned to card")
 )
 
+// Card Link errors
+var (
+	ErrCardLinkNotFound = errors.New("card link not found")
+	ErrSelfLink         = errors.New("card cannot link to itself")
+	ErrLinkAlreadyExists = errors.New("link already exists between these cards")
+	ErrInvalidLinkType  = errors.New("invalid link type")
+)
+
 // Activity errors
 var (
 	ErrEmptyActorID      = errors.New("actor ID cannot be empty")

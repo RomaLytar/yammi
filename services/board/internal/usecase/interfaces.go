@@ -150,6 +150,27 @@ type LabelRepository interface {
 	CountByBoardID(ctx context.Context, boardID string) (int, error)
 }
 
+// CardLinkRepository определяет интерфейс для работы со связями карточек
+type CardLinkRepository interface {
+	// Create создает новую связь между карточками
+	Create(ctx context.Context, link *domain.CardLink) error
+
+	// Delete удаляет связь по ID (boardID для partition pruning)
+	Delete(ctx context.Context, linkID, boardID string) error
+
+	// GetByID возвращает связь по ID (boardID для partition pruning)
+	GetByID(ctx context.Context, linkID, boardID string) (*domain.CardLink, error)
+
+	// ListChildren возвращает все дочерние связи карточки (boardID для partition pruning)
+	ListChildren(ctx context.Context, parentID, boardID string) ([]*domain.CardLink, error)
+
+	// ListParents возвращает все родительские связи карточки (без boardID — child может быть на любой доске)
+	ListParents(ctx context.Context, childID string) ([]*domain.CardLink, error)
+
+	// Exists проверяет существование связи между двумя карточками
+	Exists(ctx context.Context, parentID, childID, boardID string) (bool, error)
+}
+
 // FileStorage определяет интерфейс для работы с файловым хранилищем
 type FileStorage interface {
 	// GenerateUploadURL генерирует pre-signed URL для загрузки файла

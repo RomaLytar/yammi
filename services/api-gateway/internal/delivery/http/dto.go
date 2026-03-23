@@ -136,6 +136,19 @@ type labelResponse struct {
 	CreatedAt string `json:"created_at"`
 }
 
+// --- Card Link responses ---
+
+type cardLinkResponse struct {
+	ID              string `json:"id"`
+	ParentID        string `json:"parent_id"`
+	ChildID         string `json:"child_id"`
+	BoardID         string `json:"board_id"`
+	LinkType        string `json:"link_type"`
+	ChildTitle      string `json:"child_title,omitempty"`
+	ChildColumnName string `json:"child_column_name,omitempty"`
+	CreatedAt       string `json:"created_at"`
+}
+
 // --- Generic responses ---
 
 type statusResponse struct {

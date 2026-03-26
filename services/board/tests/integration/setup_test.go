@@ -81,6 +81,7 @@ func runMigrations(t *testing.T, db *sql.DB) {
 		"../../migrations/000010_card_links.up.sql",
 		"../../migrations/000011_custom_fields.up.sql",
 		"../../migrations/000012_automation_rules.up.sql",
+		"../../migrations/000013_optimize_indexes.up.sql",
 	}
 
 	for _, migrationPath := range migrationFiles {

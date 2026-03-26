@@ -136,6 +136,66 @@ func (m *mockPublisher) PublishCardUnlinked(ctx context.Context, event usecase.C
 	return nil
 }
 
+func (m *mockPublisher) PublishChecklistCreated(ctx context.Context, event usecase.ChecklistCreated) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishChecklistUpdated(ctx context.Context, event usecase.ChecklistUpdated) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishChecklistDeleted(ctx context.Context, event usecase.ChecklistDeleted) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishChecklistItemToggled(ctx context.Context, event usecase.ChecklistItemToggled) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCustomFieldCreated(ctx context.Context, event usecase.CustomFieldCreated) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCustomFieldUpdated(ctx context.Context, event usecase.CustomFieldUpdated) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCustomFieldDeleted(ctx context.Context, event usecase.CustomFieldDeleted) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishCustomFieldValueSet(ctx context.Context, event usecase.CustomFieldValueSet) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishAutomationRuleCreated(ctx context.Context, event usecase.AutomationRuleCreated) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishAutomationRuleUpdated(ctx context.Context, event usecase.AutomationRuleUpdated) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishAutomationRuleDeleted(ctx context.Context, event usecase.AutomationRuleDeleted) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
+func (m *mockPublisher) PublishAutomationExecuted(ctx context.Context, event usecase.AutomationExecuted) error {
+	m.events = append(m.events, event)
+	return nil
+}
+
 func TestCreateBoardUseCase_Integration(t *testing.T) {
 	dsn, cleanup := setupPostgresContainer(t)
 	defer cleanup()

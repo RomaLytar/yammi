@@ -148,11 +148,13 @@ func TestToggleChecklistItem_Success(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
+	checklistRepo.On("GetItemByID", mock.Anything, "item-123", "board-123").
+		Return(&domain.ChecklistItem{ID: "item-123", IsChecked: false}, nil)
 	checklistRepo.On("ToggleItem", mock.Anything, "item-123", "board-123", true).Return(nil)
 	publisher.On("PublishChecklistItemToggled", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 	uc := NewToggleChecklistItemUseCase(checklistRepo, memberRepo, publisher)
-	err := uc.Execute(context.Background(), "item-123", "board-123", "user-123", true)
+	_, err := uc.Execute(context.Background(), "item-123", "board-123", "user-123")
 
 	assert.NoError(t, err)
 
@@ -169,7 +171,7 @@ func TestToggleChecklistItem_NonMember_Denied(t *testing.T) {
 		Return(false, domain.Role(""), nil)
 
 	uc := NewToggleChecklistItemUseCase(checklistRepo, memberRepo, publisher)
-	err := uc.Execute(context.Background(), "item-123", "board-123", "user-999", true)
+	_, err := uc.Execute(context.Background(), "item-123", "board-123", "user-999")
 
 	assert.Error(t, err)
 	assert.Equal(t, domain.ErrAccessDenied, err)

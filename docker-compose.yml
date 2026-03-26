@@ -142,8 +142,6 @@ services:
       NATS_URL: "nats://yammi:${NATS_PASSWORD}@nats:4222"
       BCRYPT_COST: "10"
       JWT_SEED: "${JWT_SEED}"
-    deploy:
-      replicas: 5
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -239,8 +237,6 @@ services:
       NATS_URL: "nats://yammi:${NATS_PASSWORD}@nats:4222"
       REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/1"
       METRICS_PORT: "2113"
-    deploy:
-      replicas: 3
     depends_on:
       pgbouncer-consumer:
         condition: service_healthy
@@ -264,7 +260,7 @@ services:
       RATE_LIMIT_LOGIN: "${RATE_LIMIT_LOGIN:-50}"
       RATE_LIMIT_REFRESH: "${RATE_LIMIT_REFRESH:-50}"
       RATE_LIMIT_DEFAULT: "${RATE_LIMIT_DEFAULT:-300}"
-      ALLOWED_ORIGINS: "http://localhost:3000"
+      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:5173"
     ports:
       - "8080:8080"
     depends_on:
@@ -283,7 +279,7 @@ services:
       NATS_URL: "nats://yammi:${NATS_PASSWORD}@nats:4222"
       AUTH_PUBLIC_KEY_URL: "http://api-gateway:8080/api/v1/auth/public-key"
       API_GATEWAY_URL: "http://api-gateway:8080"
-      ALLOWED_ORIGINS: "http://localhost:3000"
+      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:5173"
     ports:
       - "8081:8081"
     depends_on:

@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"log"
 	"log/slog"
 	"time"
 
@@ -81,12 +80,15 @@ func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 		if prevDescription != card.Description {
 			changes["description_changed"] = "true"
 		}
-		activity, actErr := domain.NewActivity(card.ID, boardID, userID, domain.ActivityCardUpdated,
-			fmt.Sprintf("Карточка \"%s\" обновлена", card.Title), changes)
-		if actErr == nil {
-			if writeErr := uc.activityRepo.Create(ctx, activity); writeErr != nil {
-				log.Printf("failed to write activity log: %v", writeErr)
-			}
+		if activity, actErr := domain.NewActivity(card.ID, boardID, userID, domain.ActivityCardUpdated,
+			fmt.Sprintf("Карточка \"%s\" обновлена", card.Title), changes); actErr == nil {
+			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				if err := uc.activityRepo.Create(ctx, activity); err != nil {
+					slog.Error("failed to write activity log", "error", err, "card_id", card.ID)
+				}
+			}()
 		}
 	}
 

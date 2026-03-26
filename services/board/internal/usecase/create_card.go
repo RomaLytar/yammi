@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"log"
 	"log/slog"
 	"time"
 
@@ -73,13 +72,16 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 		return nil, err
 	}
 
-	// 6. Записываем активность (синхронно)
-	activity, err := domain.NewActivity(card.ID, boardID, userID, domain.ActivityCardCreated,
-		fmt.Sprintf("Карточка \"%s\" создана", card.Title), nil)
-	if err == nil {
-		if actErr := uc.activityRepo.Create(ctx, activity); actErr != nil {
-			log.Printf("failed to write activity log: %v", actErr)
-		}
+	// 6. Записываем активность (async, non-blocking)
+	if activity, err := domain.NewActivity(card.ID, boardID, userID, domain.ActivityCardCreated,
+		fmt.Sprintf("Карточка \"%s\" создана", card.Title), nil); err == nil {
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := uc.activityRepo.Create(ctx, activity); err != nil {
+				slog.Error("failed to write activity log", "error", err, "card_id", card.ID)
+			}
+		}()
 	}
 
 	// 7. Обновляем updated_at доски + публикуем события (async, non-blocking)

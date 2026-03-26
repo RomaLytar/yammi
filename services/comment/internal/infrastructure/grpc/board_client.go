@@ -39,7 +39,7 @@ func NewBoardMembershipChecker(boardGRPCAddr string) (*BoardMembershipChecker, e
 		client: boardpb.NewBoardServiceClient(conn),
 		conn:   conn,
 		cache:  make(map[string]memberCacheEntry),
-		ttl:    5 * time.Second,
+		ttl:    5 * time.Minute,
 	}, nil
 }
 

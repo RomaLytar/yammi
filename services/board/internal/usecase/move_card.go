@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"time"
 
@@ -58,17 +57,20 @@ func (uc *MoveCardUseCase) Execute(ctx context.Context, cardID, boardID, fromCol
 		return nil, err
 	}
 
-	// 6. Записываем активность (синхронно)
+	// 6. Записываем активность (async, non-blocking)
 	changes := map[string]string{
 		"from_column_id": fromColumnID,
 		"to_column_id":   toColumnID,
 	}
-	activity, actErr := domain.NewActivity(card.ID, boardID, userID, domain.ActivityCardMoved,
-		"Карточка перемещена", changes)
-	if actErr == nil {
-		if writeErr := uc.activityRepo.Create(ctx, activity); writeErr != nil {
-			log.Printf("failed to write activity log: %v", writeErr)
-		}
+	if activity, actErr := domain.NewActivity(card.ID, boardID, userID, domain.ActivityCardMoved,
+		"Карточка перемещена", changes); actErr == nil {
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := uc.activityRepo.Create(ctx, activity); err != nil {
+				slog.Error("failed to write activity log", "error", err, "card_id", card.ID)
+			}
+		}()
 	}
 
 	// 7. Обновляем updated_at доски + публикуем событие (async, non-blocking)

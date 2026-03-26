@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"log"
 	"log/slog"
 	"time"
 
@@ -65,14 +64,17 @@ func (uc *AssignCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 		return nil, err
 	}
 
-	// 7. Записываем активность
-	activity, actErr := domain.NewActivity(card.ID, boardID, userID, domain.ActivityCardAssigned,
+	// 7. Записываем активность (async, non-blocking)
+	if activity, actErr := domain.NewActivity(card.ID, boardID, userID, domain.ActivityCardAssigned,
 		fmt.Sprintf("Карточка \"%s\" назначена", card.Title),
-		map[string]string{"assignee_id": assigneeID})
-	if actErr == nil {
-		if writeErr := uc.activityRepo.Create(ctx, activity); writeErr != nil {
-			log.Printf("failed to write activity log: %v", writeErr)
-		}
+		map[string]string{"assignee_id": assigneeID}); actErr == nil {
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := uc.activityRepo.Create(ctx, activity); err != nil {
+				slog.Error("failed to write activity log", "error", err, "card_id", card.ID)
+			}
+		}()
 	}
 
 	// 8. Публикуем событие (async, non-blocking)

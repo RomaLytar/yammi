@@ -67,12 +67,17 @@ func (uc *UploadAttachmentUseCase) Execute(ctx context.Context, cardID, boardID,
 		return nil, "", err
 	}
 
-	// 5.5 Записываем в историю
-	activity, _ := domain.NewActivity(cardID, boardID, userID, domain.ActivityAttachmentAdded,
+	// 5.5 Записываем в историю (async, non-blocking)
+	if activity, err := domain.NewActivity(cardID, boardID, userID, domain.ActivityAttachmentAdded,
 		fmt.Sprintf("Файл \"%s\" прикреплён", fileName),
-		map[string]string{"file_name": fileName, "attachment_id": attachment.ID})
-	if activity != nil {
-		_ = uc.activityRepo.Create(ctx, activity)
+		map[string]string{"file_name": fileName, "attachment_id": attachment.ID}); err == nil {
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := uc.activityRepo.Create(ctx, activity); err != nil {
+				slog.Error("failed to write activity log", "error", err, "card_id", cardID)
+			}
+		}()
 	}
 
 	// 6. Публикуем событие (async, non-blocking)

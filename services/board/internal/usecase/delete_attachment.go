@@ -51,12 +51,17 @@ func (uc *DeleteAttachmentUseCase) Execute(ctx context.Context, attachmentID, bo
 		return err
 	}
 
-	// Записываем в историю
-	activity, _ := domain.NewActivity(attachment.CardID, boardID, userID, domain.ActivityAttachmentDeleted,
+	// Записываем в историю (async, non-blocking)
+	if activity, err := domain.NewActivity(attachment.CardID, boardID, userID, domain.ActivityAttachmentDeleted,
 		fmt.Sprintf("Файл \"%s\" удалён", attachment.FileName),
-		map[string]string{"file_name": attachment.FileName})
-	if activity != nil {
-		_ = uc.activityRepo.Create(ctx, activity)
+		map[string]string{"file_name": attachment.FileName}); err == nil {
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := uc.activityRepo.Create(ctx, activity); err != nil {
+				slog.Error("failed to write activity log", "error", err, "card_id", attachment.CardID)
+			}
+		}()
 	}
 
 	go func() {

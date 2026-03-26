@@ -39,10 +39,8 @@ func (r *CommentRepository) Create(ctx context.Context, comment *domain.Comment)
 // GetByID возвращает комментарий по ID
 func (r *CommentRepository) GetByID(ctx context.Context, commentID string) (*domain.Comment, error) {
 	query := `
-		SELECT id, card_id, board_id, author_id, parent_id, content,
-		       COALESCE((SELECT COUNT(*) FROM comments WHERE parent_id = c.id), 0) AS reply_count,
-		       created_at, updated_at
-		FROM comments c
+		SELECT id, card_id, board_id, author_id, parent_id, content, reply_count, created_at, updated_at
+		FROM comments
 		WHERE id = $1
 	`
 
@@ -88,10 +86,8 @@ func (r *CommentRepository) ListByCardID(ctx context.Context, cardID string, lim
 		cursorID := parts[1]
 
 		query := `
-			SELECT id, card_id, board_id, author_id, parent_id, content,
-			       COALESCE((SELECT COUNT(*) FROM comments WHERE parent_id = c.id), 0) AS reply_count,
-			       created_at, updated_at
-			FROM comments c
+			SELECT id, card_id, board_id, author_id, parent_id, content, reply_count, created_at, updated_at
+			FROM comments
 			WHERE card_id = $1 AND (created_at, id) > ($2, $3)
 			ORDER BY created_at ASC, id ASC
 			LIMIT $4
@@ -99,10 +95,8 @@ func (r *CommentRepository) ListByCardID(ctx context.Context, cardID string, lim
 		rows, err = r.db.QueryContext(ctx, query, cardID, cursorTime, cursorID, limit+1)
 	} else {
 		query := `
-			SELECT id, card_id, board_id, author_id, parent_id, content,
-			       COALESCE((SELECT COUNT(*) FROM comments WHERE parent_id = c.id), 0) AS reply_count,
-			       created_at, updated_at
-			FROM comments c
+			SELECT id, card_id, board_id, author_id, parent_id, content, reply_count, created_at, updated_at
+			FROM comments
 			WHERE card_id = $1
 			ORDER BY created_at ASC, id ASC
 			LIMIT $2
@@ -197,14 +191,18 @@ func (r *CommentRepository) CountByCardID(ctx context.Context, cardID string) (i
 
 // IncrementReplyCount увеличивает счётчик ответов у родительского комментария
 func (r *CommentRepository) IncrementReplyCount(ctx context.Context, commentID string) error {
-	// reply_count вычисляется динамически в GetByID/ListByCardID через подзапрос,
-	// но для оптимизации можно хранить материализованное значение.
-	// В текущей реализации используем подзапрос — этот метод no-op.
+	_, err := r.db.ExecContext(ctx, `UPDATE comments SET reply_count = reply_count + 1 WHERE id = $1`, commentID)
+	if err != nil {
+		return fmt.Errorf("increment reply count: %w", err)
+	}
 	return nil
 }
 
 // DecrementReplyCount уменьшает счётчик ответов у родительского комментария
 func (r *CommentRepository) DecrementReplyCount(ctx context.Context, commentID string) error {
-	// reply_count вычисляется динамически — этот метод no-op.
+	_, err := r.db.ExecContext(ctx, `UPDATE comments SET reply_count = GREATEST(reply_count - 1, 0) WHERE id = $1`, commentID)
+	if err != nil {
+		return fmt.Errorf("decrement reply count: %w", err)
+	}
 	return nil
 }

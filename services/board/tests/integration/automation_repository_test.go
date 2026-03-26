@@ -12,16 +12,8 @@ import (
 )
 
 func TestAutomationRuleRepository_Create(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	ruleRepo := postgres.NewAutomationRuleRepository(db)
@@ -71,37 +63,21 @@ func TestAutomationRuleRepository_Create(t *testing.T) {
 }
 
 func TestAutomationRuleRepository_GetByID_NotFound(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	ruleRepo := postgres.NewAutomationRuleRepository(db)
 	ctx := context.Background()
 
-	_, err = ruleRepo.GetByID(ctx, uuid.NewString())
+	_, err := ruleRepo.GetByID(ctx, uuid.NewString())
 	if err != domain.ErrAutomationRuleNotFound {
 		t.Errorf("Expected ErrAutomationRuleNotFound, got %v", err)
 	}
 }
 
 func TestAutomationRuleRepository_ListByBoardID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	ruleRepo := postgres.NewAutomationRuleRepository(db)
@@ -132,16 +108,8 @@ func TestAutomationRuleRepository_ListByBoardID(t *testing.T) {
 }
 
 func TestAutomationRuleRepository_ListEnabledByBoardAndTrigger(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	ruleRepo := postgres.NewAutomationRuleRepository(db)
@@ -180,16 +148,8 @@ func TestAutomationRuleRepository_ListEnabledByBoardAndTrigger(t *testing.T) {
 }
 
 func TestAutomationRuleRepository_Update(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	ruleRepo := postgres.NewAutomationRuleRepository(db)
@@ -208,7 +168,7 @@ func TestAutomationRuleRepository_Update(t *testing.T) {
 
 	// Update
 	rule.Update("Updated", false, map[string]string{"key": "new"}, map[string]string{"target": "col-2"})
-	err = ruleRepo.Update(ctx, rule)
+	err := ruleRepo.Update(ctx, rule)
 	if err != nil {
 		t.Fatalf("Failed to update rule: %v", err)
 	}
@@ -229,16 +189,8 @@ func TestAutomationRuleRepository_Update(t *testing.T) {
 }
 
 func TestAutomationRuleRepository_Delete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	ruleRepo := postgres.NewAutomationRuleRepository(db)
@@ -252,7 +204,7 @@ func TestAutomationRuleRepository_Delete(t *testing.T) {
 		domain.TriggerCardCreated, nil, domain.ActionMoveCard, nil, ownerID)
 	ruleRepo.Create(ctx, rule)
 
-	err = ruleRepo.Delete(ctx, rule.ID)
+	err := ruleRepo.Delete(ctx, rule.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete rule: %v", err)
 	}
@@ -264,16 +216,8 @@ func TestAutomationRuleRepository_Delete(t *testing.T) {
 }
 
 func TestAutomationRuleRepository_CountByBoardID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	ruleRepo := postgres.NewAutomationRuleRepository(db)
@@ -301,16 +245,8 @@ func TestAutomationRuleRepository_CountByBoardID(t *testing.T) {
 }
 
 func TestAutomationRuleRepository_CascadeDelete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	ruleRepo := postgres.NewAutomationRuleRepository(db)
@@ -337,7 +273,7 @@ func TestAutomationRuleRepository_CascadeDelete(t *testing.T) {
 	}
 
 	// Delete board (should cascade to rules and executions)
-	err = boardRepo.Delete(ctx, board.ID)
+	err := boardRepo.Delete(ctx, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete board: %v", err)
 	}
@@ -349,16 +285,8 @@ func TestAutomationRuleRepository_CascadeDelete(t *testing.T) {
 }
 
 func TestAutomationRuleRepository_Executions(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	ruleRepo := postgres.NewAutomationRuleRepository(db)

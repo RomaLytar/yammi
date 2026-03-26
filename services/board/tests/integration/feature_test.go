@@ -14,14 +14,8 @@ import (
 // ==================== Board tests ====================
 
 func TestFeature_CreateBoard_OwnerAutoMember(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -61,14 +55,8 @@ func TestFeature_CreateBoard_OwnerAutoMember(t *testing.T) {
 }
 
 func TestFeature_ListBoards_OnlyMemberBoards(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	ctx := context.Background()
@@ -116,14 +104,8 @@ func TestFeature_ListBoards_OnlyMemberBoards(t *testing.T) {
 }
 
 func TestFeature_ListBoards_MemberSeesSharedBoards(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -158,14 +140,8 @@ func TestFeature_ListBoards_MemberSeesSharedBoards(t *testing.T) {
 }
 
 func TestFeature_ListBoards_OwnerOnlyFilter(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -213,14 +189,8 @@ func TestFeature_ListBoards_OwnerOnlyFilter(t *testing.T) {
 }
 
 func TestFeature_ListBoards_SearchByTitle(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	ctx := context.Background()
@@ -256,14 +226,8 @@ func TestFeature_ListBoards_SearchByTitle(t *testing.T) {
 }
 
 func TestFeature_UpdateBoard_OnlyOwner(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -304,14 +268,8 @@ func TestFeature_UpdateBoard_OnlyOwner(t *testing.T) {
 }
 
 func TestFeature_GetBoard_NonMemberDenied(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -327,7 +285,7 @@ func TestFeature_GetBoard_NonMemberDenied(t *testing.T) {
 	uc := usecase.NewGetBoardUseCase(boardRepo, memberRepo)
 
 	// Owner can get board
-	_, err = uc.Execute(ctx, board.ID, ownerID)
+	_, err := uc.Execute(ctx, board.ID, ownerID)
 	if err != nil {
 		t.Fatalf("Owner should be able to get board: %v", err)
 	}
@@ -342,14 +300,8 @@ func TestFeature_GetBoard_NonMemberDenied(t *testing.T) {
 // ==================== Column tests ====================
 
 func TestFeature_AddColumn_MemberCanAdd(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -385,14 +337,8 @@ func TestFeature_AddColumn_MemberCanAdd(t *testing.T) {
 }
 
 func TestFeature_AddColumn_NonMemberDenied(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -408,21 +354,15 @@ func TestFeature_AddColumn_NonMemberDenied(t *testing.T) {
 	uc := usecase.NewAddColumnUseCase(columnRepo, boardRepo, memberRepo, publisher)
 
 	// Non-member tries to add column → ErrAccessDenied
-	_, err = uc.Execute(ctx, board.ID, nonMemberID, "Hacked Column", 0)
+	_, err := uc.Execute(ctx, board.ID, nonMemberID, "Hacked Column", 0)
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
 }
 
 func TestFeature_DeleteColumn_OnlyOwnerCanDelete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -446,7 +386,7 @@ func TestFeature_DeleteColumn_OnlyOwnerCanDelete(t *testing.T) {
 	uc := usecase.NewDeleteColumnUseCase(columnRepo, boardRepo, memberRepo, publisher)
 
 	// Non-member tries to delete → ErrAccessDenied
-	err = uc.Execute(ctx, col1.ID, board.ID, nonMemberID)
+	err := uc.Execute(ctx, col1.ID, board.ID, nonMemberID)
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
@@ -479,14 +419,8 @@ func TestFeature_DeleteColumn_OnlyOwnerCanDelete(t *testing.T) {
 // ==================== Card tests ====================
 
 func TestFeature_CreateCard_SetsCreatorID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -523,14 +457,8 @@ func TestFeature_CreateCard_SetsCreatorID(t *testing.T) {
 }
 
 func TestFeature_CreateCard_NonMemberDenied(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -550,21 +478,15 @@ func TestFeature_CreateCard_NonMemberDenied(t *testing.T) {
 	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Non-member tries to create card → ErrAccessDenied
-	_, err = uc.Execute(ctx, column.ID, board.ID, nonMemberID, "Hacked Card", "Desc", "", nil, nil, "", "")
+	_, err := uc.Execute(ctx, column.ID, board.ID, nonMemberID, "Hacked Card", "Desc", "", nil, nil, "", "")
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
 }
 
 func TestFeature_MoveCard_MemberCanMove(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -615,14 +537,8 @@ func TestFeature_MoveCard_MemberCanMove(t *testing.T) {
 }
 
 func TestFeature_MoveCard_NonMemberDenied(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -648,7 +564,7 @@ func TestFeature_MoveCard_NonMemberDenied(t *testing.T) {
 	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Non-member tries to move card → ErrAccessDenied
-	_, err = uc.Execute(ctx, card.ID, board.ID, col1.ID, col2.ID, nonMemberID, "m")
+	_, err := uc.Execute(ctx, card.ID, board.ID, col1.ID, col2.ID, nonMemberID, "m")
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}
@@ -664,14 +580,8 @@ func TestFeature_MoveCard_NonMemberDenied(t *testing.T) {
 }
 
 func TestFeature_UpdateCard_MemberCanUpdate(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -724,14 +634,8 @@ func TestFeature_UpdateCard_MemberCanUpdate(t *testing.T) {
 // ==================== Member tests ====================
 
 func TestFeature_AddMember_OnlyOwnerCanAdd(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -748,7 +652,7 @@ func TestFeature_AddMember_OnlyOwnerCanAdd(t *testing.T) {
 	uc := usecase.NewAddMemberUseCase(boardRepo, memberRepo, publisher)
 
 	// Owner adds member → success
-	err = uc.Execute(ctx, board.ID, ownerID, memberID, domain.RoleMember)
+	err := uc.Execute(ctx, board.ID, ownerID, memberID, domain.RoleMember)
 	if err != nil {
 		t.Fatalf("Owner should be able to add member: %v", err)
 	}
@@ -786,14 +690,8 @@ func TestFeature_AddMember_OnlyOwnerCanAdd(t *testing.T) {
 }
 
 func TestFeature_RemoveMember_OnlyOwnerCanRemove(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -812,7 +710,7 @@ func TestFeature_RemoveMember_OnlyOwnerCanRemove(t *testing.T) {
 	uc := usecase.NewRemoveMemberUseCase(boardRepo, cardRepo, memberRepo, publisher)
 
 	// Member A tries to remove member B → ErrAccessDenied
-	err = uc.Execute(ctx, board.ID, memberA, memberB)
+	err := uc.Execute(ctx, board.ID, memberA, memberB)
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for member removing member, got %v", err)
 	}
@@ -837,14 +735,8 @@ func TestFeature_RemoveMember_OnlyOwnerCanRemove(t *testing.T) {
 }
 
 func TestFeature_RemoveMember_CannotRemoveOwner(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -859,7 +751,7 @@ func TestFeature_RemoveMember_CannotRemoveOwner(t *testing.T) {
 	uc := usecase.NewRemoveMemberUseCase(boardRepo, cardRepo, memberRepo, publisher)
 
 	// Owner tries to remove themselves → ErrCannotRemoveOwner
-	err = uc.Execute(ctx, board.ID, ownerID, ownerID)
+	err := uc.Execute(ctx, board.ID, ownerID, ownerID)
 	if err != domain.ErrCannotRemoveOwner {
 		t.Errorf("Expected ErrCannotRemoveOwner, got %v", err)
 	}
@@ -875,14 +767,8 @@ func TestFeature_RemoveMember_CannotRemoveOwner(t *testing.T) {
 }
 
 func TestFeature_AfterRemoval_NoAccess(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -900,7 +786,7 @@ func TestFeature_AfterRemoval_NoAccess(t *testing.T) {
 
 	// Verify member can access the board
 	getBoardUC := usecase.NewGetBoardUseCase(boardRepo, memberRepo)
-	_, err = getBoardUC.Execute(ctx, board.ID, memberID)
+	_, err := getBoardUC.Execute(ctx, board.ID, memberID)
 	if err != nil {
 		t.Fatalf("Member should be able to access board: %v", err)
 	}
@@ -922,14 +808,8 @@ func TestFeature_AfterRemoval_NoAccess(t *testing.T) {
 // ==================== Assignment tests ====================
 
 func TestFeature_AssignCard_MemberCanAssign(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -974,14 +854,8 @@ func TestFeature_AssignCard_MemberCanAssign(t *testing.T) {
 }
 
 func TestFeature_AssignCard_NonMemberAssigneeDenied(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -1004,7 +878,7 @@ func TestFeature_AssignCard_NonMemberAssigneeDenied(t *testing.T) {
 	uc := usecase.NewAssignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Owner tries to assign card to non-member
-	_, err = uc.Execute(ctx, card.ID, board.ID, ownerID, nonMemberID)
+	_, err := uc.Execute(ctx, card.ID, board.ID, ownerID, nonMemberID)
 	if err != domain.ErrAssigneeNotMember {
 		t.Errorf("Expected ErrAssigneeNotMember, got %v", err)
 	}
@@ -1020,14 +894,8 @@ func TestFeature_AssignCard_NonMemberAssigneeDenied(t *testing.T) {
 }
 
 func TestFeature_UnassignCard(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -1080,14 +948,8 @@ func TestFeature_UnassignCard(t *testing.T) {
 }
 
 func TestFeature_RemoveMember_UnassignsCards(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -1112,7 +974,7 @@ func TestFeature_RemoveMember_UnassignsCards(t *testing.T) {
 
 	// Remove member
 	removeUC := usecase.NewRemoveMemberUseCase(boardRepo, cardRepo, memberRepo, publisher)
-	err = removeUC.Execute(ctx, board.ID, ownerID, memberID)
+	err := removeUC.Execute(ctx, board.ID, ownerID, memberID)
 	if err != nil {
 		t.Fatalf("Failed to remove member: %v", err)
 	}
@@ -1138,14 +1000,8 @@ func TestFeature_RemoveMember_UnassignsCards(t *testing.T) {
 // ==================== Activity tests ====================
 
 func TestFeature_CardActivity_CreateCard(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -1187,14 +1043,8 @@ func TestFeature_CardActivity_CreateCard(t *testing.T) {
 }
 
 func TestFeature_CardActivity_MoveCard(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -1218,7 +1068,7 @@ func TestFeature_CardActivity_MoveCard(t *testing.T) {
 	moveUC := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Move card from col1 to col2
-	_, err = moveUC.Execute(ctx, card.ID, board.ID, col1.ID, col2.ID, ownerID, "m")
+	_, err := moveUC.Execute(ctx, card.ID, board.ID, col1.ID, col2.ID, ownerID, "m")
 	if err != nil {
 		t.Fatalf("Failed to move card: %v", err)
 	}

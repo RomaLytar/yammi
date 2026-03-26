@@ -11,16 +11,8 @@ import (
 )
 
 func TestCustomFieldRepository_CreateDefinition(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	cfRepo := postgres.NewCustomFieldRepository(db)
@@ -62,16 +54,8 @@ func TestCustomFieldRepository_CreateDefinition(t *testing.T) {
 }
 
 func TestCustomFieldRepository_CreateDefinition_Duplicate(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	cfRepo := postgres.NewCustomFieldRepository(db)
@@ -85,7 +69,7 @@ func TestCustomFieldRepository_CreateDefinition_Duplicate(t *testing.T) {
 	cfRepo.CreateDefinition(ctx, def1)
 
 	def2, _ := domain.NewCustomFieldDefinition("", board.ID, "Sprint", domain.FieldTypeNumber, nil, 1, false)
-	err = cfRepo.CreateDefinition(ctx, def2)
+	err := cfRepo.CreateDefinition(ctx, def2)
 
 	if err != domain.ErrCustomFieldExists {
 		t.Errorf("Expected ErrCustomFieldExists, got %v", err)
@@ -93,16 +77,8 @@ func TestCustomFieldRepository_CreateDefinition_Duplicate(t *testing.T) {
 }
 
 func TestCustomFieldRepository_CreateDefinition_Dropdown(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	cfRepo := postgres.NewCustomFieldRepository(db)
@@ -114,7 +90,7 @@ func TestCustomFieldRepository_CreateDefinition_Dropdown(t *testing.T) {
 
 	options := []string{"Small", "Medium", "Large"}
 	def, _ := domain.NewCustomFieldDefinition("", board.ID, "T-Shirt Size", domain.FieldTypeDropdown, options, 0, false)
-	err = cfRepo.CreateDefinition(ctx, def)
+	err := cfRepo.CreateDefinition(ctx, def)
 	if err != nil {
 		t.Fatalf("Failed to save dropdown definition: %v", err)
 	}
@@ -129,16 +105,8 @@ func TestCustomFieldRepository_CreateDefinition_Dropdown(t *testing.T) {
 }
 
 func TestCustomFieldRepository_ListDefinitionsByBoardID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	cfRepo := postgres.NewCustomFieldRepository(db)
@@ -171,16 +139,8 @@ func TestCustomFieldRepository_ListDefinitionsByBoardID(t *testing.T) {
 }
 
 func TestCustomFieldRepository_UpdateDefinition(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	cfRepo := postgres.NewCustomFieldRepository(db)
@@ -194,7 +154,7 @@ func TestCustomFieldRepository_UpdateDefinition(t *testing.T) {
 	cfRepo.CreateDefinition(ctx, def)
 
 	def.Update("Sprint Number", nil, true)
-	err = cfRepo.UpdateDefinition(ctx, def)
+	err := cfRepo.UpdateDefinition(ctx, def)
 	if err != nil {
 		t.Fatalf("Failed to update definition: %v", err)
 	}
@@ -209,16 +169,8 @@ func TestCustomFieldRepository_UpdateDefinition(t *testing.T) {
 }
 
 func TestCustomFieldRepository_DeleteDefinition(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	cfRepo := postgres.NewCustomFieldRepository(db)
@@ -231,7 +183,7 @@ func TestCustomFieldRepository_DeleteDefinition(t *testing.T) {
 	def, _ := domain.NewCustomFieldDefinition("", board.ID, "Sprint", domain.FieldTypeText, nil, 0, false)
 	cfRepo.CreateDefinition(ctx, def)
 
-	err = cfRepo.DeleteDefinition(ctx, def.ID)
+	err := cfRepo.DeleteDefinition(ctx, def.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete definition: %v", err)
 	}
@@ -243,16 +195,8 @@ func TestCustomFieldRepository_DeleteDefinition(t *testing.T) {
 }
 
 func TestCustomFieldRepository_CountDefinitionsByBoardID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	cfRepo := postgres.NewCustomFieldRepository(db)
@@ -279,16 +223,8 @@ func TestCustomFieldRepository_CountDefinitionsByBoardID(t *testing.T) {
 }
 
 func TestCustomFieldRepository_SetAndGetValue(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -314,7 +250,7 @@ func TestCustomFieldRepository_SetAndGetValue(t *testing.T) {
 	// Set value
 	value := domain.NewCustomFieldValue("", card.ID, board.ID, def.ID)
 	value.SetText("Sprint 42")
-	err = cfRepo.SetValue(ctx, value)
+	err := cfRepo.SetValue(ctx, value)
 	if err != nil {
 		t.Fatalf("Failed to set value: %v", err)
 	}
@@ -335,16 +271,8 @@ func TestCustomFieldRepository_SetAndGetValue(t *testing.T) {
 }
 
 func TestCustomFieldRepository_SetValue_Upsert(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -373,7 +301,7 @@ func TestCustomFieldRepository_SetValue_Upsert(t *testing.T) {
 	// Set value second time (upsert)
 	v2 := domain.NewCustomFieldValue("", card.ID, board.ID, def.ID)
 	v2.SetText("Sprint 2")
-	err = cfRepo.SetValue(ctx, v2)
+	err := cfRepo.SetValue(ctx, v2)
 	if err != nil {
 		t.Fatalf("Failed to upsert value: %v", err)
 	}
@@ -390,16 +318,8 @@ func TestCustomFieldRepository_SetValue_Upsert(t *testing.T) {
 }
 
 func TestCustomFieldRepository_DeleteValue(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -424,7 +344,7 @@ func TestCustomFieldRepository_DeleteValue(t *testing.T) {
 	value.SetText("Sprint 42")
 	cfRepo.SetValue(ctx, value)
 
-	err = cfRepo.DeleteValue(ctx, card.ID, board.ID, def.ID)
+	err := cfRepo.DeleteValue(ctx, card.ID, board.ID, def.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete value: %v", err)
 	}
@@ -436,16 +356,8 @@ func TestCustomFieldRepository_DeleteValue(t *testing.T) {
 }
 
 func TestCustomFieldRepository_CascadeDelete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)

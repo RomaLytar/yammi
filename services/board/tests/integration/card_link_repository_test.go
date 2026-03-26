@@ -11,16 +11,8 @@ import (
 )
 
 func TestCreateCardLink(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -77,16 +69,8 @@ func TestCreateCardLink(t *testing.T) {
 }
 
 func TestCreateCardLink_Duplicate(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -114,7 +98,7 @@ func TestCreateCardLink_Duplicate(t *testing.T) {
 
 	// Try to create duplicate
 	link2, _ := domain.NewCardLink("", parentCard.ID, childCard.ID, board.ID, domain.LinkTypeSubtask)
-	err = cardLinkRepo.Create(ctx, link2)
+	err := cardLinkRepo.Create(ctx, link2)
 
 	if err != domain.ErrLinkAlreadyExists {
 		t.Errorf("Expected ErrLinkAlreadyExists, got %v", err)
@@ -122,16 +106,8 @@ func TestCreateCardLink_Duplicate(t *testing.T) {
 }
 
 func TestCreateCardLink_SelfLink(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -160,23 +136,15 @@ func TestCreateCardLink_SelfLink(t *testing.T) {
 		LinkType: domain.LinkTypeSubtask,
 	}
 
-	err = cardLinkRepo.Create(ctx, link)
+	err := cardLinkRepo.Create(ctx, link)
 	if err != domain.ErrSelfLink {
 		t.Errorf("Expected ErrSelfLink from DB constraint, got %v", err)
 	}
 }
 
 func TestDeleteCardLink(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -202,7 +170,7 @@ func TestDeleteCardLink(t *testing.T) {
 	cardLinkRepo.Create(ctx, link)
 
 	// Delete link
-	err = cardLinkRepo.Delete(ctx, link.ID, board.ID)
+	err := cardLinkRepo.Delete(ctx, link.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete card link: %v", err)
 	}
@@ -215,16 +183,8 @@ func TestDeleteCardLink(t *testing.T) {
 }
 
 func TestListChildren(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -270,16 +230,8 @@ func TestListChildren(t *testing.T) {
 }
 
 func TestListParents(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -325,16 +277,8 @@ func TestListParents(t *testing.T) {
 }
 
 func TestExists(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)

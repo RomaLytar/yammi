@@ -3,7 +3,6 @@ package integration
 import (
 	"context"
 	"database/sql"
-	"sync"
 	"testing"
 
 	"github.com/google/uuid"
@@ -12,32 +11,6 @@ import (
 	"github.com/RomaLytar/yammi/services/board/internal/repository/postgres"
 	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
-
-// ---------- shared test database (one container for all tests) ----------
-
-var (
-	sharedDB   *sql.DB
-	sharedOnce sync.Once
-	sharedErr  error
-)
-
-func getSharedDB(t *testing.T) *sql.DB {
-	t.Helper()
-	sharedOnce.Do(func() {
-		dsn, _ := setupPostgresContainer(t)
-		db, err := waitForDB(dsn, 10)
-		if err != nil {
-			sharedErr = err
-			return
-		}
-		runMigrations(t, db)
-		sharedDB = db
-	})
-	if sharedErr != nil {
-		t.Fatalf("shared DB setup failed: %v", sharedErr)
-	}
-	return sharedDB
-}
 
 // ---------- helper: create board with owner + optional member ----------
 

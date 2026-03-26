@@ -11,16 +11,8 @@ import (
 )
 
 func TestMembershipRepository_AddMember(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -33,7 +25,7 @@ func TestMembershipRepository_AddMember(t *testing.T) {
 
 	// Add member
 	userID := uuid.NewString()
-	err = memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
+	err := memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 	if err != nil {
 		t.Fatalf("Failed to add member: %v", err)
 	}
@@ -54,16 +46,8 @@ func TestMembershipRepository_AddMember(t *testing.T) {
 }
 
 func TestMembershipRepository_AddMember_Duplicate(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -79,23 +63,15 @@ func TestMembershipRepository_AddMember_Duplicate(t *testing.T) {
 	memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 
 	// Try to add same member again
-	err = memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
+	err := memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 	if err != domain.ErrMemberExists {
 		t.Errorf("Expected ErrMemberExists, got %v", err)
 	}
 }
 
 func TestMembershipRepository_AddMember_InvalidRole(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -108,23 +84,15 @@ func TestMembershipRepository_AddMember_InvalidRole(t *testing.T) {
 
 	// Try to add member with invalid role
 	userID := uuid.NewString()
-	err = memberRepo.AddMember(ctx, board.ID, userID, domain.Role("invalid"))
+	err := memberRepo.AddMember(ctx, board.ID, userID, domain.Role("invalid"))
 	if err != domain.ErrInvalidRole {
 		t.Errorf("Expected ErrInvalidRole, got %v", err)
 	}
 }
 
 func TestMembershipRepository_RemoveMember(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -140,7 +108,7 @@ func TestMembershipRepository_RemoveMember(t *testing.T) {
 	memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 
 	// Remove member
-	err = memberRepo.RemoveMember(ctx, board.ID, userID)
+	err := memberRepo.RemoveMember(ctx, board.ID, userID)
 	if err != nil {
 		t.Fatalf("Failed to remove member: %v", err)
 	}
@@ -157,16 +125,8 @@ func TestMembershipRepository_RemoveMember(t *testing.T) {
 }
 
 func TestMembershipRepository_RemoveMember_NotFound(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -179,23 +139,15 @@ func TestMembershipRepository_RemoveMember_NotFound(t *testing.T) {
 
 	// Try to remove non-existent member
 	nonExistentUserID := uuid.NewString()
-	err = memberRepo.RemoveMember(ctx, board.ID, nonExistentUserID)
+	err := memberRepo.RemoveMember(ctx, board.ID, nonExistentUserID)
 	if err != domain.ErrMemberNotFound {
 		t.Errorf("Expected ErrMemberNotFound, got %v", err)
 	}
 }
 
 func TestMembershipRepository_RemoveMember_CannotRemoveOwner(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -207,23 +159,15 @@ func TestMembershipRepository_RemoveMember_CannotRemoveOwner(t *testing.T) {
 	boardRepo.Create(ctx, board)
 
 	// Try to remove owner
-	err = memberRepo.RemoveMember(ctx, board.ID, ownerID)
+	err := memberRepo.RemoveMember(ctx, board.ID, ownerID)
 	if err != domain.ErrCannotRemoveOwner {
 		t.Errorf("Expected ErrCannotRemoveOwner, got %v", err)
 	}
 }
 
 func TestMembershipRepository_IsMember(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -261,16 +205,8 @@ func TestMembershipRepository_IsMember(t *testing.T) {
 }
 
 func TestMembershipRepository_ListMembers(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -311,16 +247,8 @@ func TestMembershipRepository_ListMembers(t *testing.T) {
 }
 
 func TestMembershipRepository_ListMembers_Pagination(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)

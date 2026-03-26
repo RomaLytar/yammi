@@ -11,16 +11,8 @@ import (
 )
 
 func TestLabelRepository_Create(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	labelRepo := postgres.NewLabelRepository(db)
@@ -62,16 +54,8 @@ func TestLabelRepository_Create(t *testing.T) {
 }
 
 func TestLabelRepository_Create_Duplicate(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	labelRepo := postgres.NewLabelRepository(db)
@@ -88,7 +72,7 @@ func TestLabelRepository_Create_Duplicate(t *testing.T) {
 
 	// Try to create duplicate (same name, same board)
 	label2, _ := domain.NewLabel("", board.ID, "Bug", "#3b82f6")
-	err = labelRepo.Create(ctx, label2)
+	err := labelRepo.Create(ctx, label2)
 
 	if err != domain.ErrLabelExists {
 		t.Errorf("Expected ErrLabelExists, got %v", err)
@@ -96,16 +80,8 @@ func TestLabelRepository_Create_Duplicate(t *testing.T) {
 }
 
 func TestLabelRepository_ListByBoardID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	labelRepo := postgres.NewLabelRepository(db)
@@ -135,16 +111,8 @@ func TestLabelRepository_ListByBoardID(t *testing.T) {
 }
 
 func TestLabelRepository_Update(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	labelRepo := postgres.NewLabelRepository(db)
@@ -160,7 +128,7 @@ func TestLabelRepository_Update(t *testing.T) {
 
 	// Update label
 	label.Update("Feature", "#3b82f6")
-	err = labelRepo.Update(ctx, label)
+	err := labelRepo.Update(ctx, label)
 	if err != nil {
 		t.Fatalf("Failed to update label: %v", err)
 	}
@@ -176,16 +144,8 @@ func TestLabelRepository_Update(t *testing.T) {
 }
 
 func TestLabelRepository_Delete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	labelRepo := postgres.NewLabelRepository(db)
@@ -200,7 +160,7 @@ func TestLabelRepository_Delete(t *testing.T) {
 	labelRepo.Create(ctx, label)
 
 	// Delete label
-	err = labelRepo.Delete(ctx, label.ID)
+	err := labelRepo.Delete(ctx, label.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete label: %v", err)
 	}
@@ -213,16 +173,8 @@ func TestLabelRepository_Delete(t *testing.T) {
 }
 
 func TestLabelRepository_AddToCard(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -245,7 +197,7 @@ func TestLabelRepository_AddToCard(t *testing.T) {
 	labelRepo.Create(ctx, label)
 
 	// Add label to card
-	err = labelRepo.AddToCard(ctx, card.ID, board.ID, label.ID)
+	err := labelRepo.AddToCard(ctx, card.ID, board.ID, label.ID)
 	if err != nil {
 		t.Fatalf("Failed to add label to card: %v", err)
 	}
@@ -266,16 +218,8 @@ func TestLabelRepository_AddToCard(t *testing.T) {
 }
 
 func TestLabelRepository_AddToCard_Duplicate(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -301,23 +245,15 @@ func TestLabelRepository_AddToCard_Duplicate(t *testing.T) {
 	labelRepo.AddToCard(ctx, card.ID, board.ID, label.ID)
 
 	// Try to add same label again
-	err = labelRepo.AddToCard(ctx, card.ID, board.ID, label.ID)
+	err := labelRepo.AddToCard(ctx, card.ID, board.ID, label.ID)
 	if err != domain.ErrLabelAlreadyOnCard {
 		t.Errorf("Expected ErrLabelAlreadyOnCard, got %v", err)
 	}
 }
 
 func TestLabelRepository_RemoveFromCard(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -341,7 +277,7 @@ func TestLabelRepository_RemoveFromCard(t *testing.T) {
 
 	// Add and then remove label from card
 	labelRepo.AddToCard(ctx, card.ID, board.ID, label.ID)
-	err = labelRepo.RemoveFromCard(ctx, card.ID, board.ID, label.ID)
+	err := labelRepo.RemoveFromCard(ctx, card.ID, board.ID, label.ID)
 	if err != nil {
 		t.Fatalf("Failed to remove label from card: %v", err)
 	}
@@ -354,16 +290,8 @@ func TestLabelRepository_RemoveFromCard(t *testing.T) {
 }
 
 func TestLabelRepository_ListByCardID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -402,16 +330,8 @@ func TestLabelRepository_ListByCardID(t *testing.T) {
 }
 
 func TestLabelRepository_CountByBoardID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	labelRepo := postgres.NewLabelRepository(db)

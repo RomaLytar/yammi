@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -13,12 +14,50 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-var testDB *sql.DB
+// sharedDB — единственное подключение к PostgreSQL для ВСЕХ интеграционных тестов.
+// Поднимается один раз в TestMain, убивается после завершения всех тестов.
+var sharedDB *sql.DB
 
-// setupPostgresContainer создает PostgreSQL контейнер для тестов.
-// Если задан TEST_DATABASE_URL — использует существующую БД (для CI/Docker).
-func setupPostgresContainer(t *testing.T) (string, func()) {
+// containerCleanup хранит функцию для остановки Docker контейнера
+var containerCleanup func()
+
+// TestMain — единая точка входа для всех интеграционных тестов.
+// Один контейнер PostgreSQL на весь пакет.
+func TestMain(m *testing.M) {
+	dsn, cleanup := setupContainer()
+	containerCleanup = cleanup
+
+	db, err := waitForDB(dsn, 15)
+	if err != nil {
+		log.Fatalf("Failed to connect to test database: %v", err)
+	}
+	sharedDB = db
+
+	runMigrationsRaw(db)
+
+	code := m.Run()
+
+	sharedDB.Close()
+	if containerCleanup != nil {
+		containerCleanup()
+	}
+	os.Exit(code)
+}
+
+// getSharedDB возвращает единственное подключение к тестовой БД.
+// Используется всеми тестами вместо per-test контейнеров.
+func getSharedDB(t *testing.T) *sql.DB {
+	t.Helper()
+	if sharedDB == nil {
+		t.Fatal("sharedDB is nil — TestMain did not initialize properly")
+	}
+	return sharedDB
+}
+
+// setupContainer поднимает PostgreSQL контейнер (или использует TEST_DATABASE_URL).
+func setupContainer() (string, func()) {
 	if dsn := os.Getenv("TEST_DATABASE_URL"); dsn != "" {
+		log.Printf("Using external database: %s", dsn)
 		return dsn, func() {}
 	}
 
@@ -40,35 +79,33 @@ func setupPostgresContainer(t *testing.T) (string, func()) {
 		Started:          true,
 	})
 	if err != nil {
-		t.Fatalf("Failed to start container: %v", err)
+		log.Fatalf("Failed to start PostgreSQL container: %v", err)
 	}
 
 	host, err := container.Host(ctx)
 	if err != nil {
-		t.Fatalf("Failed to get host: %v", err)
+		log.Fatalf("Failed to get container host: %v", err)
 	}
 
 	port, err := container.MappedPort(ctx, "5432")
 	if err != nil {
-		t.Fatalf("Failed to get port: %v", err)
+		log.Fatalf("Failed to get container port: %v", err)
 	}
 
 	dsn := fmt.Sprintf("postgres://test:test@%s:%s/board_test?sslmode=disable", host, port.Port())
+	log.Printf("PostgreSQL container ready at %s", dsn)
 
 	cleanup := func() {
-		if testDB != nil {
-			testDB.Close()
-		}
 		if err := container.Terminate(ctx); err != nil {
-			t.Logf("Failed to terminate container: %v", err)
+			log.Printf("Failed to terminate container: %v", err)
 		}
 	}
 
 	return dsn, cleanup
 }
 
-// runMigrations выполняет все миграции (идемпотентно, без DROP — безопасно для параллельных тестов)
-func runMigrations(t *testing.T, db *sql.DB) {
+// runMigrationsRaw применяет все миграции (вызывается из TestMain, не из тестов).
+func runMigrationsRaw(db *sql.DB) {
 	migrationFiles := []string{
 		"../../migrations/000001_init.up.sql",
 		"../../migrations/000002_board_search_sort.up.sql",
@@ -84,18 +121,20 @@ func runMigrations(t *testing.T, db *sql.DB) {
 		"../../migrations/000013_optimize_indexes.up.sql",
 	}
 
-	for _, migrationPath := range migrationFiles {
-		migrationSQL, err := os.ReadFile(migrationPath)
+	for _, path := range migrationFiles {
+		sql, err := os.ReadFile(path)
 		if err != nil {
-			t.Fatalf("Failed to read migration file %s: %v", migrationPath, err)
+			log.Fatalf("Failed to read migration %s: %v", path, err)
 		}
-
-		// Игнорируем "already exists" ошибки — миграции идемпотентны при параллельном запуске
-		_, _ = db.Exec(string(migrationSQL))
+		if _, err := db.Exec(string(sql)); err != nil {
+			// Ignore "already exists" — migrations are idempotent
+			_ = err
+		}
 	}
+	log.Printf("Migrations applied (%d files)", len(migrationFiles))
 }
 
-// waitForDB ожидает доступности базы данных
+// waitForDB ожидает доступности базы данных с retry.
 func waitForDB(dsn string, maxRetries int) (*sql.DB, error) {
 	var db *sql.DB
 	var err error
@@ -106,14 +145,11 @@ func waitForDB(dsn string, maxRetries int) (*sql.DB, error) {
 			time.Sleep(500 * time.Millisecond)
 			continue
 		}
-
 		if err = db.Ping(); err != nil {
 			time.Sleep(500 * time.Millisecond)
 			continue
 		}
-
 		return db, nil
 	}
-
-	return nil, fmt.Errorf("failed to connect to database after %d retries: %w", maxRetries, err)
+	return nil, fmt.Errorf("failed to connect after %d retries: %w", maxRetries, err)
 }

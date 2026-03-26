@@ -197,16 +197,8 @@ func (m *mockPublisher) PublishAutomationExecuted(ctx context.Context, event use
 }
 
 func TestCreateBoardUseCase_Integration(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	// Setup repositories
 	boardRepo := postgres.NewBoardRepository(db)
@@ -259,16 +251,8 @@ func TestCreateBoardUseCase_Integration(t *testing.T) {
 }
 
 func TestGetBoardUseCase_Integration(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -315,16 +299,8 @@ func TestGetBoardUseCase_Integration(t *testing.T) {
 }
 
 func TestAddColumnUseCase_Integration(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -370,16 +346,8 @@ func TestAddColumnUseCase_Integration(t *testing.T) {
 }
 
 func TestCreateCardUseCase_Integration(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -439,16 +407,8 @@ func TestCreateCardUseCase_Integration(t *testing.T) {
 }
 
 func TestMoveCardUseCase_Integration(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -482,7 +442,7 @@ func TestMoveCardUseCase_Integration(t *testing.T) {
 	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
 
 	// Execute as member (move to column2)
-	_, err = uc.Execute(ctx, card.ID, board.ID, column1.ID, column2.ID, memberID, "m")
+	_, err := uc.Execute(ctx, card.ID, board.ID, column1.ID, column2.ID, memberID, "m")
 	if err != nil {
 		t.Fatalf("Failed to move card: %v", err)
 	}
@@ -510,16 +470,8 @@ func TestMoveCardUseCase_Integration(t *testing.T) {
 }
 
 func TestAddMemberUseCase_Integration(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -537,7 +489,7 @@ func TestAddMemberUseCase_Integration(t *testing.T) {
 
 	// Execute as owner
 	newMemberID := uuid.NewString()
-	err = uc.Execute(ctx, board.ID, ownerID, newMemberID, domain.RoleMember)
+	err := uc.Execute(ctx, board.ID, ownerID, newMemberID, domain.RoleMember)
 	if err != nil {
 		t.Fatalf("Failed to add member: %v", err)
 	}

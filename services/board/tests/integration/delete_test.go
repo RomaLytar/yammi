@@ -12,14 +12,8 @@ import (
 )
 
 func TestDeleteBoard_OwnerCanDelete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -37,21 +31,15 @@ func TestDeleteBoard_OwnerCanDelete(t *testing.T) {
 		t.Fatalf("Owner should be able to delete board: %v", err)
 	}
 
-	_, err = boardRepo.GetByID(ctx, board.ID)
+	_, err := boardRepo.GetByID(ctx, board.ID)
 	if err != domain.ErrBoardNotFound {
 		t.Errorf("Expected ErrBoardNotFound, got %v", err)
 	}
 }
 
 func TestDeleteBoard_MemberCannotDelete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -65,7 +53,7 @@ func TestDeleteBoard_MemberCannotDelete(t *testing.T) {
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
 	uc := usecase.NewDeleteBoardUseCase(boardRepo, memberRepo, publisher)
-	err = uc.Execute(ctx, []string{board.ID}, memberID)
+	err := uc.Execute(ctx, []string{board.ID}, memberID)
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for member, got %v", err)
 	}
@@ -76,14 +64,8 @@ func TestDeleteBoard_MemberCannotDelete(t *testing.T) {
 }
 
 func TestDeleteBoard_BatchDelete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -111,14 +93,8 @@ func TestDeleteBoard_BatchDelete(t *testing.T) {
 }
 
 func TestDeleteBoard_CascadeDeletesCards(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -149,14 +125,8 @@ func TestDeleteBoard_CascadeDeletesCards(t *testing.T) {
 }
 
 func TestDeleteCard_CreatorCanDelete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -187,14 +157,8 @@ func TestDeleteCard_CreatorCanDelete(t *testing.T) {
 }
 
 func TestDeleteCard_OwnerCanDeleteAnyCard(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -225,14 +189,8 @@ func TestDeleteCard_OwnerCanDeleteAnyCard(t *testing.T) {
 }
 
 func TestDeleteCard_MemberCannotDeleteOthersCard(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -255,7 +213,7 @@ func TestDeleteCard_MemberCannotDeleteOthersCard(t *testing.T) {
 	cardRepo.Create(ctx, card)
 
 	uc := usecase.NewDeleteCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
-	err = uc.Execute(ctx, []string{card.ID}, board.ID, memberB)
+	err := uc.Execute(ctx, []string{card.ID}, board.ID, memberB)
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied, got %v", err)
 	}
@@ -266,14 +224,8 @@ func TestDeleteCard_MemberCannotDeleteOthersCard(t *testing.T) {
 }
 
 func TestDeleteCard_BatchDelete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -308,14 +260,8 @@ func TestDeleteCard_BatchDelete(t *testing.T) {
 }
 
 func TestDeleteCard_NonMemberCannotDelete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -335,7 +281,7 @@ func TestDeleteCard_NonMemberCannotDelete(t *testing.T) {
 	cardRepo.Create(ctx, card)
 
 	uc := usecase.NewDeleteCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
-	err = uc.Execute(ctx, []string{card.ID}, board.ID, strangerID)
+	err := uc.Execute(ctx, []string{card.ID}, board.ID, strangerID)
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for non-member, got %v", err)
 	}

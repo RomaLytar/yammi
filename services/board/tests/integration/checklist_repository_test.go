@@ -11,16 +11,8 @@ import (
 )
 
 func TestChecklistRepository_CreateChecklist(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -70,37 +62,21 @@ func TestChecklistRepository_CreateChecklist(t *testing.T) {
 }
 
 func TestChecklistRepository_GetChecklistByID_NotFound(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	checklistRepo := postgres.NewChecklistRepository(db)
 	ctx := context.Background()
 
-	_, err = checklistRepo.GetChecklistByID(ctx, uuid.NewString(), uuid.NewString())
+	_, err := checklistRepo.GetChecklistByID(ctx, uuid.NewString(), uuid.NewString())
 	if err != domain.ErrChecklistNotFound {
 		t.Errorf("Expected ErrChecklistNotFound, got %v", err)
 	}
 }
 
 func TestChecklistRepository_ListByCardID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -138,16 +114,8 @@ func TestChecklistRepository_ListByCardID(t *testing.T) {
 }
 
 func TestChecklistRepository_UpdateChecklist(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -171,7 +139,7 @@ func TestChecklistRepository_UpdateChecklist(t *testing.T) {
 
 	// Update checklist
 	checklist.Update("Deploy Tasks")
-	err = checklistRepo.UpdateChecklist(ctx, checklist)
+	err := checklistRepo.UpdateChecklist(ctx, checklist)
 	if err != nil {
 		t.Fatalf("Failed to update checklist: %v", err)
 	}
@@ -184,16 +152,8 @@ func TestChecklistRepository_UpdateChecklist(t *testing.T) {
 }
 
 func TestChecklistRepository_DeleteChecklist_CascadeItems(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -222,7 +182,7 @@ func TestChecklistRepository_DeleteChecklist_CascadeItems(t *testing.T) {
 	checklistRepo.CreateItem(ctx, item2)
 
 	// Delete checklist (should cascade delete items)
-	err = checklistRepo.DeleteChecklist(ctx, checklist.ID, board.ID)
+	err := checklistRepo.DeleteChecklist(ctx, checklist.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete checklist: %v", err)
 	}
@@ -244,16 +204,8 @@ func TestChecklistRepository_DeleteChecklist_CascadeItems(t *testing.T) {
 }
 
 func TestChecklistRepository_CreateItem(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -277,7 +229,7 @@ func TestChecklistRepository_CreateItem(t *testing.T) {
 
 	// Create item
 	item, _ := domain.NewChecklistItem("", checklist.ID, board.ID, "Write tests", 0)
-	err = checklistRepo.CreateItem(ctx, item)
+	err := checklistRepo.CreateItem(ctx, item)
 	if err != nil {
 		t.Fatalf("Failed to create item: %v", err)
 	}
@@ -298,16 +250,8 @@ func TestChecklistRepository_CreateItem(t *testing.T) {
 }
 
 func TestChecklistRepository_ToggleItem(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -333,7 +277,7 @@ func TestChecklistRepository_ToggleItem(t *testing.T) {
 	checklistRepo.CreateItem(ctx, item)
 
 	// Toggle on
-	err = checklistRepo.ToggleItem(ctx, item.ID, board.ID, true)
+	err := checklistRepo.ToggleItem(ctx, item.ID, board.ID, true)
 	if err != nil {
 		t.Fatalf("Failed to toggle item: %v", err)
 	}
@@ -356,16 +300,8 @@ func TestChecklistRepository_ToggleItem(t *testing.T) {
 }
 
 func TestChecklistRepository_DeleteItem(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -391,7 +327,7 @@ func TestChecklistRepository_DeleteItem(t *testing.T) {
 	checklistRepo.CreateItem(ctx, item)
 
 	// Delete item
-	err = checklistRepo.DeleteItem(ctx, item.ID, board.ID)
+	err := checklistRepo.DeleteItem(ctx, item.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete item: %v", err)
 	}
@@ -404,16 +340,8 @@ func TestChecklistRepository_DeleteItem(t *testing.T) {
 }
 
 func TestChecklistRepository_ListItemsByChecklistID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)

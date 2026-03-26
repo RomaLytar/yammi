@@ -13,16 +13,8 @@ import (
 )
 
 func TestBoardRepository_Create(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	repo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -79,37 +71,21 @@ func TestBoardRepository_Create(t *testing.T) {
 }
 
 func TestBoardRepository_GetByID_NotFound(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	repo := postgres.NewBoardRepository(db)
 	ctx := context.Background()
 
-	_, err = repo.GetByID(ctx, uuid.NewString())
+	_, err := repo.GetByID(ctx, uuid.NewString())
 	if err != domain.ErrBoardNotFound {
 		t.Errorf("Expected ErrBoardNotFound, got %v", err)
 	}
 }
 
 func TestBoardRepository_Update(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	repo := postgres.NewBoardRepository(db)
 	ctx := context.Background()
@@ -120,7 +96,7 @@ func TestBoardRepository_Update(t *testing.T) {
 	repo.Create(ctx, board)
 
 	// Update board
-	err = board.Update("Updated Title", "Updated Description")
+	err := board.Update("Updated Title", "Updated Description")
 	if err != nil {
 		t.Fatalf("Failed to update domain board: %v", err)
 	}
@@ -146,16 +122,8 @@ func TestBoardRepository_Update(t *testing.T) {
 }
 
 func TestBoardRepository_OptimisticLocking(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	repo := postgres.NewBoardRepository(db)
 	ctx := context.Background()
@@ -171,7 +139,7 @@ func TestBoardRepository_OptimisticLocking(t *testing.T) {
 
 	// Update board1 (version 1 → 2)
 	board1.Update("Updated Title 1", "Desc 1")
-	err = repo.Update(ctx, board1)
+	err := repo.Update(ctx, board1)
 	if err != nil {
 		t.Fatalf("First update should succeed: %v", err)
 	}
@@ -190,16 +158,8 @@ func TestBoardRepository_OptimisticLocking(t *testing.T) {
 }
 
 func TestBoardRepository_Delete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	repo := postgres.NewBoardRepository(db)
 	ctx := context.Background()
@@ -210,7 +170,7 @@ func TestBoardRepository_Delete(t *testing.T) {
 	repo.Create(ctx, board)
 
 	// Delete board
-	err = repo.Delete(ctx, board.ID)
+	err := repo.Delete(ctx, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete board: %v", err)
 	}
@@ -229,16 +189,8 @@ func TestBoardRepository_Delete(t *testing.T) {
 }
 
 func TestBoardRepository_CursorPagination(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	repo := postgres.NewBoardRepository(db)
 	memberRepo := postgres.NewMembershipRepository(db)
@@ -310,16 +262,8 @@ func TestBoardRepository_CursorPagination(t *testing.T) {
 }
 
 func TestBoardRepository_ListByUserID_EmptyResult(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	repo := postgres.NewBoardRepository(db)
 	ctx := context.Background()

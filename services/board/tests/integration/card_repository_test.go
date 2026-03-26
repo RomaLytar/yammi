@@ -12,16 +12,8 @@ import (
 )
 
 func TestCardRepository_Create(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -72,16 +64,8 @@ func TestCardRepository_Create(t *testing.T) {
 }
 
 func TestCardRepository_CreateWithoutAssignee(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -115,37 +99,21 @@ func TestCardRepository_CreateWithoutAssignee(t *testing.T) {
 }
 
 func TestCardRepository_GetByID_NotFound(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	cardRepo := postgres.NewCardRepository(db)
 	ctx := context.Background()
 
-	_, err = cardRepo.GetByID(ctx, uuid.NewString(), uuid.NewString())
+	_, err := cardRepo.GetByID(ctx, uuid.NewString(), uuid.NewString())
 	if err != domain.ErrCardNotFound {
 		t.Errorf("Expected ErrCardNotFound, got %v", err)
 	}
 }
 
 func TestCardRepository_ListByColumnID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -186,16 +154,8 @@ func TestCardRepository_ListByColumnID(t *testing.T) {
 }
 
 func TestCardRepository_LexorankPositioning(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -247,16 +207,8 @@ func TestCardRepository_LexorankPositioning(t *testing.T) {
 }
 
 func TestCardRepository_Update(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -277,7 +229,7 @@ func TestCardRepository_Update(t *testing.T) {
 
 	// Update card
 	newAssignee := uuid.NewString()
-	err = card.Update("Updated Title", "Updated Desc", &newAssignee, nil, "", "")
+	err := card.Update("Updated Title", "Updated Desc", &newAssignee, nil, "", "")
 	if err != nil {
 		t.Fatalf("Failed to update domain card: %v", err)
 	}
@@ -303,16 +255,8 @@ func TestCardRepository_Update(t *testing.T) {
 }
 
 func TestCardRepository_Move(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -335,7 +279,7 @@ func TestCardRepository_Move(t *testing.T) {
 	cardRepo.Create(ctx, card)
 
 	// Move card to column2
-	err = card.Move(column2.ID, "m")
+	err := card.Move(column2.ID, "m")
 	if err != nil {
 		t.Fatalf("Failed to move card: %v", err)
 	}
@@ -357,16 +301,8 @@ func TestCardRepository_Move(t *testing.T) {
 }
 
 func TestCardRepository_Delete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -385,7 +321,7 @@ func TestCardRepository_Delete(t *testing.T) {
 	cardRepo.Create(ctx, card)
 
 	// Delete card
-	err = cardRepo.Delete(ctx, card.ID, board.ID)
+	err := cardRepo.Delete(ctx, card.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete card: %v", err)
 	}
@@ -398,16 +334,8 @@ func TestCardRepository_Delete(t *testing.T) {
 }
 
 func TestCardRepository_Partitioning(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)

@@ -11,16 +11,8 @@ import (
 )
 
 func TestColumnRepository_Create(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -62,37 +54,21 @@ func TestColumnRepository_Create(t *testing.T) {
 }
 
 func TestColumnRepository_GetByID_NotFound(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	columnRepo := postgres.NewColumnRepository(db)
 	ctx := context.Background()
 
-	_, err = columnRepo.GetByID(ctx, uuid.NewString())
+	_, err := columnRepo.GetByID(ctx, uuid.NewString())
 	if err != domain.ErrColumnNotFound {
 		t.Errorf("Expected ErrColumnNotFound, got %v", err)
 	}
 }
 
 func TestColumnRepository_ListByBoardID(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -140,16 +116,8 @@ func TestColumnRepository_ListByBoardID(t *testing.T) {
 }
 
 func TestColumnRepository_Update(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -164,7 +132,7 @@ func TestColumnRepository_Update(t *testing.T) {
 	columnRepo.Create(ctx, column)
 
 	// Update title
-	err = column.Update("Backlog")
+	err := column.Update("Backlog")
 	if err != nil {
 		t.Fatalf("Failed to update domain column: %v", err)
 	}
@@ -199,16 +167,8 @@ func TestColumnRepository_Update(t *testing.T) {
 }
 
 func TestColumnRepository_Delete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -223,7 +183,7 @@ func TestColumnRepository_Delete(t *testing.T) {
 	columnRepo.Create(ctx, column)
 
 	// Delete column
-	err = columnRepo.Delete(ctx, column.ID, board.ID)
+	err := columnRepo.Delete(ctx, column.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete column: %v", err)
 	}
@@ -242,16 +202,8 @@ func TestColumnRepository_Delete(t *testing.T) {
 }
 
 func TestColumnRepository_CascadeDelete(t *testing.T) {
-	dsn, cleanup := setupPostgresContainer(t)
-	defer cleanup()
-
-	db, err := waitForDB(dsn, 10)
-	if err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-	defer db.Close()
-
-	runMigrations(t, db)
+	t.Parallel()
+	db := getSharedDB(t)
 
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
@@ -269,7 +221,7 @@ func TestColumnRepository_CascadeDelete(t *testing.T) {
 	}
 
 	// Delete board (should cascade delete all columns)
-	err = boardRepo.Delete(ctx, board.ID)
+	err := boardRepo.Delete(ctx, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete board: %v", err)
 	}

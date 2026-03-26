@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -16,6 +17,19 @@ import (
 	notificationpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/notification"
 	userpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/user"
 )
+
+// timeoutInterceptor добавляет дефолтный timeout к исходящим gRPC вызовам,
+// если контекст ещё не имеет deadline. Защищает от зависания при недоступности сервиса.
+func timeoutInterceptor(timeout time.Duration) grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		if _, ok := ctx.Deadline(); !ok {
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithTimeout(ctx, timeout)
+			defer cancel()
+		}
+		return invoker(ctx, method, req, reply, cc, opts...)
+	}
+}
 
 type GRPCClients struct {
 	authConn           *grpc.ClientConn
@@ -42,6 +56,7 @@ var defaultDialOpts = []grpc.DialOption{
 		MinConnectTimeout: 5 * time.Second,
 		Backoff:           backoff.DefaultConfig,
 	}),
+	grpc.WithUnaryInterceptor(timeoutInterceptor(10 * time.Second)),
 }
 
 func NewGRPCClients(authAddr, userAddr, boardAddr, commentAddr, notificationAddr string) (*GRPCClients, error) {

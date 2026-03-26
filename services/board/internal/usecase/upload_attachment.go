@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -75,7 +77,9 @@ func (uc *UploadAttachmentUseCase) Execute(ctx context.Context, cardID, boardID,
 
 	// 6. Публикуем событие (async, non-blocking)
 	go func() {
-		_ = uc.publisher.PublishAttachmentUploaded(context.Background(), AttachmentUploaded{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishAttachmentUploaded(ctx, AttachmentUploaded{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   attachment.CreatedAt,
@@ -85,7 +89,9 @@ func (uc *UploadAttachmentUseCase) Execute(ctx context.Context, cardID, boardID,
 			ActorID:      userID,
 			FileName:     attachment.FileName,
 			FileSize:     attachment.FileSize,
-		})
+		}); err != nil {
+			slog.Error("failed to publish AttachmentUploaded", "error", err, "attachment_id", attachment.ID, "board_id", attachment.BoardID)
+		}
 	}()
 
 	return attachment, uploadURL, nil

@@ -127,135 +127,107 @@ func main() {
 	customFieldRepo := postgres.NewCustomFieldRepository(db)
 	automationRuleRepo := postgres.NewAutomationRuleRepository(db)
 
-	// Use Cases
-	createBoardUC := usecase.NewCreateBoardUseCase(boardRepo, memberRepo, publisher)
-	getBoardUC := usecase.NewGetBoardUseCase(boardRepo, memberRepo)
-	listBoardsUC := usecase.NewListBoardsUseCase(boardRepo)
-	updateBoardUC := usecase.NewUpdateBoardUseCase(boardRepo, memberRepo, publisher)
-	deleteBoardUC := usecase.NewDeleteBoardUseCase(boardRepo, memberRepo, publisher)
+	// Sub-handlers (группируют use cases по доменным областям)
+	boardsHandler := delivery.NewBoardCoreHandler(
+		usecase.NewCreateBoardUseCase(boardRepo, memberRepo, publisher),
+		usecase.NewGetBoardUseCase(boardRepo, memberRepo),
+		usecase.NewListBoardsUseCase(boardRepo),
+		usecase.NewUpdateBoardUseCase(boardRepo, memberRepo, publisher),
+		usecase.NewDeleteBoardUseCase(boardRepo, memberRepo, publisher),
+	)
 
-	addColumnUC := usecase.NewAddColumnUseCase(columnRepo, boardRepo, memberRepo, publisher)
-	getColumnsUC := usecase.NewGetColumnsUseCase(columnRepo, memberRepo)
-	updateColumnUC := usecase.NewUpdateColumnUseCase(columnRepo, boardRepo, memberRepo, publisher)
-	deleteColumnUC := usecase.NewDeleteColumnUseCase(columnRepo, boardRepo, memberRepo, publisher)
-	reorderColumnsUC := usecase.NewReorderColumnsUseCase(columnRepo, boardRepo, memberRepo, publisher)
+	columnsHandler := delivery.NewColumnHandler(
+		usecase.NewAddColumnUseCase(columnRepo, boardRepo, memberRepo, publisher),
+		usecase.NewGetColumnsUseCase(columnRepo, memberRepo),
+		usecase.NewUpdateColumnUseCase(columnRepo, boardRepo, memberRepo, publisher),
+		usecase.NewDeleteColumnUseCase(columnRepo, boardRepo, memberRepo, publisher),
+		usecase.NewReorderColumnsUseCase(columnRepo, boardRepo, memberRepo, publisher),
+	)
 
-	createCardUC := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
-	getCardUC := usecase.NewGetCardUseCase(cardRepo, memberRepo)
-	getCardsUC := usecase.NewGetCardsUseCase(cardRepo, memberRepo)
-	updateCardUC := usecase.NewUpdateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
-	moveCardUC := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
-	deleteCardUC := usecase.NewDeleteCardUseCase(cardRepo, boardRepo, memberRepo, publisher)
+	cardsHandler := delivery.NewCardHandler(
+		usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
+		usecase.NewGetCardUseCase(cardRepo, memberRepo),
+		usecase.NewGetCardsUseCase(cardRepo, memberRepo),
+		usecase.NewUpdateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
+		usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
+		usecase.NewDeleteCardUseCase(cardRepo, boardRepo, memberRepo, publisher),
+		usecase.NewAssignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
+		usecase.NewUnassignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
+		usecase.NewListCardActivityUseCase(activityRepo, memberRepo),
+		cardRepo,
+	)
 
-	assignCardUC := usecase.NewAssignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
-	unassignCardUC := usecase.NewUnassignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
-	listCardActivityUC := usecase.NewListCardActivityUseCase(activityRepo, memberRepo)
+	membersHandler := delivery.NewMemberHandler(
+		usecase.NewAddMemberUseCase(boardRepo, memberRepo, publisher),
+		usecase.NewRemoveMemberUseCase(boardRepo, cardRepo, memberRepo, publisher),
+		usecase.NewListMembersUseCase(boardRepo, memberRepo),
+	)
 
-	addMemberUC := usecase.NewAddMemberUseCase(boardRepo, memberRepo, publisher)
-	removeMemberUC := usecase.NewRemoveMemberUseCase(boardRepo, cardRepo, memberRepo, publisher)
-	listMembersUC := usecase.NewListMembersUseCase(boardRepo, memberRepo)
+	attachmentsHandler := delivery.NewAttachmentHandler(
+		usecase.NewUploadAttachmentUseCase(attachmentRepo, activityRepo, memberRepo, fileStorage, publisher),
+		usecase.NewConfirmUploadUseCase(attachmentRepo, memberRepo, fileStorage),
+		usecase.NewGetDownloadURLUseCase(attachmentRepo, memberRepo, fileStorage),
+		usecase.NewListAttachmentsUseCase(attachmentRepo, memberRepo),
+		usecase.NewDeleteAttachmentUseCase(attachmentRepo, activityRepo, memberRepo, fileStorage, publisher),
+	)
 
-	uploadAttachmentUC := usecase.NewUploadAttachmentUseCase(attachmentRepo, activityRepo, memberRepo, fileStorage, publisher)
-	confirmUploadUC := usecase.NewConfirmUploadUseCase(attachmentRepo, memberRepo, fileStorage)
-	getDownloadURLUC := usecase.NewGetDownloadURLUseCase(attachmentRepo, memberRepo, fileStorage)
-	listAttachmentsUC := usecase.NewListAttachmentsUseCase(attachmentRepo, memberRepo)
-	deleteAttachmentUC := usecase.NewDeleteAttachmentUseCase(attachmentRepo, activityRepo, memberRepo, fileStorage, publisher)
+	labelsHandler := delivery.NewLabelHandler(
+		usecase.NewCreateLabelUseCase(labelRepo, memberRepo, publisher),
+		usecase.NewListLabelsUseCase(labelRepo, memberRepo),
+		usecase.NewUpdateLabelUseCase(labelRepo, memberRepo, publisher),
+		usecase.NewDeleteLabelUseCase(labelRepo, memberRepo, publisher),
+		usecase.NewAddLabelToCardUseCase(labelRepo, memberRepo, publisher),
+		usecase.NewRemoveLabelFromCardUseCase(labelRepo, memberRepo, publisher),
+		usecase.NewGetCardLabelsUseCase(labelRepo, memberRepo),
+	)
 
-	createLabelUC := usecase.NewCreateLabelUseCase(labelRepo, memberRepo, publisher)
-	listLabelsUC := usecase.NewListLabelsUseCase(labelRepo, memberRepo)
-	updateLabelUC := usecase.NewUpdateLabelUseCase(labelRepo, memberRepo, publisher)
-	deleteLabelUC := usecase.NewDeleteLabelUseCase(labelRepo, memberRepo, publisher)
-	addLabelToCardUC := usecase.NewAddLabelToCardUseCase(labelRepo, memberRepo, publisher)
-	removeLabelFromCardUC := usecase.NewRemoveLabelFromCardUseCase(labelRepo, memberRepo, publisher)
-	getCardLabelsUC := usecase.NewGetCardLabelsUseCase(labelRepo, memberRepo)
+	cardLinksHandler := delivery.NewCardLinkHandler(
+		usecase.NewLinkCardsUseCase(cardLinkRepo, cardRepo, memberRepo, publisher),
+		usecase.NewUnlinkCardsUseCase(cardLinkRepo, memberRepo, publisher),
+		usecase.NewGetCardChildrenUseCase(cardLinkRepo, memberRepo),
+		usecase.NewGetCardParentsUseCase(cardLinkRepo, memberRepo),
+	)
 
-	linkCardsUC := usecase.NewLinkCardsUseCase(cardLinkRepo, cardRepo, memberRepo, publisher)
-	unlinkCardsUC := usecase.NewUnlinkCardsUseCase(cardLinkRepo, memberRepo, publisher)
-	getCardChildrenUC := usecase.NewGetCardChildrenUseCase(cardLinkRepo, memberRepo)
-	getCardParentsUC := usecase.NewGetCardParentsUseCase(cardLinkRepo, memberRepo)
+	checklistHandler := delivery.NewChecklistHandler(
+		usecase.NewCreateChecklistUseCase(checklistRepo, memberRepo, publisher),
+		usecase.NewGetChecklistsUseCase(checklistRepo, memberRepo),
+		usecase.NewUpdateChecklistUseCase(checklistRepo, memberRepo, publisher),
+		usecase.NewDeleteChecklistUseCase(checklistRepo, memberRepo, publisher),
+		usecase.NewCreateChecklistItemUseCase(checklistRepo, memberRepo),
+		usecase.NewUpdateChecklistItemUseCase(checklistRepo, memberRepo),
+		usecase.NewDeleteChecklistItemUseCase(checklistRepo, memberRepo),
+		usecase.NewToggleChecklistItemUseCase(checklistRepo, memberRepo, publisher),
+	)
 
-	createChecklistUC := usecase.NewCreateChecklistUseCase(checklistRepo, memberRepo, publisher)
-	getChecklistsUC := usecase.NewGetChecklistsUseCase(checklistRepo, memberRepo)
-	updateChecklistUC := usecase.NewUpdateChecklistUseCase(checklistRepo, memberRepo, publisher)
-	deleteChecklistUC := usecase.NewDeleteChecklistUseCase(checklistRepo, memberRepo, publisher)
-	createChecklistItemUC := usecase.NewCreateChecklistItemUseCase(checklistRepo, memberRepo)
-	updateChecklistItemUC := usecase.NewUpdateChecklistItemUseCase(checklistRepo, memberRepo)
-	deleteChecklistItemUC := usecase.NewDeleteChecklistItemUseCase(checklistRepo, memberRepo)
-	toggleChecklistItemUC := usecase.NewToggleChecklistItemUseCase(checklistRepo, memberRepo, publisher)
+	customFieldHandler := delivery.NewCustomFieldHandler(
+		usecase.NewCreateCustomFieldUseCase(customFieldRepo, memberRepo, publisher),
+		usecase.NewListCustomFieldsUseCase(customFieldRepo, memberRepo),
+		usecase.NewUpdateCustomFieldUseCase(customFieldRepo, memberRepo, publisher),
+		usecase.NewDeleteCustomFieldUseCase(customFieldRepo, memberRepo, publisher),
+		usecase.NewSetCustomFieldValueUseCase(customFieldRepo, memberRepo, publisher),
+		usecase.NewGetCardCustomFieldsUseCase(customFieldRepo, memberRepo),
+	)
 
-	createCustomFieldUC := usecase.NewCreateCustomFieldUseCase(customFieldRepo, memberRepo, publisher)
-	listCustomFieldsUC := usecase.NewListCustomFieldsUseCase(customFieldRepo, memberRepo)
-	updateCustomFieldUC := usecase.NewUpdateCustomFieldUseCase(customFieldRepo, memberRepo, publisher)
-	deleteCustomFieldUC := usecase.NewDeleteCustomFieldUseCase(customFieldRepo, memberRepo, publisher)
-	setCustomFieldValueUC := usecase.NewSetCustomFieldValueUseCase(customFieldRepo, memberRepo, publisher)
-	getCardCustomFieldsUC := usecase.NewGetCardCustomFieldsUseCase(customFieldRepo, memberRepo)
-
-	createAutomationRuleUC := usecase.NewCreateAutomationRuleUseCase(automationRuleRepo, memberRepo, publisher)
-	listAutomationRulesUC := usecase.NewListAutomationRulesUseCase(automationRuleRepo, memberRepo)
-	updateAutomationRuleUC := usecase.NewUpdateAutomationRuleUseCase(automationRuleRepo, memberRepo, publisher)
-	deleteAutomationRuleUC := usecase.NewDeleteAutomationRuleUseCase(automationRuleRepo, memberRepo, publisher)
-	getAutomationHistoryUC := usecase.NewGetAutomationHistoryUseCase(automationRuleRepo, memberRepo)
+	automationHandler := delivery.NewAutomationHandler(
+		usecase.NewCreateAutomationRuleUseCase(automationRuleRepo, memberRepo, publisher),
+		usecase.NewListAutomationRulesUseCase(automationRuleRepo, memberRepo),
+		usecase.NewUpdateAutomationRuleUseCase(automationRuleRepo, memberRepo, publisher),
+		usecase.NewDeleteAutomationRuleUseCase(automationRuleRepo, memberRepo, publisher),
+		usecase.NewGetAutomationHistoryUseCase(automationRuleRepo, memberRepo),
+	)
 
 	// gRPC server
 	handler := delivery.NewBoardServiceServer(
-		createBoardUC,
-		getBoardUC,
-		listBoardsUC,
-		updateBoardUC,
-		deleteBoardUC,
-		addColumnUC,
-		getColumnsUC,
-		updateColumnUC,
-		deleteColumnUC,
-		reorderColumnsUC,
-		createCardUC,
-		getCardUC,
-		getCardsUC,
-		updateCardUC,
-		moveCardUC,
-		deleteCardUC,
-		assignCardUC,
-		unassignCardUC,
-		listCardActivityUC,
-		addMemberUC,
-		removeMemberUC,
-		listMembersUC,
-		cardRepo,
-		uploadAttachmentUC,
-		confirmUploadUC,
-		getDownloadURLUC,
-		listAttachmentsUC,
-		deleteAttachmentUC,
-		createLabelUC,
-		listLabelsUC,
-		updateLabelUC,
-		deleteLabelUC,
-		addLabelToCardUC,
-		removeLabelFromCardUC,
-		getCardLabelsUC,
-		linkCardsUC,
-		unlinkCardsUC,
-		getCardChildrenUC,
-		getCardParentsUC,
-		createChecklistUC,
-		getChecklistsUC,
-		updateChecklistUC,
-		deleteChecklistUC,
-		createChecklistItemUC,
-		updateChecklistItemUC,
-		deleteChecklistItemUC,
-		toggleChecklistItemUC,
-		createCustomFieldUC,
-		listCustomFieldsUC,
-		updateCustomFieldUC,
-		deleteCustomFieldUC,
-		setCustomFieldValueUC,
-		getCardCustomFieldsUC,
-		createAutomationRuleUC,
-		listAutomationRulesUC,
-		updateAutomationRuleUC,
-		deleteAutomationRuleUC,
-		getAutomationHistoryUC,
+		boardsHandler,
+		columnsHandler,
+		cardsHandler,
+		membersHandler,
+		attachmentsHandler,
+		labelsHandler,
+		cardLinksHandler,
+		checklistHandler,
+		customFieldHandler,
+		automationHandler,
 	)
 
 	grpcServer := grpc.NewServer(

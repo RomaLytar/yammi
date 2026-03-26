@@ -8,7 +8,31 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
+	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
+
+// LabelHandler группирует зависимости для операций с метками
+type LabelHandler struct {
+	create         *usecase.CreateLabelUseCase
+	list           *usecase.ListLabelsUseCase
+	update         *usecase.UpdateLabelUseCase
+	delete         *usecase.DeleteLabelUseCase
+	addToCard      *usecase.AddLabelToCardUseCase
+	removeFromCard *usecase.RemoveLabelFromCardUseCase
+	getForCard     *usecase.GetCardLabelsUseCase
+}
+
+func NewLabelHandler(
+	create *usecase.CreateLabelUseCase,
+	list *usecase.ListLabelsUseCase,
+	update *usecase.UpdateLabelUseCase,
+	delete_ *usecase.DeleteLabelUseCase,
+	addToCard *usecase.AddLabelToCardUseCase,
+	removeFromCard *usecase.RemoveLabelFromCardUseCase,
+	getForCard *usecase.GetCardLabelsUseCase,
+) LabelHandler {
+	return LabelHandler{create: create, list: list, update: update, delete: delete_, addToCard: addToCard, removeFromCard: removeFromCard, getForCard: getForCard}
+}
 
 // CreateLabel создает новую метку доски
 func (s *BoardServiceServer) CreateLabel(ctx context.Context, req *boardpb.CreateLabelRequest) (*boardpb.CreateLabelResponse, error) {
@@ -25,7 +49,7 @@ func (s *BoardServiceServer) CreateLabel(ctx context.Context, req *boardpb.Creat
 		return nil, status.Error(codes.InvalidArgument, "color is required")
 	}
 
-	label, err := s.createLabel.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetName(), req.GetColor())
+	label, err := s.labels.create.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetName(), req.GetColor())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -44,7 +68,7 @@ func (s *BoardServiceServer) ListLabels(ctx context.Context, req *boardpb.ListLa
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	labels, err := s.listLabels.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	labels, err := s.labels.list.Execute(ctx, req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -72,7 +96,7 @@ func (s *BoardServiceServer) UpdateLabel(ctx context.Context, req *boardpb.Updat
 		return nil, status.Error(codes.InvalidArgument, "color is required")
 	}
 
-	label, err := s.updateLabel.Execute(ctx, req.GetLabelId(), req.GetBoardId(), req.GetUserId(), req.GetName(), req.GetColor())
+	label, err := s.labels.update.Execute(ctx, req.GetLabelId(), req.GetBoardId(), req.GetUserId(), req.GetName(), req.GetColor())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -94,7 +118,7 @@ func (s *BoardServiceServer) DeleteLabel(ctx context.Context, req *boardpb.Delet
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.deleteLabel.Execute(ctx, req.GetLabelId(), req.GetBoardId(), req.GetUserId())
+	err := s.labels.delete.Execute(ctx, req.GetLabelId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -117,7 +141,7 @@ func (s *BoardServiceServer) AddLabelToCard(ctx context.Context, req *boardpb.Ad
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.addLabelToCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetLabelId(), req.GetUserId())
+	err := s.labels.addToCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetLabelId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -140,7 +164,7 @@ func (s *BoardServiceServer) RemoveLabelFromCard(ctx context.Context, req *board
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.removeLabelFromCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetLabelId(), req.GetUserId())
+	err := s.labels.removeFromCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetLabelId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -160,7 +184,7 @@ func (s *BoardServiceServer) GetCardLabels(ctx context.Context, req *boardpb.Get
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	labels, err := s.getCardLabels.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
+	labels, err := s.labels.getForCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

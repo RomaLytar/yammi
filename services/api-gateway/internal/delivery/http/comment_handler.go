@@ -48,6 +48,10 @@ func (h *CommentHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "content is required")
 		return
 	}
+	if msg := validateStringLen(req.Content, "content", maxContentLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
 
 	resp, err := h.client.CreateComment(r.Context(), &commentpb.CreateCommentRequest{
 		CardId:   cardID,
@@ -127,6 +131,11 @@ func (h *CommentHandler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if msg := validateStringLen(req.Content, "content", maxContentLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
 		return
 	}
 

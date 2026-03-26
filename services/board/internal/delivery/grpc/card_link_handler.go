@@ -8,7 +8,25 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
+	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
+
+// CardLinkHandler группирует зависимости для операций со связями карточек
+type CardLinkHandler struct {
+	link        *usecase.LinkCardsUseCase
+	unlink      *usecase.UnlinkCardsUseCase
+	getChildren *usecase.GetCardChildrenUseCase
+	getParents  *usecase.GetCardParentsUseCase
+}
+
+func NewCardLinkHandler(
+	link *usecase.LinkCardsUseCase,
+	unlink *usecase.UnlinkCardsUseCase,
+	getChildren *usecase.GetCardChildrenUseCase,
+	getParents *usecase.GetCardParentsUseCase,
+) CardLinkHandler {
+	return CardLinkHandler{link: link, unlink: unlink, getChildren: getChildren, getParents: getParents}
+}
 
 // LinkCards создает связь parent->child между карточками
 func (s *BoardServiceServer) LinkCards(ctx context.Context, req *boardpb.LinkCardsRequest) (*boardpb.LinkCardsResponse, error) {
@@ -25,7 +43,7 @@ func (s *BoardServiceServer) LinkCards(ctx context.Context, req *boardpb.LinkCar
 		return nil, status.Error(codes.InvalidArgument, "child_id is required")
 	}
 
-	link, err := s.linkCards.Execute(ctx, req.GetParentId(), req.GetChildId(), req.GetBoardId(), req.GetUserId())
+	link, err := s.cardLinks.link.Execute(ctx, req.GetParentId(), req.GetChildId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -47,7 +65,7 @@ func (s *BoardServiceServer) UnlinkCards(ctx context.Context, req *boardpb.Unlin
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.unlinkCards.Execute(ctx, req.GetLinkId(), req.GetBoardId(), req.GetUserId())
+	err := s.cardLinks.unlink.Execute(ctx, req.GetLinkId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -67,7 +85,7 @@ func (s *BoardServiceServer) GetCardChildren(ctx context.Context, req *boardpb.G
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	links, err := s.getCardChildren.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
+	links, err := s.cardLinks.getChildren.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -89,7 +107,7 @@ func (s *BoardServiceServer) GetCardParents(ctx context.Context, req *boardpb.Ge
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	links, err := s.getCardParents.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
+	links, err := s.cardLinks.getParents.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

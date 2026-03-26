@@ -26,7 +26,7 @@ func (s *BoardServiceServer) GetCardActivity(ctx context.Context, req *boardpb.G
 		limit = 20
 	}
 
-	activities, nextCursor, err := s.listCardActivity.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId(), limit, req.GetCursor())
+	activities, nextCursor, err := s.cards.activity.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId(), limit, req.GetCursor())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

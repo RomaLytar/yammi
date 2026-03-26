@@ -34,6 +34,15 @@ func (h *BoardHandler) CreateBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if msg := validateStringLen(req.Title, "title", maxTitleLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+	if msg := validateStringLen(req.Description, "description", maxDescriptionLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+
 	resp, err := h.client.CreateBoard(r.Context(), &boardpb.CreateBoardRequest{
 		Title:       req.Title,
 		Description: req.Description,
@@ -110,6 +119,11 @@ func (h *BoardHandler) ListBoards(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
 	sortBy := r.URL.Query().Get("sort_by")
 
+	if msg := validateStringLen(search, "search", maxSearchLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+
 	resp, err := h.client.ListBoards(r.Context(), &boardpb.ListBoardsRequest{
 		UserId:    userID,
 		Limit:     int32(limit),
@@ -172,6 +186,15 @@ func (h *BoardHandler) UpdateBoard(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if msg := validateStringLen(req.Title, "title", maxTitleLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+	if msg := validateStringLen(req.Description, "description", maxDescriptionLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
 		return
 	}
 

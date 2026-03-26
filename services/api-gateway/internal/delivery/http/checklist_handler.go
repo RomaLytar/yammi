@@ -36,6 +36,11 @@ func (h *BoardHandler) CreateChecklist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if msg := validateStringLen(req.Title, "title", maxTitleLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+
 	resp, err := h.client.CreateChecklist(r.Context(), &boardpb.CreateChecklistRequest{
 		CardId:   cardID,
 		BoardId:  boardID,
@@ -113,6 +118,11 @@ func (h *BoardHandler) UpdateChecklist(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if msg := validateStringLen(req.Title, "title", maxTitleLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
 		return
 	}
 
@@ -194,6 +204,11 @@ func (h *BoardHandler) CreateChecklistItem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	if msg := validateStringLen(req.Title, "title", maxTitleLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+
 	resp, err := h.client.CreateChecklistItem(r.Context(), &boardpb.CreateChecklistItemRequest{
 		ChecklistId: checklistID,
 		BoardId:     boardID,
@@ -236,6 +251,11 @@ func (h *BoardHandler) UpdateChecklistItem(w http.ResponseWriter, r *http.Reques
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if msg := validateStringLen(req.Title, "title", maxTitleLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
 		return
 	}
 

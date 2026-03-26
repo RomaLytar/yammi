@@ -8,7 +8,27 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
+	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
+
+// AttachmentHandler группирует зависимости для операций с вложениями
+type AttachmentHandler struct {
+	upload      *usecase.UploadAttachmentUseCase
+	confirm     *usecase.ConfirmUploadUseCase
+	downloadURL *usecase.GetDownloadURLUseCase
+	list        *usecase.ListAttachmentsUseCase
+	delete      *usecase.DeleteAttachmentUseCase
+}
+
+func NewAttachmentHandler(
+	upload *usecase.UploadAttachmentUseCase,
+	confirm *usecase.ConfirmUploadUseCase,
+	downloadURL *usecase.GetDownloadURLUseCase,
+	list *usecase.ListAttachmentsUseCase,
+	delete_ *usecase.DeleteAttachmentUseCase,
+) AttachmentHandler {
+	return AttachmentHandler{upload: upload, confirm: confirm, downloadURL: downloadURL, list: list, delete: delete_}
+}
 
 // CreateUploadURL создает метаданные вложения и возвращает pre-signed URL для загрузки
 func (s *BoardServiceServer) CreateUploadURL(ctx context.Context, req *boardpb.CreateUploadURLRequest) (*boardpb.CreateUploadURLResponse, error) {
@@ -28,7 +48,7 @@ func (s *BoardServiceServer) CreateUploadURL(ctx context.Context, req *boardpb.C
 		return nil, status.Error(codes.InvalidArgument, "file_size must be positive")
 	}
 
-	attachment, uploadURL, err := s.uploadAttachment.Execute(
+	attachment, uploadURL, err := s.attachments.upload.Execute(
 		ctx,
 		req.GetCardId(),
 		req.GetBoardId(),
@@ -59,7 +79,7 @@ func (s *BoardServiceServer) ConfirmUpload(ctx context.Context, req *boardpb.Con
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	attachment, err := s.confirmUpload.Execute(ctx, req.GetAttachmentId(), req.GetBoardId(), req.GetUserId())
+	attachment, err := s.attachments.confirm.Execute(ctx, req.GetAttachmentId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -81,7 +101,7 @@ func (s *BoardServiceServer) GetDownloadURL(ctx context.Context, req *boardpb.Ge
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	downloadURL, err := s.getDownloadURL.Execute(ctx, req.GetAttachmentId(), req.GetBoardId(), req.GetUserId())
+	downloadURL, err := s.attachments.downloadURL.Execute(ctx, req.GetAttachmentId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -103,7 +123,7 @@ func (s *BoardServiceServer) ListAttachments(ctx context.Context, req *boardpb.L
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	attachments, err := s.listAttachments.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
+	attachments, err := s.attachments.list.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -125,7 +145,7 @@ func (s *BoardServiceServer) DeleteAttachment(ctx context.Context, req *boardpb.
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.deleteAttachment.Execute(ctx, req.GetAttachmentId(), req.GetBoardId(), req.GetUserId())
+	err := s.attachments.delete.Execute(ctx, req.GetAttachmentId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

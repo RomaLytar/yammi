@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
@@ -38,7 +39,9 @@ func (uc *AddLabelToCardUseCase) Execute(ctx context.Context, cardID, boardID, l
 
 	// 3. Публикуем событие (async, non-blocking)
 	go func() {
-		_ = uc.publisher.PublishCardLabelAdded(context.Background(), CardLabelAdded{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishCardLabelAdded(ctx, CardLabelAdded{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   time.Now(),
@@ -46,7 +49,9 @@ func (uc *AddLabelToCardUseCase) Execute(ctx context.Context, cardID, boardID, l
 			BoardID:      boardID,
 			LabelID:      labelID,
 			ActorID:      userID,
-		})
+		}); err != nil {
+			slog.Error("failed to publish CardLabelAdded", "error", err, "card_id", cardID, "board_id", boardID)
+		}
 	}()
 
 	return nil

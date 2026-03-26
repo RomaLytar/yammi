@@ -9,7 +9,27 @@ import (
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
+	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
+
+// AutomationHandler группирует зависимости для операций с правилами автоматизации
+type AutomationHandler struct {
+	create     *usecase.CreateAutomationRuleUseCase
+	list       *usecase.ListAutomationRulesUseCase
+	update     *usecase.UpdateAutomationRuleUseCase
+	delete     *usecase.DeleteAutomationRuleUseCase
+	getHistory *usecase.GetAutomationHistoryUseCase
+}
+
+func NewAutomationHandler(
+	create *usecase.CreateAutomationRuleUseCase,
+	list *usecase.ListAutomationRulesUseCase,
+	update *usecase.UpdateAutomationRuleUseCase,
+	delete_ *usecase.DeleteAutomationRuleUseCase,
+	getHistory *usecase.GetAutomationHistoryUseCase,
+) AutomationHandler {
+	return AutomationHandler{create: create, list: list, update: update, delete: delete_, getHistory: getHistory}
+}
 
 // CreateAutomationRule создает новое правило автоматизации (только owner)
 func (s *BoardServiceServer) CreateAutomationRule(ctx context.Context, req *boardpb.CreateAutomationRuleRequest) (*boardpb.CreateAutomationRuleResponse, error) {
@@ -29,7 +49,7 @@ func (s *BoardServiceServer) CreateAutomationRule(ctx context.Context, req *boar
 		return nil, status.Error(codes.InvalidArgument, "action_type is required")
 	}
 
-	rule, err := s.createAutomationRule.Execute(ctx,
+	rule, err := s.automations.create.Execute(ctx,
 		req.GetBoardId(), req.GetUserId(), req.GetName(),
 		domain.TriggerType(req.GetTriggerType()), req.GetTriggerConfig(),
 		domain.ActionType(req.GetActionType()), req.GetActionConfig(),
@@ -52,7 +72,7 @@ func (s *BoardServiceServer) ListAutomationRules(ctx context.Context, req *board
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	rules, err := s.listAutomationRules.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	rules, err := s.automations.list.Execute(ctx, req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -77,7 +97,7 @@ func (s *BoardServiceServer) UpdateAutomationRule(ctx context.Context, req *boar
 		return nil, status.Error(codes.InvalidArgument, "name is required")
 	}
 
-	rule, err := s.updateAutomationRule.Execute(ctx,
+	rule, err := s.automations.update.Execute(ctx,
 		req.GetRuleId(), req.GetBoardId(), req.GetUserId(),
 		req.GetName(), req.GetEnabled(),
 		req.GetTriggerConfig(), req.GetActionConfig(),
@@ -103,7 +123,7 @@ func (s *BoardServiceServer) DeleteAutomationRule(ctx context.Context, req *boar
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.deleteAutomationRule.Execute(ctx, req.GetRuleId(), req.GetBoardId(), req.GetUserId())
+	err := s.automations.delete.Execute(ctx, req.GetRuleId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -128,7 +148,7 @@ func (s *BoardServiceServer) GetAutomationHistory(ctx context.Context, req *boar
 		limit = 50
 	}
 
-	executions, err := s.getAutomationHistory.Execute(ctx, req.GetRuleId(), req.GetBoardId(), req.GetUserId(), limit)
+	executions, err := s.automations.getHistory.Execute(ctx, req.GetRuleId(), req.GetBoardId(), req.GetUserId(), limit)
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

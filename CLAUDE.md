@@ -63,13 +63,13 @@ Client → API Gateway (:8080) → gRPC → [Auth :50051 | User :50052 | Board :
                                         Notification :50055   WebSocket Gateway :8081 → Client
 ```
 
-- **API Gateway** — HTTP entry point, JWT verification (local, via public key), rate limiting. No business logic.
-- **Auth Service** — Registration, login, JWT (EdDSA asymmetric keys), refresh/revoke tokens.
+- **API Gateway** — HTTP entry point, JWT verification (local, via public key), rate limiting, input validation (max lengths), 10s gRPC timeout interceptor, 1MB body limit. No business logic.
+- **Auth Service** — Registration, login, JWT (EdDSA asymmetric keys), refresh/revoke tokens. Login protected against timing attacks (constant-time bcrypt). Auth events logged via slog.
 - **User Service** — User profiles.
 - **Board Service** — Core domain. Boards, columns, cards. Redis cache, NATS event publishing, optimistic locking.
 - **Comment Service** — Card comments.
 - **Notification Service** — Async event consumer only. No sync API.
-- **WebSocket Gateway** (`services/gateway`) — Async event consumer, pushes real-time updates to clients. Never calls other services synchronously.
+- **WebSocket Gateway** (`services/gateway`) — Async event consumer, pushes real-time updates to clients. Never calls other services synchronously. JWT auth via Authorization header (preferred) or query param (fallback). CheckOrigin rejects when ALLOWED_ORIGINS not configured.
 
 Each service has its own PostgreSQL database (see `scripts/init-databases.sql`). Cross-service data access is only via gRPC.
 
@@ -113,11 +113,42 @@ migrations/                 — SQL migration files (000001_init.up.sql format)
 
 **Key rule:** Domain has zero dependencies. Usecases define repository interfaces; infrastructure implements them. Business logic lives in domain entities, not usecases.
 
+## Board Service Handler Decomposition
+
+The gRPC handler in Board Service is decomposed into 10 domain-specific sub-handler structs to avoid a God Object. `BoardServiceServer` delegates to:
+
+| Sub-handler | Domain | Methods |
+|-------------|--------|---------|
+| `BoardCoreHandler` | Boards CRUD | 5 |
+| `ColumnHandler` | Columns | 5 |
+| `CardHandler` | Cards + activity | 10 |
+| `MemberHandler` | Membership | 4 |
+| `AttachmentHandler` | File attachments | 5 |
+| `LabelHandler` | Labels | 7 |
+| `CardLinkHandler` | Parent-child links | 4 |
+| `ChecklistHandler` | Checklists | 8 |
+| `CustomFieldHandler` | Custom fields | 6 |
+| `AutomationHandler` | Automation rules | 5 |
+
+Each sub-handler has its own struct + constructor in the corresponding `*_handler.go` file. The main `NewBoardServiceServer()` takes 10 sub-handler params instead of 52 positional args. Methods remain on `*BoardServiceServer` (required by gRPC interface) but access deps through sub-handlers (e.g., `s.cards.create.Execute(...)`).
+
 ## DDD: Board as Aggregate Root
 
 Board is the sole aggregate root in Board Service. Column and Card are value objects within Board — there are no separate `CardRepository` or `ColumnRepository`. All persistence goes through `BoardRepository`.
 
 Invariants enforced in domain: card belongs to exactly one column, unique ordering within column, version increment on every change (optimistic locking).
+
+## Security & Resilience
+
+- **Async event publishing** — all `go func()` blocks use `context.WithTimeout(5s)` + `slog.Error` logging. No fire-and-forget.
+- **gRPC timeouts** — API Gateway has 10s default timeout interceptor on all outgoing gRPC calls (`timeoutInterceptor` in `grpc_clients.go`).
+- **Input validation** — API Gateway validates max lengths: title (500), description (5000), name (255), content (10000), search (200), color (7). Defined in `dto.go`.
+- **SQL LIKE injection** — all ILIKE queries use `ESCAPE '\'` clause + `escapeLikePattern()` function.
+- **Timing attack protection** — login always runs bcrypt even for non-existent users.
+- **CORS** — requires explicit `ALLOWED_ORIGINS` env var; rejects all origins when not set.
+- **WebSocket** — CheckOrigin rejects when origins not configured; JWT via Authorization header.
+- **Request body limit** — 1MB via `MaxBodyMiddleware`.
+- **Structured logging** — `log/slog` for auth events and event publishing errors.
 
 ## Conventions
 

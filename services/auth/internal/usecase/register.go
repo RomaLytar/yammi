@@ -2,7 +2,8 @@ package usecase
 
 import (
 	"context"
-	"log"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/auth/internal/domain"
 )
@@ -35,8 +36,10 @@ func (uc *AuthUseCase) Register(ctx context.Context, email, password, name strin
 
 	// Публикуем событие (async, non-blocking — не задерживаем ответ клиенту)
 	go func() {
-		if err := uc.eventPublisher.PublishUserCreated(context.Background(), user.ID, user.Email, user.Name); err != nil {
-			log.Printf("WARNING: failed to publish UserCreated event for user %s: %v", user.ID, err)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.eventPublisher.PublishUserCreated(ctx, user.ID, user.Email, user.Name); err != nil {
+			slog.Error("failed to publish UserCreated", "error", err, "user_id", user.ID)
 		}
 	}()
 
@@ -50,8 +53,10 @@ func (uc *AuthUseCase) DeleteUser(ctx context.Context, userID string) error {
 
 	// Публикуем событие (async, non-blocking)
 	go func() {
-		if err := uc.eventPublisher.PublishUserDeleted(context.Background(), userID); err != nil {
-			log.Printf("WARNING: failed to publish UserDeleted event for user %s: %v", userID, err)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.eventPublisher.PublishUserDeleted(ctx, userID); err != nil {
+			slog.Error("failed to publish UserDeleted", "error", err, "user_id", userID)
 		}
 	}()
 

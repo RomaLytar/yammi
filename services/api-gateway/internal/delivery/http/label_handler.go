@@ -30,6 +30,15 @@ func (h *BoardHandler) CreateLabel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if msg := validateStringLen(req.Name, "name", maxNameLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+	if msg := validateStringLen(req.Color, "color", maxColorLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+
 	resp, err := h.client.CreateLabel(r.Context(), &boardpb.CreateLabelRequest{
 		BoardId: boardID,
 		UserId:  userID,
@@ -100,6 +109,15 @@ func (h *BoardHandler) UpdateLabel(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if msg := validateStringLen(req.Name, "name", maxNameLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+	if msg := validateStringLen(req.Color, "color", maxColorLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
 		return
 	}
 

@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -59,7 +61,9 @@ func (uc *UpdateBoardUseCase) Execute(ctx context.Context, boardID, userID, titl
 
 	// 5. Публикуем событие
 	go func() {
-		_ = uc.publisher.PublishBoardUpdated(context.Background(), BoardUpdated{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishBoardUpdated(ctx, BoardUpdated{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   board.UpdatedAt,
@@ -67,7 +71,9 @@ func (uc *UpdateBoardUseCase) Execute(ctx context.Context, boardID, userID, titl
 			ActorID:      userID,
 			Title:        board.Title,
 			Description:  board.Description,
-		})
+		}); err != nil {
+			slog.Error("failed to publish BoardUpdated", "error", err, "board_id", board.ID)
+		}
 	}()
 
 	return board, nil

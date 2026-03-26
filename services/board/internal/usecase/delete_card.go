@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -52,16 +54,22 @@ func (uc *DeleteCardUseCase) Execute(ctx context.Context, cardIDs []string, boar
 
 	// 4. Обновляем updated_at доски + публикуем события (async, non-blocking)
 	go func() {
-		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.boardRepo.TouchUpdatedAt(ctx, boardID); err != nil {
+			slog.Error("failed to touch board updated_at", "error", err, "board_id", boardID)
+		}
 		for _, cardID := range cardIDs {
-			_ = uc.publisher.PublishCardDeleted(context.Background(), CardDeleted{
+			if err := uc.publisher.PublishCardDeleted(ctx, CardDeleted{
 				EventID:      generateEventID(),
 				EventVersion: 1,
 				OccurredAt:   getCurrentTime(),
 				BoardID:      boardID,
 				CardID:       cardID,
 				ActorID:      userID,
-			})
+			}); err != nil {
+				slog.Error("failed to publish CardDeleted", "error", err, "card_id", cardID, "board_id", boardID)
+			}
 		}
 	}()
 

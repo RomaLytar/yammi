@@ -8,7 +8,27 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
+	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
+
+// ColumnHandler группирует зависимости для операций с колонками
+type ColumnHandler struct {
+	add     *usecase.AddColumnUseCase
+	get     *usecase.GetColumnsUseCase
+	update  *usecase.UpdateColumnUseCase
+	delete  *usecase.DeleteColumnUseCase
+	reorder *usecase.ReorderColumnsUseCase
+}
+
+func NewColumnHandler(
+	add *usecase.AddColumnUseCase,
+	get *usecase.GetColumnsUseCase,
+	update *usecase.UpdateColumnUseCase,
+	delete *usecase.DeleteColumnUseCase,
+	reorder *usecase.ReorderColumnsUseCase,
+) ColumnHandler {
+	return ColumnHandler{add: add, get: get, update: update, delete: delete, reorder: reorder}
+}
 
 // AddColumn добавляет колонку в доску
 func (s *BoardServiceServer) AddColumn(ctx context.Context, req *boardpb.AddColumnRequest) (*boardpb.AddColumnResponse, error) {
@@ -22,7 +42,7 @@ func (s *BoardServiceServer) AddColumn(ctx context.Context, req *boardpb.AddColu
 		return nil, status.Error(codes.InvalidArgument, "title is required")
 	}
 
-	column, err := s.addColumn.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetTitle(), int(req.GetPosition()))
+	column, err := s.columns.add.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetTitle(), int(req.GetPosition()))
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -41,7 +61,7 @@ func (s *BoardServiceServer) GetColumns(ctx context.Context, req *boardpb.GetCol
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	columns, err := s.getColumns.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	columns, err := s.columns.get.Execute(ctx, req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -66,7 +86,7 @@ func (s *BoardServiceServer) UpdateColumn(ctx context.Context, req *boardpb.Upda
 		return nil, status.Error(codes.InvalidArgument, "title is required")
 	}
 
-	column, err := s.updateColumn.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), int(req.GetVersion()))
+	column, err := s.columns.update.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), int(req.GetVersion()))
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -88,7 +108,7 @@ func (s *BoardServiceServer) DeleteColumn(ctx context.Context, req *boardpb.Dele
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.deleteColumn.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId())
+	err := s.columns.delete.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -114,7 +134,7 @@ func (s *BoardServiceServer) ReorderColumns(ctx context.Context, req *boardpb.Re
 		positions[pos.GetColumnId()] = int(pos.GetPosition())
 	}
 
-	columns, err := s.reorderColumns.Execute(ctx, req.GetBoardId(), req.GetUserId(), positions, int(req.GetVersion()))
+	columns, err := s.columns.reorder.Execute(ctx, req.GetBoardId(), req.GetUserId(), positions, int(req.GetVersion()))
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

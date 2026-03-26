@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
@@ -58,7 +59,9 @@ func (uc *CreateAutomationRuleUseCase) Execute(ctx context.Context, boardID, use
 
 	// 5. Публикуем событие (async, non-blocking)
 	go func() {
-		_ = uc.publisher.PublishAutomationRuleCreated(context.Background(), AutomationRuleCreated{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishAutomationRuleCreated(ctx, AutomationRuleCreated{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   time.Now(),
@@ -68,7 +71,9 @@ func (uc *CreateAutomationRuleUseCase) Execute(ctx context.Context, boardID, use
 			Name:         rule.Name,
 			TriggerType:  string(rule.TriggerType),
 			ActionType:   string(rule.ActionType),
-		})
+		}); err != nil {
+			slog.Error("failed to publish AutomationRuleCreated", "error", err, "rule_id", rule.ID, "board_id", boardID)
+		}
 	}()
 
 	return rule, nil

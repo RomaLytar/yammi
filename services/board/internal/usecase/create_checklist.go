@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
@@ -44,7 +45,9 @@ func (uc *CreateChecklistUseCase) Execute(ctx context.Context, cardID, boardID, 
 
 	// 4. Публикуем событие (async, non-blocking)
 	go func() {
-		_ = uc.publisher.PublishChecklistCreated(context.Background(), ChecklistCreated{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishChecklistCreated(ctx, ChecklistCreated{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   time.Now(),
@@ -53,7 +56,9 @@ func (uc *CreateChecklistUseCase) Execute(ctx context.Context, cardID, boardID, 
 			BoardID:      boardID,
 			ActorID:      userID,
 			Title:        checklist.Title,
-		})
+		}); err != nil {
+			slog.Error("failed to publish ChecklistCreated", "error", err, "checklist_id", checklist.ID, "board_id", boardID)
+		}
 	}()
 
 	return checklist, nil

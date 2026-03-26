@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -58,7 +60,9 @@ func (uc *DeleteAttachmentUseCase) Execute(ctx context.Context, attachmentID, bo
 	}
 
 	go func() {
-		_ = uc.publisher.PublishAttachmentDeleted(context.Background(), AttachmentDeleted{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishAttachmentDeleted(ctx, AttachmentDeleted{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   attachment.CreatedAt,
@@ -67,7 +71,9 @@ func (uc *DeleteAttachmentUseCase) Execute(ctx context.Context, attachmentID, bo
 			BoardID:      attachment.BoardID,
 			ActorID:      userID,
 			FileName:     attachment.FileName,
-		})
+		}); err != nil {
+			slog.Error("failed to publish AttachmentDeleted", "error", err, "attachment_id", attachment.ID, "board_id", attachment.BoardID)
+		}
 	}()
 
 	return nil

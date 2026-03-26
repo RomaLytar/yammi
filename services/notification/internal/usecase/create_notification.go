@@ -2,7 +2,8 @@ package usecase
 
 import (
 	"context"
-	"log"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/notification/internal/domain"
 )
@@ -38,7 +39,7 @@ func (uc *CreateNotificationUseCase) Execute(ctx context.Context, userID string,
 	// Проверяем настройки пользователя
 	s, err := uc.settings.Get(ctx, userID)
 	if err != nil {
-		log.Printf("failed to get settings for user %s, using defaults: %v", userID, err)
+		slog.Error("failed to get settings, using defaults", "error", err, "user_id", userID)
 		s = domain.DefaultSettings(userID)
 	}
 
@@ -63,8 +64,10 @@ func (uc *CreateNotificationUseCase) Execute(ctx context.Context, userID string,
 	// Публикуем событие для WebSocket доставки (счётчик + toast)
 	if uc.publisher != nil {
 		go func() {
-			if err := uc.publisher.PublishNotificationCreated(context.Background(), n); err != nil {
-				log.Printf("failed to publish notification.created for user %s: %v", userID, err)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := uc.publisher.PublishNotificationCreated(ctx, n); err != nil {
+				slog.Error("failed to publish NotificationCreated", "error", err, "user_id", userID)
 			}
 		}()
 	}
@@ -101,7 +104,7 @@ func (uc *CreateNotificationUseCase) BatchExecute(ctx context.Context, requests 
 	// 2. Batch-fetch настроек (1 запрос или кеш)
 	settingsMap, err := uc.settings.BatchGet(ctx, userIDs)
 	if err != nil {
-		log.Printf("failed to batch get settings, using defaults: %v", err)
+		slog.Error("failed to batch get settings, using defaults", "error", err)
 		settingsMap = make(map[string]*domain.NotificationSettings, len(userIDs))
 		for _, uid := range userIDs {
 			settingsMap[uid] = domain.DefaultSettings(uid)
@@ -121,7 +124,7 @@ func (uc *CreateNotificationUseCase) BatchExecute(ctx context.Context, requests 
 
 		n, err := domain.NewNotification(r.UserID, r.Type, r.Title, r.Message, r.Metadata)
 		if err != nil {
-			log.Printf("failed to create notification for user %s: %v", r.UserID, err)
+			slog.Error("failed to create notification", "error", err, "user_id", r.UserID)
 			continue
 		}
 		notifications = append(notifications, n)
@@ -139,8 +142,10 @@ func (uc *CreateNotificationUseCase) BatchExecute(ctx context.Context, requests 
 	// 5. Batch publish в NATS (async)
 	if uc.publisher != nil {
 		go func() {
-			if err := uc.publisher.PublishNotificationsBatch(context.Background(), notifications); err != nil {
-				log.Printf("failed to batch publish notifications: %v", err)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := uc.publisher.PublishNotificationsBatch(ctx, notifications); err != nil {
+				slog.Error("failed to batch publish notifications", "error", err)
 			}
 		}()
 	}
@@ -167,7 +172,11 @@ func (uc *CreateNotificationUseCase) CreateBoardEvent(ctx context.Context, board
 	// WebSocket push — 1 NATS сообщение, gateway broadcast подписчикам board
 	if uc.publisher != nil {
 		go func() {
-			_ = uc.publisher.PublishBoardEventNotification(context.Background(), event)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := uc.publisher.PublishBoardEventNotification(ctx, event); err != nil {
+				slog.Error("failed to publish BoardEventNotification", "error", err, "board_id", boardID)
+			}
 		}()
 	}
 

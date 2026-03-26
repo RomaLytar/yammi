@@ -10,7 +10,41 @@ import (
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
+	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
+
+// CardHandler группирует зависимости для операций с карточками
+type CardHandler struct {
+	create   *usecase.CreateCardUseCase
+	get      *usecase.GetCardUseCase
+	getAll   *usecase.GetCardsUseCase
+	update   *usecase.UpdateCardUseCase
+	move     *usecase.MoveCardUseCase
+	delete   *usecase.DeleteCardUseCase
+	assign   *usecase.AssignCardUseCase
+	unassign *usecase.UnassignCardUseCase
+	activity *usecase.ListCardActivityUseCase
+	repo     usecase.CardRepository
+}
+
+func NewCardHandler(
+	create *usecase.CreateCardUseCase,
+	get *usecase.GetCardUseCase,
+	getAll *usecase.GetCardsUseCase,
+	update *usecase.UpdateCardUseCase,
+	move *usecase.MoveCardUseCase,
+	delete_ *usecase.DeleteCardUseCase,
+	assign *usecase.AssignCardUseCase,
+	unassign *usecase.UnassignCardUseCase,
+	activity *usecase.ListCardActivityUseCase,
+	repo usecase.CardRepository,
+) CardHandler {
+	return CardHandler{
+		create: create, get: get, getAll: getAll, update: update,
+		move: move, delete: delete_, assign: assign, unassign: unassign,
+		activity: activity, repo: repo,
+	}
+}
 
 // CreateCard создает новую карточку
 func (s *BoardServiceServer) CreateCard(ctx context.Context, req *boardpb.CreateCardRequest) (*boardpb.CreateCardResponse, error) {
@@ -43,7 +77,7 @@ func (s *BoardServiceServer) CreateCard(ctx context.Context, req *boardpb.Create
 		dueDate = &t
 	}
 
-	card, err := s.createCard.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), req.GetPosition(), assigneeID, dueDate, domain.Priority(req.GetPriority()), domain.TaskType(req.GetTaskType()))
+	card, err := s.cards.create.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), req.GetPosition(), assigneeID, dueDate, domain.Priority(req.GetPriority()), domain.TaskType(req.GetTaskType()))
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -65,7 +99,7 @@ func (s *BoardServiceServer) GetCard(ctx context.Context, req *boardpb.GetCardRe
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	card, err := s.getCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
+	card, err := s.cards.get.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -87,7 +121,7 @@ func (s *BoardServiceServer) GetCards(ctx context.Context, req *boardpb.GetCards
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	cards, err := s.getCards.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId())
+	cards, err := s.cards.getAll.Execute(ctx, req.GetColumnId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -125,7 +159,7 @@ func (s *BoardServiceServer) UpdateCard(ctx context.Context, req *boardpb.Update
 		dueDate = &t
 	}
 
-	card, err := s.updateCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), assigneeID, int(req.GetVersion()), dueDate, domain.Priority(req.GetPriority()), domain.TaskType(req.GetTaskType()))
+	card, err := s.cards.update.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), assigneeID, int(req.GetVersion()), dueDate, domain.Priority(req.GetPriority()), domain.TaskType(req.GetTaskType()))
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -157,13 +191,13 @@ func (s *BoardServiceServer) MoveCard(ctx context.Context, req *boardpb.MoveCard
 	}
 
 	// Передаём lexorank позицию напрямую (вычисляется на фронтенде)
-	card, err := s.moveCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetFromColumnId(), req.GetToColumnId(), req.GetUserId(), req.GetPosition())
+	card, err := s.cards.move.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetFromColumnId(), req.GetToColumnId(), req.GetUserId(), req.GetPosition())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
 
 	// Доступ проверен в moveCard — загружаем карточки без повторного IsMember
-	cardsInColumn, err := s.getCards.ExecuteAuthorized(ctx, req.GetToColumnId())
+	cardsInColumn, err := s.cards.getAll.ExecuteAuthorized(ctx, req.GetToColumnId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -186,7 +220,7 @@ func (s *BoardServiceServer) DeleteCard(ctx context.Context, req *boardpb.Delete
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.deleteCard.Execute(ctx, req.GetCardIds(), req.GetBoardId(), req.GetUserId())
+	err := s.cards.delete.Execute(ctx, req.GetCardIds(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -209,7 +243,7 @@ func (s *BoardServiceServer) AssignCard(ctx context.Context, req *boardpb.Assign
 		return nil, status.Error(codes.InvalidArgument, "assignee_id is required")
 	}
 
-	card, err := s.assignCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId(), req.GetAssigneeId())
+	card, err := s.cards.assign.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId(), req.GetAssigneeId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -231,7 +265,7 @@ func (s *BoardServiceServer) UnassignCard(ctx context.Context, req *boardpb.Unas
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	card, err := s.unassignCard.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
+	card, err := s.cards.unassign.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

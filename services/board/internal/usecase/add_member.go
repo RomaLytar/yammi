@@ -2,10 +2,10 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
-	
 )
 
 type AddMemberUseCase struct {
@@ -46,7 +46,9 @@ func (uc *AddMemberUseCase) Execute(ctx context.Context, boardID, userID, member
 
 	// 5. Публикуем событие
 	go func() {
-		_ = uc.publisher.PublishMemberAdded(context.Background(), MemberAdded{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishMemberAdded(ctx, MemberAdded{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   time.Now(),
@@ -55,7 +57,9 @@ func (uc *AddMemberUseCase) Execute(ctx context.Context, boardID, userID, member
 			ActorID:      userID,
 			Role:         string(role),
 			BoardTitle:   board.Title,
-		})
+		}); err != nil {
+			slog.Error("failed to publish MemberAdded", "error", err, "board_id", boardID)
+		}
 	}()
 
 	return nil

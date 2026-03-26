@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
@@ -91,8 +92,12 @@ func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 
 	// 8. Обновляем updated_at доски + публикуем события (async, non-blocking)
 	go func() {
-		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
-		_ = uc.publisher.PublishCardUpdated(context.Background(), CardUpdated{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.boardRepo.TouchUpdatedAt(ctx, boardID); err != nil {
+			slog.Error("failed to touch board updated_at", "error", err, "board_id", boardID)
+		}
+		if err := uc.publisher.PublishCardUpdated(ctx, CardUpdated{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   card.UpdatedAt,
@@ -106,13 +111,15 @@ func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 			DueDate:      card.DueDate,
 			Priority:     string(card.Priority),
 			TaskType:     string(card.TaskType),
-		})
+		}); err != nil {
+			slog.Error("failed to publish CardUpdated", "error", err, "card_id", card.ID, "board_id", boardID)
+		}
 
 		// Детектим изменение assignee и публикуем отдельное событие
 		assigneeChanged := !assigneesEqual(prevAssignee, card.AssigneeID)
 		if assigneeChanged {
 			if card.AssigneeID != nil && *card.AssigneeID != "" {
-				_ = uc.publisher.PublishCardAssigned(context.Background(), CardAssigned{
+				if err := uc.publisher.PublishCardAssigned(ctx, CardAssigned{
 					EventID:      generateEventID(),
 					EventVersion: 1,
 					OccurredAt:   card.UpdatedAt,
@@ -123,9 +130,11 @@ func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 					AssigneeID:   *card.AssigneeID,
 					PrevAssignee: prevAssignee,
 					CardTitle:    card.Title,
-				})
+				}); err != nil {
+					slog.Error("failed to publish CardAssigned", "error", err, "card_id", card.ID, "board_id", boardID)
+				}
 			} else if prevAssignee != nil {
-				_ = uc.publisher.PublishCardUnassigned(context.Background(), CardUnassigned{
+				if err := uc.publisher.PublishCardUnassigned(ctx, CardUnassigned{
 					EventID:      generateEventID(),
 					EventVersion: 1,
 					OccurredAt:   card.UpdatedAt,
@@ -135,7 +144,9 @@ func (uc *UpdateCardUseCase) Execute(ctx context.Context, cardID, boardID, userI
 					ActorID:      userID,
 					PrevAssignee: *prevAssignee,
 					CardTitle:    card.Title,
-				})
+				}); err != nil {
+					slog.Error("failed to publish CardUnassigned", "error", err, "card_id", card.ID, "board_id", boardID)
+				}
 			}
 		}
 	}()

@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -34,7 +36,9 @@ func (uc *CreateBoardUseCase) Execute(ctx context.Context, title, description, o
 
 	// 3. Публикуем события (async, non-blocking)
 	go func() {
-		_ = uc.publisher.PublishBoardCreated(context.Background(), BoardCreated{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishBoardCreated(ctx, BoardCreated{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   board.CreatedAt,
@@ -42,9 +46,11 @@ func (uc *CreateBoardUseCase) Execute(ctx context.Context, title, description, o
 			OwnerID:      board.OwnerID,
 			Title:        board.Title,
 			Description:  board.Description,
-		})
+		}); err != nil {
+			slog.Error("failed to publish BoardCreated", "error", err, "board_id", board.ID)
+		}
 		// Публикуем MemberAdded для owner — notification cache должен узнать об участнике
-		_ = uc.publisher.PublishMemberAdded(context.Background(), MemberAdded{
+		if err := uc.publisher.PublishMemberAdded(ctx, MemberAdded{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   board.CreatedAt,
@@ -53,7 +59,9 @@ func (uc *CreateBoardUseCase) Execute(ctx context.Context, title, description, o
 			ActorID:      board.OwnerID,
 			Role:         string(domain.RoleOwner),
 			BoardTitle:   board.Title,
-		})
+		}); err != nil {
+			slog.Error("failed to publish MemberAdded", "error", err, "board_id", board.ID)
+		}
 	}()
 
 	return board, nil

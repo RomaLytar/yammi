@@ -10,7 +10,29 @@ import (
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
+	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
+
+// CustomFieldHandler группирует зависимости для операций с кастомными полями
+type CustomFieldHandler struct {
+	create    *usecase.CreateCustomFieldUseCase
+	list      *usecase.ListCustomFieldsUseCase
+	update    *usecase.UpdateCustomFieldUseCase
+	delete    *usecase.DeleteCustomFieldUseCase
+	setValue  *usecase.SetCustomFieldValueUseCase
+	getValues *usecase.GetCardCustomFieldsUseCase
+}
+
+func NewCustomFieldHandler(
+	create *usecase.CreateCustomFieldUseCase,
+	list *usecase.ListCustomFieldsUseCase,
+	update *usecase.UpdateCustomFieldUseCase,
+	delete_ *usecase.DeleteCustomFieldUseCase,
+	setValue *usecase.SetCustomFieldValueUseCase,
+	getValues *usecase.GetCardCustomFieldsUseCase,
+) CustomFieldHandler {
+	return CustomFieldHandler{create: create, list: list, update: update, delete: delete_, setValue: setValue, getValues: getValues}
+}
 
 // CreateCustomField создает новое определение кастомного поля (только owner)
 func (s *BoardServiceServer) CreateCustomField(ctx context.Context, req *boardpb.CreateCustomFieldRequest) (*boardpb.CreateCustomFieldResponse, error) {
@@ -27,7 +49,7 @@ func (s *BoardServiceServer) CreateCustomField(ctx context.Context, req *boardpb
 		return nil, status.Error(codes.InvalidArgument, "field_type is required")
 	}
 
-	def, err := s.createCustomField.Execute(ctx,
+	def, err := s.customFields.create.Execute(ctx,
 		req.GetBoardId(),
 		req.GetUserId(),
 		req.GetName(),
@@ -54,7 +76,7 @@ func (s *BoardServiceServer) ListCustomFields(ctx context.Context, req *boardpb.
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	defs, err := s.listCustomFields.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	defs, err := s.customFields.list.Execute(ctx, req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -79,7 +101,7 @@ func (s *BoardServiceServer) UpdateCustomField(ctx context.Context, req *boardpb
 		return nil, status.Error(codes.InvalidArgument, "name is required")
 	}
 
-	def, err := s.updateCustomField.Execute(ctx,
+	def, err := s.customFields.update.Execute(ctx,
 		req.GetFieldId(),
 		req.GetBoardId(),
 		req.GetUserId(),
@@ -108,7 +130,7 @@ func (s *BoardServiceServer) DeleteCustomField(ctx context.Context, req *boardpb
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.deleteCustomField.Execute(ctx, req.GetFieldId(), req.GetBoardId(), req.GetUserId())
+	err := s.customFields.delete.Execute(ctx, req.GetFieldId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -148,7 +170,7 @@ func (s *BoardServiceServer) SetCustomFieldValue(ctx context.Context, req *board
 		datePtr = &t
 	}
 
-	value, err := s.setCustomFieldValue.Execute(ctx,
+	value, err := s.customFields.setValue.Execute(ctx,
 		req.GetCardId(),
 		req.GetBoardId(),
 		req.GetFieldId(),
@@ -178,7 +200,7 @@ func (s *BoardServiceServer) GetCardCustomFields(ctx context.Context, req *board
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	values, err := s.getCardCustomFields.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
+	values, err := s.customFields.getValues.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

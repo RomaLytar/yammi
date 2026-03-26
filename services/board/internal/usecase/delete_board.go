@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -39,18 +41,21 @@ func (uc *DeleteBoardUseCase) Execute(ctx context.Context, boardIDs []string, us
 	}
 
 	// 3. Публикуем события
-	for _, boardID := range boardIDs {
-		bid := boardID
-		go func() {
-			_ = uc.publisher.PublishBoardDeleted(context.Background(), BoardDeleted{
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		for _, bid := range boardIDs {
+			if err := uc.publisher.PublishBoardDeleted(ctx, BoardDeleted{
 				EventID:      generateEventID(),
 				EventVersion: 1,
 				OccurredAt:   getCurrentTime(),
 				BoardID:      bid,
 				ActorID:      userID,
-			})
-		}()
-	}
+			}); err != nil {
+				slog.Error("failed to publish BoardDeleted", "error", err, "board_id", bid)
+			}
+		}
+	}()
 
 	return nil
 }

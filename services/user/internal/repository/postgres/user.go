@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgtype"
 
@@ -78,9 +79,12 @@ func (r *UserRepo) SearchByEmail(ctx context.Context, query string, limit int) (
 		limit = 5
 	}
 
-	sqlQuery := `SELECT id, email, name, avatar_url FROM profiles WHERE email ILIKE $1 ORDER BY email LIMIT $2`
+	sqlQuery := `SELECT id, email, name, avatar_url FROM profiles WHERE email ILIKE $1 ESCAPE '\' ORDER BY email LIMIT $2`
 
-	rows, err := r.db.QueryContext(ctx, sqlQuery, "%"+query+"%", limit)
+	escaped := strings.ReplaceAll(query, `\`, `\\`)
+	escaped = strings.ReplaceAll(escaped, `%`, `\%`)
+	escaped = strings.ReplaceAll(escaped, `_`, `\_`)
+	rows, err := r.db.QueryContext(ctx, sqlQuery, "%"+escaped+"%", limit)
 	if err != nil {
 		return nil, err
 	}

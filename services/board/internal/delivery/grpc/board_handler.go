@@ -8,7 +8,27 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
+	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
+
+// BoardCoreHandler группирует зависимости для операций с досками
+type BoardCoreHandler struct {
+	create *usecase.CreateBoardUseCase
+	get    *usecase.GetBoardUseCase
+	list   *usecase.ListBoardsUseCase
+	update *usecase.UpdateBoardUseCase
+	delete *usecase.DeleteBoardUseCase
+}
+
+func NewBoardCoreHandler(
+	create *usecase.CreateBoardUseCase,
+	get *usecase.GetBoardUseCase,
+	list *usecase.ListBoardsUseCase,
+	update *usecase.UpdateBoardUseCase,
+	delete *usecase.DeleteBoardUseCase,
+) BoardCoreHandler {
+	return BoardCoreHandler{create: create, get: get, list: list, update: update, delete: delete}
+}
 
 // CreateBoard создает новую доску
 func (s *BoardServiceServer) CreateBoard(ctx context.Context, req *boardpb.CreateBoardRequest) (*boardpb.CreateBoardResponse, error) {
@@ -19,7 +39,7 @@ func (s *BoardServiceServer) CreateBoard(ctx context.Context, req *boardpb.Creat
 		return nil, status.Error(codes.InvalidArgument, "owner_id is required")
 	}
 
-	board, err := s.createBoard.Execute(ctx, req.GetTitle(), req.GetDescription(), req.GetOwnerId())
+	board, err := s.boards.create.Execute(ctx, req.GetTitle(), req.GetDescription(), req.GetOwnerId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -39,24 +59,24 @@ func (s *BoardServiceServer) GetBoard(ctx context.Context, req *boardpb.GetBoard
 	}
 
 	// 1. Загружаем доску (включает проверку IsMember)
-	board, err := s.getBoard.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	board, err := s.boards.get.Execute(ctx, req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
 
 	// 2. Доступ проверен — загружаем columns и members без повторного IsMember
-	columns, err := s.getColumns.ExecuteAuthorized(ctx, req.GetBoardId())
+	columns, err := s.columns.get.ExecuteAuthorized(ctx, req.GetBoardId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
 
-	members, err := s.listMembers.ExecuteAuthorized(ctx, req.GetBoardId())
+	members, err := s.members.list.ExecuteAuthorized(ctx, req.GetBoardId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
 
 	// 3. Подсчёт карточек по колонкам (один запрос)
-	cardCounts, _ := s.cardRepo.CountByBoard(ctx, req.GetBoardId())
+	cardCounts, _ := s.cards.repo.CountByBoard(ctx, req.GetBoardId())
 
 	return &boardpb.GetBoardResponse{
 		Board:   mapBoardToProto(board),
@@ -79,7 +99,7 @@ func (s *BoardServiceServer) ListBoards(ctx context.Context, req *boardpb.ListBo
 		limit = 100 // max limit
 	}
 
-	boards, nextCursor, err := s.listBoards.Execute(ctx, req.GetUserId(), limit, req.GetCursor(), req.GetOwnerOnly(), req.GetSearch(), req.GetSortBy())
+	boards, nextCursor, err := s.boards.list.Execute(ctx, req.GetUserId(), limit, req.GetCursor(), req.GetOwnerOnly(), req.GetSearch(), req.GetSortBy())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -102,7 +122,7 @@ func (s *BoardServiceServer) UpdateBoard(ctx context.Context, req *boardpb.Updat
 		return nil, status.Error(codes.InvalidArgument, "title is required")
 	}
 
-	board, err := s.updateBoard.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), int(req.GetVersion()))
+	board, err := s.boards.update.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetTitle(), req.GetDescription(), int(req.GetVersion()))
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -121,7 +141,7 @@ func (s *BoardServiceServer) DeleteBoard(ctx context.Context, req *boardpb.Delet
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.deleteBoard.Execute(ctx, req.GetBoardIds(), req.GetUserId())
+	err := s.boards.delete.Execute(ctx, req.GetBoardIds(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

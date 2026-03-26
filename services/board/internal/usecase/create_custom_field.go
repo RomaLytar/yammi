@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
@@ -58,7 +59,9 @@ func (uc *CreateCustomFieldUseCase) Execute(ctx context.Context, boardID, userID
 
 	// 5. Публикуем событие (async, non-blocking)
 	go func() {
-		_ = uc.publisher.PublishCustomFieldCreated(context.Background(), CustomFieldCreated{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishCustomFieldCreated(ctx, CustomFieldCreated{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   time.Now(),
@@ -67,7 +70,9 @@ func (uc *CreateCustomFieldUseCase) Execute(ctx context.Context, boardID, userID
 			ActorID:      userID,
 			Name:         def.Name,
 			FieldType:    string(def.FieldType),
-		})
+		}); err != nil {
+			slog.Error("failed to publish CustomFieldCreated", "error", err, "field_id", def.ID, "board_id", boardID)
+		}
 	}()
 
 	return def, nil

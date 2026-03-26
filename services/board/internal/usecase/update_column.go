@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -50,8 +52,12 @@ func (uc *UpdateColumnUseCase) Execute(ctx context.Context, columnID, boardID, u
 
 	// 5. Обновляем updated_at доски + публикуем событие (async, non-blocking)
 	go func() {
-		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
-		_ = uc.publisher.PublishColumnUpdated(context.Background(), ColumnUpdated{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.boardRepo.TouchUpdatedAt(ctx, boardID); err != nil {
+			slog.Error("failed to touch board updated_at", "error", err, "board_id", boardID)
+		}
+		if err := uc.publisher.PublishColumnUpdated(ctx, ColumnUpdated{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   getCurrentTime(),
@@ -59,7 +65,9 @@ func (uc *UpdateColumnUseCase) Execute(ctx context.Context, columnID, boardID, u
 			ColumnID:     column.ID,
 			ActorID:      userID,
 			Title:        column.Title,
-		})
+		}); err != nil {
+			slog.Error("failed to publish ColumnUpdated", "error", err, "board_id", boardID)
+		}
 	}()
 
 	return column, nil

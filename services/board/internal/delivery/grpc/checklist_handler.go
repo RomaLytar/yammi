@@ -8,7 +8,36 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
+	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
+
+// ChecklistHandler группирует зависимости для операций с чеклистами
+type ChecklistHandler struct {
+	create     *usecase.CreateChecklistUseCase
+	get        *usecase.GetChecklistsUseCase
+	update     *usecase.UpdateChecklistUseCase
+	delete     *usecase.DeleteChecklistUseCase
+	createItem *usecase.CreateChecklistItemUseCase
+	updateItem *usecase.UpdateChecklistItemUseCase
+	deleteItem *usecase.DeleteChecklistItemUseCase
+	toggleItem *usecase.ToggleChecklistItemUseCase
+}
+
+func NewChecklistHandler(
+	create *usecase.CreateChecklistUseCase,
+	get *usecase.GetChecklistsUseCase,
+	update *usecase.UpdateChecklistUseCase,
+	delete_ *usecase.DeleteChecklistUseCase,
+	createItem *usecase.CreateChecklistItemUseCase,
+	updateItem *usecase.UpdateChecklistItemUseCase,
+	deleteItem *usecase.DeleteChecklistItemUseCase,
+	toggleItem *usecase.ToggleChecklistItemUseCase,
+) ChecklistHandler {
+	return ChecklistHandler{
+		create: create, get: get, update: update, delete: delete_,
+		createItem: createItem, updateItem: updateItem, deleteItem: deleteItem, toggleItem: toggleItem,
+	}
+}
 
 // CreateChecklist создает новый чеклист для карточки
 func (s *BoardServiceServer) CreateChecklist(ctx context.Context, req *boardpb.CreateChecklistRequest) (*boardpb.CreateChecklistResponse, error) {
@@ -25,7 +54,7 @@ func (s *BoardServiceServer) CreateChecklist(ctx context.Context, req *boardpb.C
 		return nil, status.Error(codes.InvalidArgument, "title is required")
 	}
 
-	checklist, err := s.createChecklist.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), int(req.GetPosition()))
+	checklist, err := s.checklists.create.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), int(req.GetPosition()))
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -47,7 +76,7 @@ func (s *BoardServiceServer) GetChecklists(ctx context.Context, req *boardpb.Get
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	checklists, err := s.getChecklists.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
+	checklists, err := s.checklists.get.Execute(ctx, req.GetCardId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -72,7 +101,7 @@ func (s *BoardServiceServer) UpdateChecklist(ctx context.Context, req *boardpb.U
 		return nil, status.Error(codes.InvalidArgument, "title is required")
 	}
 
-	checklist, err := s.updateChecklist.Execute(ctx, req.GetChecklistId(), req.GetBoardId(), req.GetUserId(), req.GetTitle())
+	checklist, err := s.checklists.update.Execute(ctx, req.GetChecklistId(), req.GetBoardId(), req.GetUserId(), req.GetTitle())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -94,7 +123,7 @@ func (s *BoardServiceServer) DeleteChecklist(ctx context.Context, req *boardpb.D
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.deleteChecklist.Execute(ctx, req.GetChecklistId(), req.GetBoardId(), req.GetUserId())
+	err := s.checklists.delete.Execute(ctx, req.GetChecklistId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -117,7 +146,7 @@ func (s *BoardServiceServer) CreateChecklistItem(ctx context.Context, req *board
 		return nil, status.Error(codes.InvalidArgument, "title is required")
 	}
 
-	item, err := s.createChecklistItem.Execute(ctx, req.GetChecklistId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), int(req.GetPosition()))
+	item, err := s.checklists.createItem.Execute(ctx, req.GetChecklistId(), req.GetBoardId(), req.GetUserId(), req.GetTitle(), int(req.GetPosition()))
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -142,7 +171,7 @@ func (s *BoardServiceServer) UpdateChecklistItem(ctx context.Context, req *board
 		return nil, status.Error(codes.InvalidArgument, "title is required")
 	}
 
-	item, err := s.updateChecklistItem.Execute(ctx, req.GetItemId(), req.GetBoardId(), req.GetUserId(), req.GetTitle())
+	item, err := s.checklists.updateItem.Execute(ctx, req.GetItemId(), req.GetBoardId(), req.GetUserId(), req.GetTitle())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -164,7 +193,7 @@ func (s *BoardServiceServer) DeleteChecklistItem(ctx context.Context, req *board
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	err := s.deleteChecklistItem.Execute(ctx, req.GetItemId(), req.GetBoardId(), req.GetUserId())
+	err := s.checklists.deleteItem.Execute(ctx, req.GetItemId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -184,7 +213,7 @@ func (s *BoardServiceServer) ToggleChecklistItem(ctx context.Context, req *board
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	isChecked, err := s.toggleChecklistItem.Execute(ctx, req.GetItemId(), req.GetBoardId(), req.GetUserId())
+	isChecked, err := s.checklists.toggleItem.Execute(ctx, req.GetItemId(), req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

@@ -40,6 +40,11 @@ func (h *BoardHandler) CreateCustomField(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	if msg := validateStringLen(req.Name, "name", maxNameLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+
 	resp, err := h.client.CreateCustomField(r.Context(), &boardpb.CreateCustomFieldRequest{
 		BoardId:   boardID,
 		UserId:    userID,
@@ -114,6 +119,11 @@ func (h *BoardHandler) UpdateCustomField(w http.ResponseWriter, r *http.Request)
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if msg := validateStringLen(req.Name, "name", maxNameLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
 		return
 	}
 

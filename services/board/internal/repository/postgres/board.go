@@ -102,7 +102,7 @@ func (r *BoardRepository) ListByUserID(ctx context.Context, userID string, limit
 	}
 
 	if search != "" {
-		where += fmt.Sprintf(" AND b.title ILIKE $%d", argIdx)
+		where += fmt.Sprintf(` AND b.title ILIKE $%d ESCAPE '\'`, argIdx)
 		args = append(args, "%"+escapeLikePattern(search)+"%")
 		argIdx++
 	}

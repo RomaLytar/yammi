@@ -38,6 +38,15 @@ func (h *BoardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if msg := validateStringLen(req.Title, "title", maxTitleLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+	if msg := validateStringLen(req.Description, "description", maxDescriptionLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+
 	grpcReq := &boardpb.CreateCardRequest{
 		ColumnId:    columnID,
 		BoardId:     req.BoardID,
@@ -165,6 +174,15 @@ func (h *BoardHandler) UpdateCard(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if msg := validateStringLen(req.Title, "title", maxTitleLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+	if msg := validateStringLen(req.Description, "description", maxDescriptionLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
 		return
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
@@ -83,8 +84,12 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 
 	// 7. Обновляем updated_at доски + публикуем события (async, non-blocking)
 	go func() {
-		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
-		_ = uc.publisher.PublishCardCreated(context.Background(), CardCreated{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.boardRepo.TouchUpdatedAt(ctx, boardID); err != nil {
+			slog.Error("failed to touch board updated_at", "error", err, "board_id", boardID)
+		}
+		if err := uc.publisher.PublishCardCreated(ctx, CardCreated{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   card.CreatedAt,
@@ -99,11 +104,13 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 			DueDate:      card.DueDate,
 			Priority:     string(card.Priority),
 			TaskType:     string(card.TaskType),
-		})
+		}); err != nil {
+			slog.Error("failed to publish CardCreated", "error", err, "card_id", card.ID, "board_id", boardID)
+		}
 
 		// Если карточка создана сразу с assignee — отправляем событие
 		if card.AssigneeID != nil && *card.AssigneeID != "" {
-			_ = uc.publisher.PublishCardAssigned(context.Background(), CardAssigned{
+			if err := uc.publisher.PublishCardAssigned(ctx, CardAssigned{
 				EventID:      generateEventID(),
 				EventVersion: 1,
 				OccurredAt:   card.CreatedAt,
@@ -113,7 +120,9 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 				ActorID:      userID,
 				AssigneeID:   *card.AssigneeID,
 				CardTitle:    card.Title,
-			})
+			}); err != nil {
+				slog.Error("failed to publish CardAssigned", "error", err, "card_id", card.ID, "board_id", boardID)
+			}
 		}
 	}()
 

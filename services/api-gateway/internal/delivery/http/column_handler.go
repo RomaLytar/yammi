@@ -30,6 +30,11 @@ func (h *BoardHandler) AddColumn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if msg := validateStringLen(req.Title, "title", maxTitleLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+
 	resp, err := h.client.AddColumn(r.Context(), &boardpb.AddColumnRequest{
 		BoardId:  boardID,
 		UserId:   userID,
@@ -95,6 +100,11 @@ func (h *BoardHandler) UpdateColumn(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if msg := validateStringLen(req.Title, "title", maxTitleLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
 		return
 	}
 

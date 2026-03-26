@@ -10,7 +10,23 @@ import (
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
+	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
+
+// MemberHandler группирует зависимости для операций с участниками
+type MemberHandler struct {
+	add    *usecase.AddMemberUseCase
+	remove *usecase.RemoveMemberUseCase
+	list   *usecase.ListMembersUseCase
+}
+
+func NewMemberHandler(
+	add *usecase.AddMemberUseCase,
+	remove *usecase.RemoveMemberUseCase,
+	list *usecase.ListMembersUseCase,
+) MemberHandler {
+	return MemberHandler{add: add, remove: remove, list: list}
+}
 
 // AddMember добавляет участника в доску (только owner)
 func (s *BoardServiceServer) AddMember(ctx context.Context, req *boardpb.AddMemberRequest) (*boardpb.AddMemberResponse, error) {
@@ -32,13 +48,13 @@ func (s *BoardServiceServer) AddMember(ctx context.Context, req *boardpb.AddMemb
 		return nil, status.Error(codes.InvalidArgument, "invalid role")
 	}
 
-	err := s.addMember.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetMemberUserId(), role)
+	err := s.members.add.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetMemberUserId(), role)
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
 
 	// AddMemberUseCase не возвращает member, загружаем его отдельно
-	members, err := s.listMembers.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	members, err := s.members.list.Execute(ctx, req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -73,7 +89,7 @@ func (s *BoardServiceServer) RemoveMember(ctx context.Context, req *boardpb.Remo
 		return nil, status.Error(codes.InvalidArgument, "member_user_id is required")
 	}
 
-	err := s.removeMember.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetMemberUserId())
+	err := s.members.remove.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetMemberUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -90,7 +106,7 @@ func (s *BoardServiceServer) ListMembers(ctx context.Context, req *boardpb.ListM
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	members, err := s.listMembers.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	members, err := s.members.list.Execute(ctx, req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
@@ -113,7 +129,7 @@ func (s *BoardServiceServer) IsMember(ctx context.Context, req *boardpb.IsMember
 	// нам нужен прямой вызов репозитория. Вызываем через memberRepo напрямую — это
 	// delivery-level utility для cross-service запросов.
 	// Для этого используем listMembers и ищем user_id в результате.
-	members, err := s.listMembers.Execute(ctx, req.GetBoardId(), req.GetUserId())
+	members, err := s.members.list.Execute(ctx, req.GetBoardId(), req.GetUserId())
 	if err != nil {
 		// Если access denied — значит не участник
 		if errors.Is(err, domain.ErrAccessDenied) {

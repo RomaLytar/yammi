@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
@@ -41,14 +42,18 @@ func (uc *DeleteAutomationRuleUseCase) Execute(ctx context.Context, ruleID, boar
 
 	// 3. Публикуем событие (async, non-blocking)
 	go func() {
-		_ = uc.publisher.PublishAutomationRuleDeleted(context.Background(), AutomationRuleDeleted{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishAutomationRuleDeleted(ctx, AutomationRuleDeleted{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   time.Now(),
 			RuleID:       ruleID,
 			BoardID:      boardID,
 			ActorID:      userID,
-		})
+		}); err != nil {
+			slog.Error("failed to publish AutomationRuleDeleted", "error", err, "rule_id", ruleID, "board_id", boardID)
+		}
 	}()
 
 	return nil

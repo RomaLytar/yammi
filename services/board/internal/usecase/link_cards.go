@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
@@ -52,7 +53,9 @@ func (uc *LinkCardsUseCase) Execute(ctx context.Context, parentID, childID, boar
 
 	// 5. Публикуем событие (async, non-blocking)
 	go func() {
-		_ = uc.publisher.PublishCardLinked(context.Background(), CardLinked{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishCardLinked(ctx, CardLinked{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   time.Now(),
@@ -62,7 +65,9 @@ func (uc *LinkCardsUseCase) Execute(ctx context.Context, parentID, childID, boar
 			BoardID:      boardID,
 			LinkType:     string(link.LinkType),
 			ActorID:      userID,
-		})
+		}); err != nil {
+			slog.Error("failed to publish CardLinked", "error", err, "link_id", link.ID, "board_id", boardID)
+		}
 	}()
 
 	return link, nil

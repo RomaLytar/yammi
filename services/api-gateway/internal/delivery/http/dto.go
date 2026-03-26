@@ -1,5 +1,23 @@
 package http
 
+import "strconv"
+
+const (
+	maxTitleLen       = 500
+	maxDescriptionLen = 5000
+	maxNameLen        = 255
+	maxSearchLen      = 200
+	maxColorLen       = 7 // #FFFFFF
+	maxContentLen     = 10000
+)
+
+func validateStringLen(s, field string, max int) string {
+	if len(s) > max {
+		return field + " is too long, max " + strconv.Itoa(max) + " characters"
+	}
+	return ""
+}
+
 // --- Auth responses ---
 
 type authResponse struct {

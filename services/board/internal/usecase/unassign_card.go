@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -69,8 +71,12 @@ func (uc *UnassignCardUseCase) Execute(ctx context.Context, cardID, boardID, use
 
 	// 7. Публикуем событие (async, non-blocking)
 	go func() {
-		_ = uc.boardRepo.TouchUpdatedAt(context.Background(), boardID)
-		_ = uc.publisher.PublishCardUnassigned(context.Background(), CardUnassigned{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.boardRepo.TouchUpdatedAt(ctx, boardID); err != nil {
+			slog.Error("failed to touch board updated_at", "error", err, "board_id", boardID)
+		}
+		if err := uc.publisher.PublishCardUnassigned(ctx, CardUnassigned{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   card.UpdatedAt,
@@ -80,7 +86,9 @@ func (uc *UnassignCardUseCase) Execute(ctx context.Context, cardID, boardID, use
 			ActorID:      userID,
 			PrevAssignee: prevAssignee,
 			CardTitle:    card.Title,
-		})
+		}); err != nil {
+			slog.Error("failed to publish CardUnassigned", "error", err, "card_id", card.ID, "board_id", boardID)
+		}
 	}()
 
 	return card, nil

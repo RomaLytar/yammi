@@ -26,7 +26,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		if len(allowedOrigins) == 0 {
-			return true // fallback для dev без конфигурации
+			return false // reject если origins не сконфигурированы
 		}
 		origin := r.Header.Get("Origin")
 		return allowedOrigins[origin]
@@ -39,9 +39,15 @@ type BoardAccessChecker interface {
 }
 
 // ServeWS обрабатывает HTTP-запрос на апгрейд до WebSocket.
-// Аутентификация через query-параметр token: /ws?token=<jwt>.
+// Аутентификация: Authorization header (предпочтительно) или query-параметр token (fallback).
 func ServeWS(hub *Hub, verifier *auth.JWTVerifier, checker BoardAccessChecker, w http.ResponseWriter, r *http.Request) {
-	token := r.URL.Query().Get("token")
+	// Предпочитаем Authorization header — токен не попадёт в логи и историю браузера
+	token := ""
+	if header := r.Header.Get("Authorization"); strings.HasPrefix(header, "Bearer ") {
+		token = strings.TrimPrefix(header, "Bearer ")
+	} else {
+		token = r.URL.Query().Get("token")
+	}
 	if token == "" {
 		http.Error(w, "missing token", http.StatusUnauthorized)
 		return

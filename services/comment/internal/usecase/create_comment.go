@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/comment/internal/domain"
 )
@@ -69,7 +71,9 @@ func (uc *CreateCommentUseCase) Execute(ctx context.Context, cardID, boardID, us
 
 	// 6. Публикуем событие (async, non-blocking)
 	go func() {
-		_ = uc.publisher.PublishCommentCreated(context.Background(), CommentCreated{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishCommentCreated(ctx, CommentCreated{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   comment.CreatedAt,
@@ -79,7 +83,9 @@ func (uc *CreateCommentUseCase) Execute(ctx context.Context, cardID, boardID, us
 			AuthorID:     comment.AuthorID,
 			ParentID:     comment.ParentID,
 			Content:      comment.Content,
-		})
+		}); err != nil {
+			slog.Error("failed to publish CommentCreated", "error", err, "comment_id", comment.ID, "card_id", comment.CardID)
+		}
 	}()
 
 	return comment, nil

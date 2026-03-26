@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
+	"time"
 
 	"github.com/RomaLytar/yammi/services/comment/internal/domain"
 )
@@ -62,7 +64,9 @@ func (uc *DeleteCommentUseCase) Execute(ctx context.Context, commentID, boardID,
 
 	// 6. Публикуем событие (async, non-blocking)
 	go func() {
-		_ = uc.publisher.PublishCommentDeleted(context.Background(), CommentDeleted{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := uc.publisher.PublishCommentDeleted(ctx, CommentDeleted{
 			EventID:      generateEventID(),
 			EventVersion: 1,
 			OccurredAt:   comment.UpdatedAt,
@@ -70,7 +74,9 @@ func (uc *DeleteCommentUseCase) Execute(ctx context.Context, commentID, boardID,
 			CardID:       comment.CardID,
 			BoardID:      comment.BoardID,
 			ActorID:      userID,
-		})
+		}); err != nil {
+			slog.Error("failed to publish CommentDeleted", "error", err, "comment_id", comment.ID, "card_id", comment.CardID)
+		}
 	}()
 
 	return nil

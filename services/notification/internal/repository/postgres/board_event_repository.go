@@ -73,8 +73,11 @@ func (r *BoardEventRepo) ListForUser(ctx context.Context, userID string, boardID
 	// Поиск по title
 	if search != "" {
 		idx := len(args) + 1
-		query += fmt.Sprintf(" AND be.title ILIKE $%d", idx)
-		args = append(args, "%"+search+"%")
+		query += fmt.Sprintf(` AND be.title ILIKE $%d ESCAPE '\'`, idx)
+		escaped := strings.ReplaceAll(search, `\`, `\\`)
+		escaped = strings.ReplaceAll(escaped, `%`, `\%`)
+		escaped = strings.ReplaceAll(escaped, `_`, `\_`)
+		args = append(args, "%"+escaped+"%")
 	}
 
 	cursorIdx := len(args) + 1

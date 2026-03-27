@@ -17,10 +17,12 @@ import (
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
 	delivery "github.com/RomaLytar/yammi/services/board/internal/delivery/grpc"
+	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/cache"
 	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/database"
 	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/metrics"
 	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/nats"
 	"github.com/RomaLytar/yammi/services/board/internal/infrastructure/storage"
+	"github.com/RomaLytar/yammi/services/board/internal/repository/cached"
 	"github.com/RomaLytar/yammi/services/board/internal/repository/postgres"
 	"github.com/RomaLytar/yammi/services/board/internal/usecase"
 )
@@ -104,6 +106,30 @@ func main() {
 	// Event publisher (wraps NATS publisher)
 	publisher := nats.NewEventPublisher(natsPublisher)
 
+	// Redis membership cache (CQRS: event-driven, no TTL)
+	redisURL := os.Getenv("REDIS_URL")
+	var membershipCache *cache.MembershipCache
+	if redisURL != "" {
+		mc, err := cache.NewMembershipCache(redisURL)
+		if err != nil {
+			log.Printf("WARNING: Redis unavailable, running without cache: %v", err)
+		} else {
+			membershipCache = mc
+			defer membershipCache.Close()
+
+			// Cache consumer: синхронизирует Redis из NATS событий (DeliverAll replay)
+			cacheConsumer, err := nats.NewCacheConsumer(natsURL, membershipCache)
+			if err != nil {
+				log.Printf("WARNING: cache consumer failed to start: %v", err)
+			} else {
+				defer cacheConsumer.Close()
+				if err := cacheConsumer.Start(); err != nil {
+					log.Printf("WARNING: cache consumer start failed: %v", err)
+				}
+			}
+		}
+	}
+
 	// MinIO storage
 	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")
 	if minioPublicURL == "" {
@@ -118,7 +144,7 @@ func main() {
 	boardRepo := postgres.NewBoardRepository(db)
 	columnRepo := postgres.NewColumnRepository(db)
 	cardRepo := postgres.NewCardRepository(db)
-	memberRepo := postgres.NewMembershipRepository(db)
+	pgMemberRepo := postgres.NewMembershipRepository(db)
 	attachmentRepo := postgres.NewAttachmentRepository(db)
 	activityRepo := postgres.NewActivityRepository(db)
 	labelRepo := postgres.NewLabelRepository(db)
@@ -126,6 +152,17 @@ func main() {
 	checklistRepo := postgres.NewChecklistRepository(db)
 	customFieldRepo := postgres.NewCustomFieldRepository(db)
 	automationRuleRepo := postgres.NewAutomationRuleRepository(db)
+
+	// Membership repository: Redis cache decorator over PostgreSQL.
+	// Если Redis недоступен — используется чистый PostgreSQL.
+	var memberRepo usecase.MembershipRepository
+	if membershipCache != nil {
+		memberRepo = cached.NewMembershipRepository(pgMemberRepo, membershipCache)
+		log.Println("membership: using Redis cache + PostgreSQL fallback")
+	} else {
+		memberRepo = pgMemberRepo
+		log.Println("membership: using PostgreSQL only (no Redis)")
+	}
 
 	// Sub-handlers (группируют use cases по доменным областям)
 	boardsHandler := delivery.NewBoardCoreHandler(

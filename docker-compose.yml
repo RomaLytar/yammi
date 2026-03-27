@@ -178,6 +178,7 @@ services:
       MINIO_PUBLIC_URL: "localhost:9002"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
       MINIO_SECRET_KEY: "${MINIO_ROOT_PASSWORD}"
+      REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/2"
     ports:
       - "50053:50053"
     depends_on:
@@ -186,6 +187,8 @@ services:
       nats:
         condition: service_healthy
       minio:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   comment:

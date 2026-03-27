@@ -164,9 +164,19 @@ func (uc *CreateNotificationUseCase) CreateBoardEvent(ctx context.Context, board
 		return err
 	}
 
-	// Redis: обновляем max_seq для доски (1 SET, не fan-out)
+	// Redis: обновляем max_seq для доски (1 SET)
 	if uc.unreadCounter != nil {
 		_ = uc.unreadCounter.SetBoardSeq(ctx, boardID, seq)
+
+		// Инвалидируем unread-count кеш member'ов чтобы следующий запрос пересчитал.
+		// Без этого кеш может держать stale значение до 60s TTL.
+		if memberIDs, err := uc.memberRepo.ListMemberIDs(ctx, boardID); err == nil {
+			for _, uid := range memberIDs {
+				if uid != actorID { // actor не получает свои нотификации
+					_ = uc.unreadCounter.Invalidate(ctx, uid)
+				}
+			}
+		}
 	}
 
 	// WebSocket push — 1 NATS сообщение, gateway broadcast подписчикам board

@@ -367,6 +367,44 @@ function getUnreadCount(h) {
   return -1;
 }
 
+// measureDelivery: owner делает действие на доске, member poll'ит нотификации.
+// Замеряет реальное время от действия до появления нотификации у member'а.
+// ownerH — headers владельца (делает действие), memberH — headers участника (получает нотификацию).
+// boardID — доска где оба участники.
+function measureDelivery(ownerH, memberH, boardID) {
+  if (!boardID) return;
+
+  // 1. Сбрасываем нотификации у member'а
+  markAllRead(memberH);
+  sleep(0.2);
+  const beforeCount = getUnreadCount(memberH);
+  if (beforeCount < 0) return;
+
+  // 2. Owner создаёт колонку → board_event для member'а
+  const actionTime = Date.now();
+  const col = createColumn(ownerH, boardID, `measure-${Date.now()}`);
+  if (!col) return;
+
+  // 3. Poll unread-count member'а до появления новой нотификации
+  const maxPollMs = 10000;
+  const pollInterval = 200; // ms
+
+  for (let elapsed = 0; elapsed < maxPollMs; elapsed += pollInterval) {
+    sleep(pollInterval / 1000);
+    const count = getUnreadCount(memberH);
+    if (count > beforeCount) {
+      latency.notifDelivery.add(Date.now() - actionTime);
+      // Cleanup: удаляем тестовую колонку
+      deleteColumn(ownerH, col.id, boardID);
+      return;
+    }
+  }
+
+  // Timeout
+  latency.notifDelivery.add(maxPollMs);
+  deleteColumn(ownerH, col.id, boardID);
+}
+
 // ─── Сценарии пользователей ─────────────────────────────────────────────
 
 function workerScenario(me, allUsers, h) {
@@ -400,8 +438,14 @@ function workerScenario(me, allUsers, h) {
     sleep(randomBetween(0.5, 1.5));
   }
 
-  checkNotifications(h);
-  markAllRead(h);
+  // Замер реальной latency доставки нотификации (owner → member)
+  if (Math.random() < 0.3 && members.length > 0) {
+    const memberH = auth(members[0].token);
+    measureDelivery(h, memberH, board.id);
+  } else {
+    checkNotifications(h);
+    markAllRead(h);
+  }
   sleep(randomBetween(0.5, 1));
 
   if (Math.random() < 0.5) {
@@ -482,32 +526,17 @@ function heavyUserScenario(me, allUsers, h) {
     deleteColumn(h, cols[2].id, board.id);
     sleep(randomBetween(0.3, 0.5));
 
+    // Замер реальной latency доставки (owner делает действие → member видит нотификацию)
+    if (members.length > 0) {
+      const memberH = auth(members[0].token);
+      measureDelivery(h, memberH, board.id);
+    }
+
     if (members.length > 0) {
       removeMember(h, board.id, members[0].id);
       sleep(randomBetween(0.3, 0.5));
     }
   }
-
-  // Notification delivery latency: находим самую свежую нотификацию,
-  // сравниваем её created_at с текущим временем
-  sleep(2);
-  const notifs = checkNotifications(h);
-  if (notifs && notifs.notifications && notifs.notifications.length > 0) {
-    let maxCreatedAt = 0;
-    for (const n of notifs.notifications) {
-      if (n.created_at) {
-        const t = new Date(n.created_at).getTime();
-        if (t > maxCreatedAt) maxCreatedAt = t;
-      }
-    }
-    if (maxCreatedAt > 0) {
-      const deliveryMs = Date.now() - maxCreatedAt;
-      if (deliveryMs > 0 && deliveryMs < 60000) {
-        latency.notifDelivery.add(deliveryMs);
-      }
-    }
-  }
-  markAllRead(h);
 
   if (Math.random() < 0.3 && boards.length > 0) {
     deleteBoard(h, boards[0].id);

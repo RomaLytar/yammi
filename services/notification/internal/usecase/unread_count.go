@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 
@@ -91,20 +90,15 @@ func (uc *GetUnreadCountUseCase) computeUnread(ctx context.Context, userID strin
 	}
 
 	boardUnread := 0
-	if len(boardIDs) > 0 && uc.cache != nil {
-		boardSeqs, _ := uc.cache.GetBoardSeqs(ctx, boardIDs)
-		if len(boardSeqs) > 0 {
-			cursors, _ := uc.boardEventRepo.GetUserCursors(ctx, userID, boardIDs)
-			for boardID, maxSeq := range boardSeqs {
-				lastSeen := cursors[boardID]
-				if diff := maxSeq - lastSeen; diff > 0 {
-					boardUnread += int(diff)
-				}
-			}
+	if len(boardIDs) > 0 {
+		count, err := uc.boardEventRepo.GetUnreadCountBySeq(ctx, userID, boardIDs)
+		if err != nil {
+			log.Printf("failed to get board unread count for user %s: %v", userID, err)
+		} else {
+			boardUnread = count
 		}
 	}
 
 	directUnread, _ := uc.repo.GetUnreadCount(ctx, userID)
-	_ = fmt.Sprintf("") // suppress unused import
 	return boardUnread + directUnread
 }

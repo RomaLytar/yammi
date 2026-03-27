@@ -24,7 +24,7 @@ func (c *Consumer) buildTitle(ctx context.Context, action, boardID string) strin
 }
 
 func (c *Consumer) subscribeCardCreated() error {
-	_, err := c.js.QueueSubscribe(events.SubjectCardCreated, "notification-workers", func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectCardCreated, "notification-workers", c.parallel(func(msg *nats.Msg) {
 		var event events.CardCreated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardCreated, err)
@@ -49,7 +49,7 @@ func (c *Consumer) subscribeCardCreated() error {
 				})
 			return nil
 		})
-	},
+	}),
 		nats.Durable(consumerCardCreated),
 		nats.ManualAck(),
 		nats.DeliverNew(),
@@ -65,7 +65,7 @@ func (c *Consumer) subscribeCardCreated() error {
 }
 
 func (c *Consumer) subscribeCardUpdated() error {
-	_, err := c.js.QueueSubscribe(events.SubjectCardUpdated, "notification-workers", func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectCardUpdated, "notification-workers", c.parallel(func(msg *nats.Msg) {
 		var event events.CardUpdated
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardUpdated, err)
@@ -81,7 +81,7 @@ func (c *Consumer) subscribeCardUpdated() error {
 			// Значимые изменения (assign, move, delete) имеют свои события.
 			return nil
 		})
-	},
+	}),
 		nats.Durable(consumerCardUpdated),
 		nats.ManualAck(),
 		nats.DeliverNew(),
@@ -97,7 +97,7 @@ func (c *Consumer) subscribeCardUpdated() error {
 }
 
 func (c *Consumer) subscribeCardMoved() error {
-	_, err := c.js.QueueSubscribe(events.SubjectCardMoved, "notification-workers", func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectCardMoved, "notification-workers", c.parallel(func(msg *nats.Msg) {
 		var event events.CardMoved
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardMoved, err)
@@ -126,7 +126,7 @@ func (c *Consumer) subscribeCardMoved() error {
 				})
 			return nil
 		})
-	},
+	}),
 		nats.Durable(consumerCardMoved),
 		nats.ManualAck(),
 		nats.DeliverNew(),
@@ -142,7 +142,7 @@ func (c *Consumer) subscribeCardMoved() error {
 }
 
 func (c *Consumer) subscribeCardAssigned() error {
-	_, err := c.js.QueueSubscribe(events.SubjectCardAssigned, "notification-workers", func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectCardAssigned, "notification-workers", c.parallel(func(msg *nats.Msg) {
 		var event events.CardAssigned
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardAssigned, err)
@@ -184,7 +184,7 @@ func (c *Consumer) subscribeCardAssigned() error {
 			}
 			return nil
 		})
-	},
+	}),
 		nats.Durable(consumerCardAssigned),
 		nats.ManualAck(),
 		nats.DeliverNew(),
@@ -200,7 +200,7 @@ func (c *Consumer) subscribeCardAssigned() error {
 }
 
 func (c *Consumer) subscribeCardUnassigned() error {
-	_, err := c.js.QueueSubscribe(events.SubjectCardUnassigned, "notification-workers", func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectCardUnassigned, "notification-workers", c.parallel(func(msg *nats.Msg) {
 		var event events.CardUnassigned
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardUnassigned, err)
@@ -236,7 +236,7 @@ func (c *Consumer) subscribeCardUnassigned() error {
 			}
 			return nil
 		})
-	},
+	}),
 		nats.Durable(consumerCardUnassigned),
 		nats.ManualAck(),
 		nats.DeliverNew(),
@@ -252,7 +252,7 @@ func (c *Consumer) subscribeCardUnassigned() error {
 }
 
 func (c *Consumer) subscribeAttachmentUploaded() error {
-	_, err := c.js.QueueSubscribe(events.SubjectAttachmentUploaded, "notification-workers", func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectAttachmentUploaded, "notification-workers", c.parallel(func(msg *nats.Msg) {
 		var event events.AttachmentUploaded
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectAttachmentUploaded, err)
@@ -284,7 +284,7 @@ func (c *Consumer) subscribeAttachmentUploaded() error {
 				})
 			return nil
 		})
-	},
+	}),
 		nats.Durable(consumerAttachmentUploaded),
 		nats.ManualAck(),
 		nats.DeliverNew(),
@@ -300,7 +300,7 @@ func (c *Consumer) subscribeAttachmentUploaded() error {
 }
 
 func (c *Consumer) subscribeAttachmentDeleted() error {
-	_, err := c.js.QueueSubscribe(events.SubjectAttachmentDeleted, "notification-workers", func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectAttachmentDeleted, "notification-workers", c.parallel(func(msg *nats.Msg) {
 		var event events.AttachmentDeleted
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectAttachmentDeleted, err)
@@ -332,7 +332,7 @@ func (c *Consumer) subscribeAttachmentDeleted() error {
 				})
 			return nil
 		})
-	},
+	}),
 		nats.Durable(consumerAttachmentDeleted),
 		nats.ManualAck(),
 		nats.DeliverNew(),
@@ -348,7 +348,7 @@ func (c *Consumer) subscribeAttachmentDeleted() error {
 }
 
 func (c *Consumer) subscribeCardDeleted() error {
-	_, err := c.js.QueueSubscribe(events.SubjectCardDeleted, "notification-workers", func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectCardDeleted, "notification-workers", c.parallel(func(msg *nats.Msg) {
 		var event events.CardDeleted
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectCardDeleted, err)
@@ -376,7 +376,7 @@ func (c *Consumer) subscribeCardDeleted() error {
 			_ = c.nameCache.DeleteCardName(ctx, event.CardID)
 			return nil
 		})
-	},
+	}),
 		nats.Durable(consumerCardDeleted),
 		nats.ManualAck(),
 		nats.DeliverNew(),

@@ -15,7 +15,7 @@ import (
 // --- Member events ---
 
 func (c *Consumer) subscribeMemberAdded() error {
-	_, err := c.js.QueueSubscribe(events.SubjectMemberAdded, "notification-workers", func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectMemberAdded, "notification-workers", c.parallel(func(msg *nats.Msg) {
 		var event events.MemberAdded
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectMemberAdded, err)
@@ -35,7 +35,7 @@ func (c *Consumer) subscribeMemberAdded() error {
 				fmt.Sprintf("Роль: %s", event.Role),
 				map[string]string{"board_id": event.BoardID, "board_title": event.BoardTitle, "role": event.Role})
 		})
-	},
+	}),
 		nats.Durable(consumerMemberAdded),
 		nats.ManualAck(),
 		nats.DeliverNew(),
@@ -51,7 +51,7 @@ func (c *Consumer) subscribeMemberAdded() error {
 }
 
 func (c *Consumer) subscribeMemberRemoved() error {
-	_, err := c.js.QueueSubscribe(events.SubjectMemberRemoved, "notification-workers", func(msg *nats.Msg) {
+	_, err := c.js.QueueSubscribe(events.SubjectMemberRemoved, "notification-workers", c.parallel(func(msg *nats.Msg) {
 		var event events.MemberRemoved
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			log.Printf("poison message on %s, sending to DLQ: %v", events.SubjectMemberRemoved, err)
@@ -74,7 +74,7 @@ func (c *Consumer) subscribeMemberRemoved() error {
 			}
 			return nil
 		})
-	},
+	}),
 		nats.Durable(consumerMemberRemoved),
 		nats.ManualAck(),
 		nats.DeliverNew(),

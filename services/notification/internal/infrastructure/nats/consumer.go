@@ -55,6 +55,10 @@ type NameCache interface {
 	TruncateCache(ctx context.Context) error
 }
 
+// workerPoolSize определяет количество параллельных goroutine для обработки событий.
+// Один consumer с pool=20 обрабатывает 20 событий одновременно вместо 1.
+const workerPoolSize = 20
+
 type Consumer struct {
 	nc            *nats.Conn
 	js            nats.JetStreamContext
@@ -62,6 +66,7 @@ type Consumer struct {
 	memberRepo    usecase.BoardMemberRepository
 	nameCache     NameCache
 	settingsCache *cache.SettingsCache
+	pool          chan struct{} // semaphore для ограничения параллельных goroutine
 }
 
 // SetCreateUC обновляет usecase без пересоздания NATS-соединения.
@@ -81,7 +86,7 @@ func NewConsumer(natsURL string, createUC *usecase.CreateNotificationUseCase, me
 		return nil, fmt.Errorf("get jetstream context: %w", err)
 	}
 
-	c := &Consumer{nc: nc, js: js, createUC: createUC, memberRepo: memberRepo, nameCache: nameCache, settingsCache: settingsCache}
+	c := &Consumer{nc: nc, js: js, createUC: createUC, memberRepo: memberRepo, nameCache: nameCache, settingsCache: settingsCache, pool: make(chan struct{}, workerPoolSize)}
 
 	if err := c.ensureStreams(); err != nil {
 		nc.Close()
@@ -178,6 +183,19 @@ func (c *Consumer) resetCacheConsumers() {
 	}
 
 	log.Println("cache consumers reset — full replay on subscribe")
+}
+
+// parallel оборачивает NATS handler в goroutine pool.
+// NATS доставляет до MaxAckPending(500) сообщений, pool ограничивает
+// параллельную обработку до workerPoolSize goroutine.
+func (c *Consumer) parallel(handler func(*nats.Msg)) func(*nats.Msg) {
+	return func(msg *nats.Msg) {
+		c.pool <- struct{}{}        // acquire slot (блокируется если pool полон)
+		go func() {
+			defer func() { <-c.pool }() // release slot
+			handler(msg)
+		}()
+	}
 }
 
 func (c *Consumer) Close() {

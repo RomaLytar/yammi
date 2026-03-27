@@ -41,6 +41,7 @@ const TOTAL_USERS = parseInt(__ENV.USERS || '1000');
 const MEMBERS_PER_BOARD = parseInt(__ENV.MEMBERS || '2');  // 2 default, 10-50 для big board test
 
 export const options = {
+  setupTimeout: '180s',
   scenarios: {
     realistic_usage: {
       executor: 'ramping-vus',

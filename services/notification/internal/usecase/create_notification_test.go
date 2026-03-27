@@ -112,23 +112,25 @@ func (m *mockPublisher) PublishNotificationsBatch(ctx context.Context, notificat
 }
 
 type mockBoardEventRepo struct {
-	createFn            func(ctx context.Context, event *domain.BoardEvent) error
-	listForUserFn       func(ctx context.Context, userID string, boardIDs []string, limit int, cursor string) ([]*domain.Notification, string, error)
-	markBoardReadFn     func(ctx context.Context, userID, boardID string) error
-	markAllBoardsReadFn func(ctx context.Context, userID string, boardIDs []string) error
-	getBoardIDByEventFn func(ctx context.Context, eventID string) (string, error)
+	createFn              func(ctx context.Context, event *domain.BoardEvent) (int64, error)
+	listForUserFn         func(ctx context.Context, userID string, boardIDs []string, limit int, cursor, typeFilter, search string) ([]*domain.Notification, string, error)
+	markBoardReadFn       func(ctx context.Context, userID, boardID string) error
+	markAllBoardsReadFn   func(ctx context.Context, userID string, boardIDs []string) error
+	getBoardIDByEventFn   func(ctx context.Context, eventID string) (string, error)
+	getUnreadCountBySeqFn func(ctx context.Context, userID string, boardIDs []string) (int, error)
+	getUserCursorsFn      func(ctx context.Context, userID string, boardIDs []string) (map[string]int64, error)
 }
 
-func (m *mockBoardEventRepo) Create(ctx context.Context, event *domain.BoardEvent) error {
+func (m *mockBoardEventRepo) Create(ctx context.Context, event *domain.BoardEvent) (int64, error) {
 	if m.createFn != nil {
 		return m.createFn(ctx, event)
 	}
-	return nil
+	return 1, nil
 }
 
-func (m *mockBoardEventRepo) ListForUser(ctx context.Context, userID string, boardIDs []string, limit int, cursor string) ([]*domain.Notification, string, error) {
+func (m *mockBoardEventRepo) ListForUser(ctx context.Context, userID string, boardIDs []string, limit int, cursor, typeFilter, search string) ([]*domain.Notification, string, error) {
 	if m.listForUserFn != nil {
-		return m.listForUserFn(ctx, userID, boardIDs, limit, cursor)
+		return m.listForUserFn(ctx, userID, boardIDs, limit, cursor, typeFilter, search)
 	}
 	return nil, "", nil
 }
@@ -154,47 +156,69 @@ func (m *mockBoardEventRepo) GetBoardIDByEventID(ctx context.Context, eventID st
 	return "", nil
 }
 
+func (m *mockBoardEventRepo) GetUnreadCountBySeq(ctx context.Context, userID string, boardIDs []string) (int, error) {
+	if m.getUnreadCountBySeqFn != nil {
+		return m.getUnreadCountBySeqFn(ctx, userID, boardIDs)
+	}
+	return 0, nil
+}
+
+func (m *mockBoardEventRepo) GetUserCursors(ctx context.Context, userID string, boardIDs []string) (map[string]int64, error) {
+	if m.getUserCursorsFn != nil {
+		return m.getUserCursorsFn(ctx, userID, boardIDs)
+	}
+	return nil, nil
+}
+
 type mockUnreadCounter struct {
-	incrementFn     func(ctx context.Context, userID string) error
-	incrementManyFn func(ctx context.Context, userIDs []string) error
-	getFn           func(ctx context.Context, userID string) (int, error)
-	resetFn         func(ctx context.Context, userID string) error
-	decrementFn     func(ctx context.Context, userID string) error
-}
-
-func (m *mockUnreadCounter) Increment(ctx context.Context, userID string) error {
-	if m.incrementFn != nil {
-		return m.incrementFn(ctx, userID)
-	}
-	return nil
-}
-
-func (m *mockUnreadCounter) IncrementMany(ctx context.Context, userIDs []string) error {
-	if m.incrementManyFn != nil {
-		return m.incrementManyFn(ctx, userIDs)
-	}
-	return nil
+	getFn            func(ctx context.Context, userID string) (int, error)
+	setFn            func(ctx context.Context, userID string, count int) error
+	invalidateFn     func(ctx context.Context, userID string) error
+	incrementBatchFn func(ctx context.Context, userIDs []string) error
+	setBoardSeqFn    func(ctx context.Context, boardID string, seq int64) error
+	getBoardSeqsFn   func(ctx context.Context, boardIDs []string) (map[string]int64, error)
 }
 
 func (m *mockUnreadCounter) Get(ctx context.Context, userID string) (int, error) {
 	if m.getFn != nil {
 		return m.getFn(ctx, userID)
 	}
-	return 0, nil
+	return -1, nil
 }
 
-func (m *mockUnreadCounter) Reset(ctx context.Context, userID string) error {
-	if m.resetFn != nil {
-		return m.resetFn(ctx, userID)
+func (m *mockUnreadCounter) Set(ctx context.Context, userID string, count int) error {
+	if m.setFn != nil {
+		return m.setFn(ctx, userID, count)
 	}
 	return nil
 }
 
-func (m *mockUnreadCounter) Decrement(ctx context.Context, userID string) error {
-	if m.decrementFn != nil {
-		return m.decrementFn(ctx, userID)
+func (m *mockUnreadCounter) Invalidate(ctx context.Context, userID string) error {
+	if m.invalidateFn != nil {
+		return m.invalidateFn(ctx, userID)
 	}
 	return nil
+}
+
+func (m *mockUnreadCounter) IncrementBatch(ctx context.Context, userIDs []string) error {
+	if m.incrementBatchFn != nil {
+		return m.incrementBatchFn(ctx, userIDs)
+	}
+	return nil
+}
+
+func (m *mockUnreadCounter) SetBoardSeq(ctx context.Context, boardID string, seq int64) error {
+	if m.setBoardSeqFn != nil {
+		return m.setBoardSeqFn(ctx, boardID, seq)
+	}
+	return nil
+}
+
+func (m *mockUnreadCounter) GetBoardSeqs(ctx context.Context, boardIDs []string) (map[string]int64, error) {
+	if m.getBoardSeqsFn != nil {
+		return m.getBoardSeqsFn(ctx, boardIDs)
+	}
+	return nil, nil
 }
 
 type mockBoardMemberRepo struct {
@@ -372,7 +396,7 @@ func TestCreateBoardEvent_Success(t *testing.T) {
 	var incrementedUsers []string
 
 	boardEventRepo := &mockBoardEventRepo{
-		createFn: func(ctx context.Context, event *domain.BoardEvent) error {
+		createFn: func(ctx context.Context, event *domain.BoardEvent) (int64, error) {
 			eventCreated = true
 			if event.BoardID != "board-1" {
 				t.Errorf("expected BoardID=board-1, got %s", event.BoardID)
@@ -380,7 +404,7 @@ func TestCreateBoardEvent_Success(t *testing.T) {
 			if event.ActorID != "actor-1" {
 				t.Errorf("expected ActorID=actor-1, got %s", event.ActorID)
 			}
-			return nil
+			return 1, nil
 		},
 	}
 	memberRepo := &mockBoardMemberRepo{
@@ -389,7 +413,7 @@ func TestCreateBoardEvent_Success(t *testing.T) {
 		},
 	}
 	unreadCounter := &mockUnreadCounter{
-		incrementManyFn: func(ctx context.Context, userIDs []string) error {
+		incrementBatchFn: func(ctx context.Context, userIDs []string) error {
 			incrementedUsers = userIDs
 			return nil
 		},
@@ -412,8 +436,8 @@ func TestCreateBoardEvent_Success(t *testing.T) {
 func TestCreateBoardEvent_EventRepoError(t *testing.T) {
 	expectedErr := errors.New("db error")
 	boardEventRepo := &mockBoardEventRepo{
-		createFn: func(ctx context.Context, event *domain.BoardEvent) error {
-			return expectedErr
+		createFn: func(ctx context.Context, event *domain.BoardEvent) (int64, error) {
+			return 0, expectedErr
 		},
 	}
 

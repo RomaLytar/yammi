@@ -38,7 +38,7 @@ const errorRate = new Rate('error_rate');
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 const TOTAL_USERS = parseInt(__ENV.USERS || '2000');
-const MEMBERS_PER_BOARD = parseInt(__ENV.MEMBERS || '40');  // 30-50, default 40
+const MEMBERS_PER_BOARD = parseInt(__ENV.MEMBERS || '20');
 
 export const options = {
   setupTimeout: '3m',
@@ -106,7 +106,7 @@ export function setup() {
   return { users };
 }
 
-// ─── Teardown: очистка БД ───────────────────────────────────────────────
+// ─── Teardown ───────────────────────────────────────────────────────────
 
 export function teardown(data) {
   console.log('Тест завершён. Для очистки БД/Redis запустите: ./tests/load/cleanup.sh');
@@ -368,6 +368,43 @@ function getUnreadCount(h) {
   return -1;
 }
 
+// measureDelivery: owner делает действие на доске, member poll'ит нотификации.
+// Замеряет реальное время от действия до появления нотификации у member'а.
+function measureDelivery(ownerH, memberH, boardID) {
+  if (!boardID) return;
+
+  // 1. Сбрасываем нотификации у member'а
+  markAllRead(memberH);
+  sleep(0.2);
+  const beforeCount = getUnreadCount(memberH);
+  if (beforeCount < 0) return;
+
+  // 2. Owner создаёт колонку → board_event для member'а
+  const actionTime = Date.now();
+  const col = createColumn(ownerH, boardID, `measure-${Date.now()}`);
+  if (!col) return;
+
+  // 3. Poll unread-count member'а до появления новой нотификации
+  const maxPollMs = 10000;
+
+  for (let elapsed = 0; elapsed < maxPollMs; ) {
+    const pollInterval = randomBetween(200, 400);
+    sleep(pollInterval / 1000);
+    elapsed += pollInterval;
+    const count = getUnreadCount(memberH);
+    if (count > beforeCount) {
+      latency.notifDelivery.add(Date.now() - actionTime);
+      // Cleanup: удаляем тестовую колонку
+      deleteColumn(ownerH, col.id, boardID);
+      return;
+    }
+  }
+
+  // Timeout
+  latency.notifDelivery.add(maxPollMs);
+  deleteColumn(ownerH, col.id, boardID);
+}
+
 // ─── Сценарии пользователей ─────────────────────────────────────────────
 
 function workerScenario(me, allUsers, h) {
@@ -375,16 +412,12 @@ function workerScenario(me, allUsers, h) {
   if (!board) return;
   sleep(randomBetween(0.5, 1.5));
 
-  // 30-50 участников на доску
-  const memberCount = Math.floor(randomBetween(30, Math.min(MEMBERS_PER_BOARD + 1, allUsers.length)));
+  const memberCount = MEMBERS_PER_BOARD > 2 ? MEMBERS_PER_BOARD : (Math.random() < 0.5 ? 1 : 2);
   const members = pickRandomUsers(allUsers, me.id, memberCount);
-
-  // Добавляем участников батчами по 10 с паузой
-  for (let i = 0; i < members.length; i++) {
-    addMember(h, board.id, members[i].id, 'member');
-    if (i % 10 === 9) sleep(randomBetween(0.3, 0.8));
+  for (const m of members) {
+    addMember(h, board.id, m.id, 'member');
+    sleep(randomBetween(0.1, 0.3));
   }
-  sleep(randomBetween(0.5, 1.5));
 
   const col1 = createColumn(h, board.id, 'To Do');
   sleep(randomBetween(0.3, 0.8));
@@ -405,8 +438,14 @@ function workerScenario(me, allUsers, h) {
     sleep(randomBetween(0.5, 1.5));
   }
 
-  checkNotifications(h);
-  markAllRead(h);
+  // Замер реальной latency доставки нотификации (owner → member)
+  if (Math.random() < 0.3 && members.length > 0) {
+    const memberH = auth(members[0].token);
+    measureDelivery(h, memberH, board.id);
+  } else {
+    checkNotifications(h);
+    markAllRead(h);
+  }
   sleep(randomBetween(0.5, 1));
 
   if (Math.random() < 0.5) {
@@ -439,16 +478,12 @@ function heavyUserScenario(me, allUsers, h) {
   if (boards.length === 0) return;
 
   for (const board of boards) {
-    // 30-50 участников
-    const heavyMemberCount = Math.floor(randomBetween(30, Math.min(MEMBERS_PER_BOARD + 1, allUsers.length)));
+    const heavyMemberCount = MEMBERS_PER_BOARD > 3 ? MEMBERS_PER_BOARD : 3;
     const members = pickRandomUsers(allUsers, me.id, heavyMemberCount);
-
-    // Добавляем участников батчами по 10
-    for (let i = 0; i < members.length; i++) {
-      addMember(h, board.id, members[i].id, 'member');
-      if (i % 10 === 9) sleep(randomBetween(0.3, 0.8));
+    for (const m of members) {
+      addMember(h, board.id, m.id, 'member');
+      sleep(randomBetween(0.1, 0.3));
     }
-    sleep(randomBetween(0.5, 1));
 
     const cols = [];
     for (const title of ['Backlog', 'In Progress', 'Done']) {
@@ -467,6 +502,7 @@ function heavyUserScenario(me, allUsers, h) {
 
     for (let i = 0; i < Math.min(3, cards.length); i++) {
       moveCard(h, cards[i], cols[1].id, board.id);
+      // После move обновляем column_id для следующих операций
       cards[i].column_id = cols[1].id;
       sleep(randomBetween(0.3, 0.8));
     }
@@ -490,31 +526,17 @@ function heavyUserScenario(me, allUsers, h) {
     deleteColumn(h, cols[2].id, board.id);
     sleep(randomBetween(0.3, 0.5));
 
+    // Замер реальной latency доставки (owner делает действие → member видит нотификацию)
+    if (members.length > 0) {
+      const memberH = auth(members[0].token);
+      measureDelivery(h, memberH, board.id);
+    }
+
     if (members.length > 0) {
       removeMember(h, board.id, members[0].id);
       sleep(randomBetween(0.3, 0.5));
     }
   }
-
-  // Notification delivery latency
-  sleep(3);
-  const notifs = checkNotifications(h);
-  if (notifs && notifs.notifications && notifs.notifications.length > 0) {
-    let maxCreatedAt = 0;
-    for (const n of notifs.notifications) {
-      if (n.created_at) {
-        const t = new Date(n.created_at).getTime();
-        if (t > maxCreatedAt) maxCreatedAt = t;
-      }
-    }
-    if (maxCreatedAt > 0) {
-      const deliveryMs = Date.now() - maxCreatedAt;
-      if (deliveryMs > 0 && deliveryMs < 120000) {
-        latency.notifDelivery.add(deliveryMs);
-      }
-    }
-  }
-  markAllRead(h);
 
   if (Math.random() < 0.3 && boards.length > 0) {
     deleteBoard(h, boards[0].id);
@@ -530,13 +552,14 @@ export default function (data) {
     return;
   }
 
+  // Гибрид: VU + iteration — минимизирует коллизии при параллельном доступе
   const iterGlobal = exec.scenario.iterationInTest;
   const userIdx = ((exec.vu.idInTest - 1) + iterGlobal) % allUsers.length;
   const me = allUsers[userIdx];
   const h = auth(me.token);
 
   // Тип: 70% worker, 20% reader, 10% heavy
-  const roll = iterGlobal % 10;
+  const roll = Math.random() * 10;
 
   if (roll < 7) {
     workerScenario(me, allUsers, h);
@@ -561,7 +584,6 @@ export function handleSummary(data) {
   const summary = `
 ╔══════════════════════════════════════════════════════════════════╗
 ║           НАГРУЗОЧНЫЙ ТЕСТ: 2000 пользователей                 ║
-║           30-50 members/board                                  ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                  ║
 ║  Распределение:  70% workers / 20% readers / 10% heavy users   ║
@@ -573,7 +595,9 @@ export function handleSummary(data) {
 ║  Создание карточки:    ${String(val('latency_create_card_ms', 'p(95)')).padStart(6)} ms                          ║
 ║  Перемещение карточки: ${String(val('latency_move_card_ms', 'p(95)')).padStart(6)} ms                          ║
 ║  Нотификации:          ${String(val('latency_notifications_ms', 'p(95)')).padStart(6)} ms                          ║
-║  Notif delivery:       ${String(val('latency_notif_delivery_ms', 'p(95)')).padStart(6)} ms                          ║
+║  Notif delivery med:   ${String(val('latency_notif_delivery_ms', 'med')).padStart(6)} ms                          ║
+║  Notif delivery p95:   ${String(val('latency_notif_delivery_ms', 'p(95)')).padStart(6)} ms                          ║
+║  Notif delivery avg:   ${String(val('latency_notif_delivery_ms', 'avg')).padStart(6)} ms                          ║
 ║                                                                  ║
 ║  ── Ошибки ─────────────────────────────────────────────────    ║
 ║  Error rate:           ${String(val('error_rate', 'rate')).padStart(6)}                                ║

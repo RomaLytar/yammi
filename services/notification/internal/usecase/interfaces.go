@@ -51,6 +51,7 @@ type UnreadCounter interface {
 	Get(ctx context.Context, userID string) (int, error)    // -1 при cache miss
 	Set(ctx context.Context, userID string, count int) error // кэшировать вычисленное значение
 	Invalidate(ctx context.Context, userID string) error     // удалить кэш (при mark read)
+	IncrementBatch(ctx context.Context, userIDs []string) error // атомарный INCR для списка (1 pipeline)
 	SetBoardSeq(ctx context.Context, boardID string, seq int64) error         // max event_seq per board
 	GetBoardSeqs(ctx context.Context, boardIDs []string) (map[string]int64, error) // MGET board seqs
 }

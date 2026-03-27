@@ -110,7 +110,7 @@ func TestMarkAllRead_Success(t *testing.T) {
 		},
 	}
 	unreadCounter := &mockUnreadCounter{
-		resetFn: func(ctx context.Context, userID string) error {
+		invalidateFn: func(ctx context.Context, userID string) error {
 			resetCalled = true
 			return nil
 		},
@@ -128,7 +128,7 @@ func TestMarkAllRead_Success(t *testing.T) {
 		t.Error("expected MarkAllBoardsRead to be called")
 	}
 	if !resetCalled {
-		t.Error("expected unread counter Reset to be called")
+		t.Error("expected unread counter Invalidate to be called")
 	}
 }
 

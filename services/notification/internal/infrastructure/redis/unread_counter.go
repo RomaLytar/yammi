@@ -50,17 +50,43 @@ func (u *UnreadCounter) Get(ctx context.Context, userID string) (int, error) {
 	return count, nil
 }
 
-// Set кэширует вычисленный unread count с TTL 60s.
-// TTL гарантирует eventual consistency: worst case 60s stale.
-// Инвалидируется раньше через Invalidate (mark read).
+// Set кэширует вычисленный unread count с TTL 10s.
+// Короткий TTL обеспечивает быструю доставку: worst case 10s stale.
+// IncrementBatch обновляет кэш inline при новых событиях (если ключ существует).
 func (u *UnreadCounter) Set(ctx context.Context, userID string, count int) error {
-	return u.client.Set(ctx, u.unreadKey(userID), count, 60*time.Second).Err()
+	return u.client.Set(ctx, u.unreadKey(userID), count, 10*time.Second).Err()
 }
 
 // Invalidate удаляет кэш (вызывается при mark read / mark all read).
 // Следующий Get вернёт -1, usecase пересчитает из SQL и закэширует.
 func (u *UnreadCounter) Invalidate(ctx context.Context, userID string) error {
 	return u.client.Del(ctx, u.unreadKey(userID)).Err()
+}
+
+// IncrementBatch атомарно инкрементирует unread count для списка пользователей.
+// Использует Lua script: проверяет EXISTS, инкрементирует только существующие ключи.
+// Если ключа нет (cache miss) — не трогаем, следующий read пересчитает из SQL.
+// 1 round-trip через pipeline вместо N последовательных вызовов.
+func (u *UnreadCounter) IncrementBatch(ctx context.Context, userIDs []string) error {
+	if len(userIDs) == 0 {
+		return nil
+	}
+
+	// Lua: INCR only if key exists, preserve TTL
+	script := redis.NewScript(`
+		if redis.call("EXISTS", KEYS[1]) == 1 then
+			return redis.call("INCR", KEYS[1])
+		end
+		return -1
+	`)
+
+	pipe := u.client.Pipeline()
+	for _, uid := range userIDs {
+		script.Run(ctx, pipe, []string{u.unreadKey(uid)})
+	}
+	_, _ = pipe.Exec(ctx)
+
+	return nil
 }
 
 // SetBoardSeq сохраняет последний event_seq для доски (1 SET на write, не fan-out).

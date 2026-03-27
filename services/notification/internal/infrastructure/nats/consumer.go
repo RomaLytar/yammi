@@ -56,8 +56,8 @@ type NameCache interface {
 }
 
 // workerPoolSize определяет количество параллельных goroutine для обработки событий.
-// Один consumer с pool=20 обрабатывает 20 событий одновременно вместо 1.
-const workerPoolSize = 20
+// Один consumer с pool=50 обрабатывает 50 событий одновременно.
+const workerPoolSize = 50
 
 type Consumer struct {
 	nc            *nats.Conn

@@ -168,14 +168,16 @@ func (uc *CreateNotificationUseCase) CreateBoardEvent(ctx context.Context, board
 	if uc.unreadCounter != nil {
 		_ = uc.unreadCounter.SetBoardSeq(ctx, boardID, seq)
 
-		// Инвалидируем unread-count кеш member'ов чтобы следующий запрос пересчитал.
-		// Без этого кеш может держать stale значение до 60s TTL.
+		// Инкрементируем unread-count кеш member'ов одним pipeline (1 round-trip).
+		// Если кэш есть — count +1 (мгновенно). Если нет — следующий read пересчитает из SQL.
 		if memberIDs, err := uc.memberRepo.ListMemberIDs(ctx, boardID); err == nil {
+			targets := make([]string, 0, len(memberIDs))
 			for _, uid := range memberIDs {
-				if uid != actorID { // actor не получает свои нотификации
-					_ = uc.unreadCounter.Invalidate(ctx, uid)
+				if uid != actorID {
+					targets = append(targets, uid)
 				}
 			}
+			_ = uc.unreadCounter.IncrementBatch(ctx, targets)
 		}
 	}
 

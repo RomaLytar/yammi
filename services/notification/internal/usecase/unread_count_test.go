@@ -15,7 +15,7 @@ func TestGetUnreadCount_Success(t *testing.T) {
 		},
 	}
 
-	uc := NewGetUnreadCountUseCase(unreadCounter)
+	uc := NewGetUnreadCountUseCase(&mockBoardEventRepo{}, &mockBoardMemberRepo{}, &mockNotificationRepo{}, unreadCounter)
 	count, err := uc.Execute(context.Background(), "user-1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -26,7 +26,7 @@ func TestGetUnreadCount_Success(t *testing.T) {
 }
 
 func TestGetUnreadCount_EmptyUserID(t *testing.T) {
-	uc := NewGetUnreadCountUseCase(&mockUnreadCounter{})
+	uc := NewGetUnreadCountUseCase(&mockBoardEventRepo{}, &mockBoardMemberRepo{}, &mockNotificationRepo{}, &mockUnreadCounter{})
 	_, err := uc.Execute(context.Background(), "")
 	if !errors.Is(err, domain.ErrEmptyUserID) {
 		t.Errorf("expected ErrEmptyUserID, got %v", err)
@@ -36,13 +36,17 @@ func TestGetUnreadCount_EmptyUserID(t *testing.T) {
 func TestGetUnreadCount_RedisError(t *testing.T) {
 	unreadCounter := &mockUnreadCounter{
 		getFn: func(ctx context.Context, userID string) (int, error) {
-			return 0, errors.New("redis error")
+			return -1, errors.New("redis error")
 		},
 	}
 
-	uc := NewGetUnreadCountUseCase(unreadCounter)
-	_, err := uc.Execute(context.Background(), "user-1")
-	if err == nil {
-		t.Fatal("expected error")
+	uc := NewGetUnreadCountUseCase(&mockBoardEventRepo{}, &mockBoardMemberRepo{}, &mockNotificationRepo{}, unreadCounter)
+	count, err := uc.Execute(context.Background(), "user-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Cache miss → computeUnread returns 0 (mock repos return empty)
+	if count != 0 {
+		t.Errorf("expected count=0 on cache miss, got %d", count)
 	}
 }

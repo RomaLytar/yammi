@@ -438,7 +438,7 @@ func TestFeature_CreateCard_SetsCreatorID(t *testing.T) {
 	columnRepo.Create(ctx, column)
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
-	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher, nil)
 
 	// Member creates card
 	card, err := uc.Execute(ctx, column.ID, board.ID, memberID, "My Task", "Description", "", nil, nil, "", "")
@@ -475,7 +475,7 @@ func TestFeature_CreateCard_NonMemberDenied(t *testing.T) {
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
-	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher, nil)
 
 	// Non-member tries to create card → ErrAccessDenied
 	_, err := uc.Execute(ctx, column.ID, board.ID, nonMemberID, "Hacked Card", "Desc", "", nil, nil, "", "")
@@ -511,7 +511,7 @@ func TestFeature_MoveCard_MemberCanMove(t *testing.T) {
 
 	memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember)
 
-	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher, nil)
 
 	// Member moves card from col1 to col2
 	moved, err := uc.Execute(ctx, card.ID, board.ID, col1.ID, col2.ID, memberID, "m")
@@ -561,7 +561,7 @@ func TestFeature_MoveCard_NonMemberDenied(t *testing.T) {
 	card, _ := domain.NewCard(col1.ID, "Task", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
-	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher, nil)
 
 	// Non-member tries to move card → ErrAccessDenied
 	_, err := uc.Execute(ctx, card.ID, board.ID, col1.ID, col2.ID, nonMemberID, "m")
@@ -1017,7 +1017,7 @@ func TestFeature_CardActivity_CreateCard(t *testing.T) {
 	column, _ := domain.NewColumn(board.ID, "To Do", 0)
 	columnRepo.Create(ctx, column)
 
-	createUC := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+	createUC := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher, nil)
 
 	// Create card
 	card, err := createUC.Execute(ctx, column.ID, board.ID, ownerID, "My Task", "Description", "", nil, nil, "", "")
@@ -1065,7 +1065,7 @@ func TestFeature_CardActivity_MoveCard(t *testing.T) {
 	card, _ := domain.NewCard(col1.ID, "Task", "Desc", "n", nil, ownerID, nil, "", "")
 	cardRepo.Create(ctx, card)
 
-	moveUC := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+	moveUC := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher, nil)
 
 	// Move card from col1 to col2
 	_, err := moveUC.Execute(ctx, card.ID, board.ID, col1.ID, col2.ID, ownerID, "m")

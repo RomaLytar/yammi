@@ -177,7 +177,7 @@ func TestACL_Label_MemberCanAttachToCard(t *testing.T) {
 
 	label, _ := usecase.NewCreateLabelUseCase(labelRepo, memberRepo, pub).Execute(ctx, tb.board.ID, tb.memberID, "Attach", "#333333")
 
-	err := usecase.NewAddLabelToCardUseCase(labelRepo, memberRepo, pub).Execute(ctx, tb.card.ID, tb.board.ID, label.ID, tb.memberID)
+	err := usecase.NewAddLabelToCardUseCase(labelRepo, nil, memberRepo, pub).Execute(ctx, tb.card.ID, tb.board.ID, label.ID, tb.memberID)
 	if err != nil {
 		t.Fatalf("Member should attach label to card: %v", err)
 	}
@@ -204,7 +204,7 @@ func TestACL_Label_NonMemberCannotAttach(t *testing.T) {
 
 	label, _ := usecase.NewCreateLabelUseCase(labelRepo, memberRepo, pub).Execute(ctx, tb.board.ID, tb.ownerID, "NoAccess", "#444444")
 
-	err := usecase.NewAddLabelToCardUseCase(labelRepo, memberRepo, pub).Execute(ctx, tb.card.ID, tb.board.ID, label.ID, tb.outsiderID)
+	err := usecase.NewAddLabelToCardUseCase(labelRepo, nil, memberRepo, pub).Execute(ctx, tb.card.ID, tb.board.ID, label.ID, tb.outsiderID)
 	if err != domain.ErrAccessDenied {
 		t.Errorf("Expected ErrAccessDenied for outsider attach, got %v", err)
 	}
@@ -234,7 +234,7 @@ func TestACL_Label_MemberCanDetach(t *testing.T) {
 	pub := &mockPublisher{}
 
 	label, _ := usecase.NewCreateLabelUseCase(labelRepo, memberRepo, pub).Execute(ctx, tb.board.ID, tb.memberID, "Detach", "#555555")
-	_ = usecase.NewAddLabelToCardUseCase(labelRepo, memberRepo, pub).Execute(ctx, tb.card.ID, tb.board.ID, label.ID, tb.memberID)
+	_ = usecase.NewAddLabelToCardUseCase(labelRepo, nil, memberRepo, pub).Execute(ctx, tb.card.ID, tb.board.ID, label.ID, tb.memberID)
 
 	err := usecase.NewRemoveLabelFromCardUseCase(labelRepo, memberRepo, pub).Execute(ctx, tb.card.ID, tb.board.ID, label.ID, tb.memberID)
 	if err != nil {
@@ -722,7 +722,7 @@ func TestACL_CrossBoard_CannotCreateCardInOtherBoard(t *testing.T) {
 	_ = boardRepo.Create(ctx, boardB)
 
 	// UserB tries to create card in Board A
-	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, pub)
+	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, pub, nil)
 	_, err := uc.Execute(ctx, colA.ID, boardA.ID, userB, "Hacked Card", "desc", "", nil, nil, "", "")
 	if err != domain.ErrAccessDenied {
 		t.Errorf("UserB should not create card in BoardA, got %v", err)

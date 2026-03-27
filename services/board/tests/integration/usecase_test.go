@@ -371,7 +371,7 @@ func TestCreateCardUseCase_Integration(t *testing.T) {
 
 	// Create use case
 	activityRepo := postgres.NewActivityRepository(db)
-	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+	uc := usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher, nil)
 
 	// Execute as member (assignee must be a board member)
 	assignee := memberID
@@ -439,7 +439,7 @@ func TestMoveCardUseCase_Integration(t *testing.T) {
 
 	// Create use case
 	activityRepo := postgres.NewActivityRepository(db)
-	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+	uc := usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher, nil)
 
 	// Execute as member (move to column2)
 	_, err := uc.Execute(ctx, card.ID, board.ID, column1.ID, column2.ID, memberID, "m")

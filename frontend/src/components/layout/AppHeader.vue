@@ -5,11 +5,13 @@ import BaseAvatar from '@/components/shared/BaseAvatar.vue'
 import NotificationBell from '@/components/notification/NotificationBell.vue'
 import NotificationPanel from '@/components/notification/NotificationPanel.vue'
 import ThemeSwitcher from '@/components/layout/ThemeSwitcher.vue'
+import GlobalLabelsModal from '@/components/board/GlobalLabelsModal.vue'
 
 const userStore = useUserStore()
 
 const showNotifications = ref(false)
 const notificationsRef = ref<HTMLElement | null>(null)
+const showGlobalLabels = ref(false)
 
 function toggleNotifications() {
   showNotifications.value = !showNotifications.value
@@ -25,6 +27,11 @@ function toggleNotifications() {
     </nav>
 
     <div class="app-header__right">
+      <button class="app-header__icon-btn" title="Глобальные метки" @click="showGlobalLabels = true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" />
+        </svg>
+      </button>
       <ThemeSwitcher />
       <div ref="notificationsRef" class="app-header__notifications">
         <NotificationBell @toggle="toggleNotifications" />
@@ -36,6 +43,8 @@ function toggleNotifications() {
         <BaseAvatar :name="userStore.profile.name" :src="userStore.profile.avatarUrl || undefined" size="md" />
       </RouterLink>
     </div>
+
+    <GlobalLabelsModal v-if="showGlobalLabels" @close="showGlobalLabels = false" />
   </header>
 </template>
 
@@ -77,6 +86,25 @@ function toggleNotifications() {
 }
 
 .app-header__right { display: flex; align-items: center; gap: var(--space-sm); }
+
+.app-header__icon-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0;
+}
+.app-header__icon-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
 
 .app-header__notifications { position: relative; }
 

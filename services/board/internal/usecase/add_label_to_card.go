@@ -9,16 +9,18 @@ import (
 )
 
 type AddLabelToCardUseCase struct {
-	labelRepo  LabelRepository
-	memberRepo MembershipRepository
-	publisher  EventPublisher
+	labelRepo     LabelRepository
+	userLabelRepo UserLabelRepository
+	memberRepo    MembershipRepository
+	publisher     EventPublisher
 }
 
-func NewAddLabelToCardUseCase(labelRepo LabelRepository, memberRepo MembershipRepository, publisher EventPublisher) *AddLabelToCardUseCase {
+func NewAddLabelToCardUseCase(labelRepo LabelRepository, userLabelRepo UserLabelRepository, memberRepo MembershipRepository, publisher EventPublisher) *AddLabelToCardUseCase {
 	return &AddLabelToCardUseCase{
-		labelRepo:  labelRepo,
-		memberRepo: memberRepo,
-		publisher:  publisher,
+		labelRepo:     labelRepo,
+		userLabelRepo: userLabelRepo,
+		memberRepo:    memberRepo,
+		publisher:     publisher,
 	}
 }
 
@@ -32,7 +34,27 @@ func (uc *AddLabelToCardUseCase) Execute(ctx context.Context, cardID, boardID, l
 		return domain.ErrAccessDenied
 	}
 
-	// 2. Назначаем метку на карточку
+	// 2. Проверяем, есть ли метка в board labels
+	_, err = uc.labelRepo.GetByID(ctx, labelID)
+	if err != nil {
+		// Метка не найдена в board labels — проверяем глобальные метки
+		userLabel, ulErr := uc.userLabelRepo.GetByID(ctx, labelID)
+		if ulErr != nil {
+			return domain.ErrLabelNotFound
+		}
+
+		// Копируем глобальную метку как метку доски (сохраняем тот же ID)
+		boardLabel, createErr := domain.NewLabel(userLabel.ID, boardID, userLabel.Name, userLabel.Color)
+		if createErr != nil {
+			return createErr
+		}
+		if createErr = uc.labelRepo.Create(ctx, boardLabel); createErr != nil {
+			return createErr
+		}
+		labelID = boardLabel.ID
+	}
+
+	// 3. Назначаем метку на карточку
 	if err := uc.labelRepo.AddToCard(ctx, cardID, boardID, labelID); err != nil {
 		return err
 	}

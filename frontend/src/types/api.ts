@@ -335,8 +335,69 @@ export interface ActivityEntryResponse {
   created_at: string
 }
 
+// --- Board Settings ---
+
+export interface BoardSettingsResponse {
+  board_id: string
+  use_board_labels_only: boolean
+}
+
+// --- User Labels (global) ---
+
+export interface UserLabelResponse {
+  id: string
+  user_id: string
+  name: string
+  color: string
+  created_at: string
+}
+
+export interface AvailableLabelsResponse {
+  board_labels: LabelResponse[]
+  user_labels: UserLabelResponse[]
+  use_board_labels_only: boolean
+}
+
 // --- Errors ---
 
 export interface ErrorResponse {
   error: string
+}
+
+// --- Templates ---
+
+export interface CardTemplateResponse {
+  id: string
+  board_id: string
+  user_id: string
+  name: string
+  title: string
+  description: string
+  priority: string
+  task_type: string
+  checklist_data: { title: string; items: string[] }[]
+  label_ids: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface ColumnTemplateResponse {
+  id: string
+  board_id: string
+  user_id: string
+  name: string
+  columns_data: { title: string; position: number }[]
+  created_at: string
+  updated_at: string
+}
+
+export interface BoardTemplateResponse {
+  id: string
+  user_id: string
+  name: string
+  description: string
+  columns_data: { title: string; position: number }[]
+  labels_data: { name: string; color: string }[]
+  created_at: string
+  updated_at: string
 }

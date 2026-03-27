@@ -10,20 +10,22 @@ import (
 )
 
 type CreateCardUseCase struct {
-	cardRepo     CardRepository
-	boardRepo    BoardRepository
-	memberRepo   MembershipRepository
-	activityRepo ActivityRepository
-	publisher    EventPublisher
+	cardRepo            CardRepository
+	boardRepo           BoardRepository
+	memberRepo          MembershipRepository
+	activityRepo        ActivityRepository
+	publisher           EventPublisher
+	automationExecutor  *ExecuteAutomationsUseCase
 }
 
-func NewCreateCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, activityRepo ActivityRepository, publisher EventPublisher) *CreateCardUseCase {
+func NewCreateCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, activityRepo ActivityRepository, publisher EventPublisher, automationExecutor *ExecuteAutomationsUseCase) *CreateCardUseCase {
 	return &CreateCardUseCase{
-		cardRepo:     cardRepo,
-		boardRepo:    boardRepo,
-		memberRepo:   memberRepo,
-		activityRepo: activityRepo,
-		publisher:    publisher,
+		cardRepo:            cardRepo,
+		boardRepo:           boardRepo,
+		memberRepo:          memberRepo,
+		activityRepo:        activityRepo,
+		publisher:           publisher,
+		automationExecutor:  automationExecutor,
 	}
 }
 
@@ -127,6 +129,20 @@ func (uc *CreateCardUseCase) Execute(ctx context.Context, columnID, boardID, use
 			}
 		}
 	}()
+
+	// 8. Выполняем правила автоматизации card_created (async, non-blocking)
+	if uc.automationExecutor != nil {
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			if err := uc.automationExecutor.Execute(ctx, boardID, card.ID,
+				domain.TriggerCardCreated, map[string]string{
+					"column_id": columnID,
+				}); err != nil {
+				slog.Error("failed to execute automations on card_created", "error", err, "card_id", card.ID, "board_id", boardID)
+			}
+		}()
+	}
 
 	return card, nil
 }

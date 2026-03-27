@@ -229,10 +229,11 @@ func TestAddLabelToCard_Success(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
+	labelRepo.On("GetByID", mock.Anything, "label-123").Return(&domain.Label{ID: "label-123"}, nil)
 	labelRepo.On("AddToCard", mock.Anything, "card-123", "board-123", "label-123").Return(nil)
 	publisher.On("PublishCardLabelAdded", mock.Anything, mock.Anything).Return(nil).Maybe()
 
-	uc := NewAddLabelToCardUseCase(labelRepo, memberRepo, publisher)
+	uc := NewAddLabelToCardUseCase(labelRepo, nil, memberRepo, publisher)
 	err := uc.Execute(context.Background(), "card-123", "board-123", "label-123", "user-123")
 
 	assert.NoError(t, err)
@@ -249,7 +250,7 @@ func TestAddLabelToCard_NonMember_Denied(t *testing.T) {
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-999").
 		Return(false, domain.Role(""), nil)
 
-	uc := NewAddLabelToCardUseCase(labelRepo, memberRepo, publisher)
+	uc := NewAddLabelToCardUseCase(labelRepo, nil, memberRepo, publisher)
 	err := uc.Execute(context.Background(), "card-123", "board-123", "label-123", "user-999")
 
 	assert.Error(t, err)
@@ -265,10 +266,11 @@ func TestAddLabelToCard_AlreadyAssigned(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
+	labelRepo.On("GetByID", mock.Anything, "label-123").Return(&domain.Label{ID: "label-123"}, nil)
 	labelRepo.On("AddToCard", mock.Anything, "card-123", "board-123", "label-123").
 		Return(domain.ErrLabelAlreadyOnCard)
 
-	uc := NewAddLabelToCardUseCase(labelRepo, memberRepo, publisher)
+	uc := NewAddLabelToCardUseCase(labelRepo, nil, memberRepo, publisher)
 	err := uc.Execute(context.Background(), "card-123", "board-123", "label-123", "user-123")
 
 	assert.Error(t, err)

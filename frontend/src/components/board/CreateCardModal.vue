@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseModal from '@/components/shared/BaseModal.vue'
 import BaseInput from '@/components/shared/BaseInput.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
@@ -19,6 +20,7 @@ interface Emits {
 }
 
 const emit = defineEmits<Emits>()
+const router = useRouter()
 const boardStore = useBoardStore()
 
 const title = ref('')
@@ -35,6 +37,28 @@ watch(dueDateObj, (val) => {
 })
 const loading = ref(false)
 const isDragging = ref(false)
+
+// --- Labels ---
+const selectedLabelIds = ref<Set<string>>(new Set())
+const showLabelPicker = ref(false)
+
+function toggleLabelSelect(labelId: string) {
+  const s = new Set(selectedLabelIds.value)
+  if (s.has(labelId)) s.delete(labelId)
+  else s.add(labelId)
+  selectedLabelIds.value = s
+}
+
+function isLabelSelected(labelId: string): boolean {
+  return selectedLabelIds.value.has(labelId)
+}
+
+function goToSettings() {
+  if (boardStore.boardId) {
+    emit('close')
+    router.push(`/boards/${boardStore.boardId}/settings`)
+  }
+}
 
 const assigneeOptions = computed(() =>
   boardStore.members.map(m => ({
@@ -300,6 +324,61 @@ function handleClose() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Labels -->
+      <div class="ccm-section">
+        <div class="ccm-section__label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+            <line x1="7" y1="7" x2="7.01" y2="7" />
+          </svg>
+          Метки
+        </div>
+
+        <div v-if="boardStore.allAvailableLabels.length > 0">
+          <!-- Selected labels -->
+          <div v-if="selectedLabelIds.size > 0" class="ccm-labels-selected">
+            <span
+              v-for="label in boardStore.allAvailableLabels.filter(l => isLabelSelected(l.id))"
+              :key="label.id"
+              class="ccm-label-pill"
+              :style="{ background: label.color }"
+            >
+              {{ label.name }}
+              <span v-if="label.isGlobal" class="ccm-label-global-tag">G</span>
+              <button class="ccm-label-pill__remove" @click="toggleLabelSelect(label.id)">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </span>
+          </div>
+
+          <button class="ccm-labels-toggle" @click="showLabelPicker = !showLabelPicker">
+            {{ showLabelPicker ? 'Скрыть' : '+ Выбрать метки' }}
+          </button>
+
+          <div v-if="showLabelPicker" class="ccm-label-picker">
+            <div
+              v-for="label in boardStore.allAvailableLabels"
+              :key="label.id"
+              class="ccm-label-option"
+              :class="{ 'ccm-label-option--selected': isLabelSelected(label.id) }"
+              @click="toggleLabelSelect(label.id)"
+            >
+              <span class="ccm-label-option__color" :style="{ background: label.color }" />
+              <span class="ccm-label-option__name">{{ label.name }}</span>
+              <span v-if="label.isGlobal" class="ccm-label-option__global">глобальная</span>
+              <svg v-if="isLabelSelected(label.id)" class="ccm-label-option__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="ccm-labels-empty">
+          <span class="ccm-labels-empty__text">Метки ещё не созданы.</span>
+          <button class="ccm-labels-empty__link" @click="goToSettings">
+            Настроить метки
+          </button>
         </div>
       </div>
 
@@ -812,6 +891,165 @@ function handleClose() {
 .ccm-date-clear:hover {
   background: var(--color-danger-soft);
   color: var(--color-danger);
+}
+
+/* Labels */
+.ccm-labels-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.ccm-label-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+}
+
+.ccm-label-global-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ccm-label-pill__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 0;
+  margin-left: 2px;
+  transition: color 0.15s;
+}
+
+.ccm-label-pill__remove:hover {
+  color: white;
+}
+
+.ccm-labels-toggle {
+  display: inline-block;
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.ccm-labels-toggle:hover {
+  color: var(--color-primary-hover);
+}
+
+.ccm-label-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  padding: 6px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.ccm-label-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ccm-label-option:hover {
+  background: var(--color-primary-soft);
+}
+
+.ccm-label-option--selected {
+  background: var(--color-primary-soft);
+}
+
+.ccm-label-option__color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.ccm-label-option__name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.ccm-label-option__global {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+.ccm-label-option__check {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.ccm-labels-empty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--color-surface-alt);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.ccm-labels-empty__text {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+
+.ccm-labels-empty__link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+}
+
+.ccm-labels-empty__link:hover {
+  color: var(--color-primary-hover);
 }
 
 </style>

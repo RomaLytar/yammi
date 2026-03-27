@@ -93,9 +93,6 @@ func (s *BoardServiceServer) UpdateAutomationRule(ctx context.Context, req *boar
 	if req.GetUserId() == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
-	if req.GetName() == "" {
-		return nil, status.Error(codes.InvalidArgument, "name is required")
-	}
 
 	rule, err := s.automations.update.Execute(ctx,
 		req.GetRuleId(), req.GetBoardId(), req.GetUserId(),

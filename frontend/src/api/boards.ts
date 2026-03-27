@@ -26,11 +26,19 @@ import type {
   CustomFieldDefinitionResponse,
   CustomFieldValueResponse,
   AutomationRuleResponse,
+  BoardSettingsResponse,
+  UserLabelResponse,
+  AvailableLabelsResponse,
+  CardTemplateResponse,
+  ColumnTemplateResponse,
+  BoardTemplateResponse,
 } from '@/types/api'
 import type {
   Board, Column, Card, Comment, Attachment, ActivityEntry,
   Label, Checklist, ChecklistItem, CardLink,
   CustomFieldDefinition, CustomFieldValue, AutomationRule,
+  BoardSettings, UserLabel,
+  CardTemplate, ColumnTemplate, BoardTemplate,
 } from '@/types/domain'
 
 // --- Mappers: snake_case (API) -> camelCase (Domain) ---
@@ -723,6 +731,84 @@ export async function getAutomationHistory(boardId: string, ruleId: string): Pro
   return data.history || []
 }
 
+// --- Board Settings ---
+
+function mapBoardSettings(dto: BoardSettingsResponse): BoardSettings {
+  return {
+    boardId: dto.board_id,
+    useBoardLabelsOnly: dto.use_board_labels_only,
+  }
+}
+
+function mapUserLabel(dto: UserLabelResponse): UserLabel {
+  return {
+    id: dto.id,
+    userId: dto.user_id,
+    name: dto.name,
+    color: dto.color,
+    createdAt: dto.created_at,
+  }
+}
+
+export async function getBoardSettings(boardId: string): Promise<BoardSettings> {
+  const { data } = await api.get<{ settings: BoardSettingsResponse }>(
+    `/v1/boards/${boardId}/settings`,
+  )
+  return mapBoardSettings(data.settings)
+}
+
+export async function updateBoardSettings(boardId: string, useBoardLabelsOnly: boolean): Promise<BoardSettings> {
+  const { data } = await api.put<{ settings: BoardSettingsResponse }>(
+    `/v1/boards/${boardId}/settings`,
+    { use_board_labels_only: useBoardLabelsOnly },
+  )
+  return mapBoardSettings(data.settings)
+}
+
+// --- User Labels (global) ---
+
+export async function createUserLabel(name: string, color: string): Promise<UserLabel> {
+  const { data } = await api.post<{ label: UserLabelResponse }>(
+    '/v1/user-labels',
+    { name, color },
+  )
+  return mapUserLabel(data.label)
+}
+
+export async function listUserLabels(): Promise<UserLabel[]> {
+  const { data } = await api.get<{ labels: UserLabelResponse[] }>('/v1/user-labels')
+  return (data.labels || []).map(mapUserLabel)
+}
+
+export async function updateUserLabel(labelId: string, name: string, color: string): Promise<UserLabel> {
+  const { data } = await api.put<{ label: UserLabelResponse }>(
+    `/v1/user-labels/${labelId}`,
+    { name, color },
+  )
+  return mapUserLabel(data.label)
+}
+
+export async function deleteUserLabel(labelId: string): Promise<void> {
+  await api.delete(`/v1/user-labels/${labelId}`)
+}
+
+// --- Available Labels (merged board + global) ---
+
+export async function getAvailableLabels(boardId: string): Promise<{
+  boardLabels: Label[]
+  globalLabels: UserLabel[]
+  useBoardLabelsOnly: boolean
+}> {
+  const { data } = await api.get<AvailableLabelsResponse>(
+    `/v1/boards/${boardId}/available-labels`,
+  )
+  return {
+    boardLabels: (data.board_labels || []).map(mapLabel),
+    globalLabels: (data.user_labels || []).map(mapUserLabel),
+    useBoardLabelsOnly: data.use_board_labels_only,
+  }
+}
+
 // --- Activity ---
 
 export async function getCardActivity(
@@ -741,4 +827,155 @@ export async function getCardActivity(
     entries: data.entries.map(mapActivity),
     nextCursor: data.next_cursor,
   }
+}
+// --- Template Mappers ---
+
+function mapCardTemplate(dto: CardTemplateResponse): CardTemplate {
+  return {
+    id: dto.id,
+    boardId: dto.board_id,
+    userId: dto.user_id,
+    name: dto.name,
+    title: dto.title,
+    description: dto.description,
+    priority: (dto.priority as CardTemplate['priority']) || 'medium',
+    taskType: (dto.task_type as CardTemplate['taskType']) || 'task',
+    checklistData: dto.checklist_data || [],
+    labelIds: dto.label_ids || [],
+    createdAt: dto.created_at,
+    updatedAt: dto.updated_at,
+  }
+}
+
+function mapColumnTemplate(dto: ColumnTemplateResponse): ColumnTemplate {
+  return {
+    id: dto.id,
+    boardId: dto.board_id,
+    userId: dto.user_id,
+    name: dto.name,
+    columnsData: dto.columns_data || [],
+    createdAt: dto.created_at,
+    updatedAt: dto.updated_at,
+  }
+}
+
+function mapBoardTemplate(dto: BoardTemplateResponse): BoardTemplate {
+  return {
+    id: dto.id,
+    userId: dto.user_id,
+    name: dto.name,
+    description: dto.description,
+    columnsData: dto.columns_data || [],
+    labelsData: dto.labels_data || [],
+    createdAt: dto.created_at,
+    updatedAt: dto.updated_at,
+  }
+}
+
+// --- Card Templates ---
+
+export async function createCardTemplate(
+  boardId: string,
+  data_: {
+    name: string
+    title: string
+    description: string
+    priority: string
+    task_type: string
+    checklist_data: { title: string; items: string[] }[]
+    label_ids: string[]
+  },
+): Promise<CardTemplate> {
+  const { data } = await api.post<{ template: CardTemplateResponse }>(
+    `/v1/boards/${boardId}/card-templates`,
+    data_,
+  )
+  return mapCardTemplate(data.template)
+}
+
+export async function listCardTemplates(boardId: string): Promise<CardTemplate[]> {
+  const { data } = await api.get<{ templates: CardTemplateResponse[] }>(
+    `/v1/boards/${boardId}/card-templates`,
+  )
+  return (data.templates || []).map(mapCardTemplate)
+}
+
+export async function deleteCardTemplate(boardId: string, templateId: string): Promise<void> {
+  await api.delete(`/v1/boards/${boardId}/card-templates/${templateId}`)
+}
+
+export async function createCardFromTemplate(
+  boardId: string,
+  columnId: string,
+  templateId: string,
+  position: string,
+): Promise<Card> {
+  const { data } = await api.post<{ card: CardResponse }>(
+    `/v1/boards/${boardId}/card-templates/${templateId}/apply`,
+    { column_id: columnId, position },
+  )
+  return mapCard(data.card)
+}
+
+// --- Column Templates ---
+
+export async function createColumnTemplate(
+  boardId: string,
+  data_: { name: string; columns_data: { title: string; position: number }[] },
+): Promise<ColumnTemplate> {
+  const { data } = await api.post<{ template: ColumnTemplateResponse }>(
+    `/v1/boards/${boardId}/column-templates`,
+    data_,
+  )
+  return mapColumnTemplate(data.template)
+}
+
+export async function listColumnTemplates(boardId: string): Promise<ColumnTemplate[]> {
+  const { data } = await api.get<{ templates: ColumnTemplateResponse[] }>(
+    `/v1/boards/${boardId}/column-templates`,
+  )
+  return (data.templates || []).map(mapColumnTemplate)
+}
+
+export async function deleteColumnTemplate(boardId: string, templateId: string): Promise<void> {
+  await api.delete(`/v1/boards/${boardId}/column-templates/${templateId}`)
+}
+
+// --- Board Templates ---
+
+export async function createBoardTemplate(
+  data_: {
+    name: string
+    description: string
+    columns_data: { title: string; position: number }[]
+    labels_data: { name: string; color: string }[]
+  },
+): Promise<BoardTemplate> {
+  const { data } = await api.post<{ template: BoardTemplateResponse }>(
+    '/v1/board-templates',
+    data_,
+  )
+  return mapBoardTemplate(data.template)
+}
+
+export async function listBoardTemplates(): Promise<BoardTemplate[]> {
+  const { data } = await api.get<{ templates: BoardTemplateResponse[] }>(
+    '/v1/board-templates',
+  )
+  return (data.templates || []).map(mapBoardTemplate)
+}
+
+export async function deleteBoardTemplate(templateId: string): Promise<void> {
+  await api.delete(`/v1/board-templates/${templateId}`)
+}
+
+export async function createBoardFromTemplate(
+  templateId: string,
+  title: string,
+): Promise<Board> {
+  const { data } = await api.post<{ board: BoardResponse }>(
+    `/v1/board-templates/${templateId}/apply`,
+    { title },
+  )
+  return mapBoard(data.board)
 }

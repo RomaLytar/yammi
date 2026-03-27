@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBoardsStore } from '@/stores/boards'
+import * as boardsApi from '@/api/boards'
 import { useAuthStore } from '@/stores/auth'
 import { registerHandler, unregisterHandler } from '@/services/realtimeService'
 import type { Board } from '@/types/domain'
@@ -163,6 +164,19 @@ async function handleCreateBoard(data: { title: string; description: string }) {
   }
 }
 
+async function handleCreateFromTemplate(data: { templateId: string; title: string }) {
+  try {
+    creatingBoard.value = true
+    const board = await boardsApi.createBoardFromTemplate(data.templateId, data.title)
+    showCreateModal.value = false
+    router.push(`/boards/${board.id}`)
+  } catch (error) {
+    console.error('Failed to create board from template:', error)
+  } finally {
+    creatingBoard.value = false
+  }
+}
+
 function openBoard(boardId: string) {
   if (selectMode.value) return
   router.push(`/boards/${boardId}`)
@@ -189,6 +203,12 @@ function openMembers(board: Board, e: Event) {
   e.stopPropagation()
   activeMenu.value = null
   membersTarget.value = board
+}
+
+function openSettings(board: Board, e: Event) {
+  e.stopPropagation()
+  activeMenu.value = null
+  router.push(`/boards/${board.id}/settings`)
 }
 
 function confirmDelete(board: Board, e: Event) {
@@ -330,6 +350,12 @@ async function handleDeleteBoard() {
                   Участники
                 </button>
                 <template v-if="isOwner(board)">
+                  <button class="dropdown-item" @click="openSettings(board, $event)">
+                    <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                    Настройки
+                  </button>
                   <div class="dropdown-divider"></div>
                   <button class="dropdown-item dropdown-item--danger" @click="confirmDelete(board, $event)">
                     <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -360,7 +386,7 @@ async function handleDeleteBoard() {
     </div>
 
     <!-- Modals -->
-    <CreateBoardModal v-if="showCreateModal" @close="showCreateModal = false" @create="handleCreateBoard" />
+    <CreateBoardModal v-if="showCreateModal" @close="showCreateModal = false" @create="handleCreateBoard" @createFromTemplate="handleCreateFromTemplate" />
 
     <ConfirmModal
       v-if="deleteTarget"

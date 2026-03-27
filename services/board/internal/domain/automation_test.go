@@ -127,7 +127,7 @@ func TestAutomationRule_Update(t *testing.T) {
 	assert.Equal(t, "col-2", rule.ActionConfig["target"])
 }
 
-func TestAutomationRule_Update_EmptyName(t *testing.T) {
+func TestAutomationRule_Update_EmptyName_KeepsOriginal(t *testing.T) {
 	rule, _ := NewAutomationRule(
 		"", "board-123", "Original",
 		TriggerCardCreated, nil,
@@ -137,8 +137,7 @@ func TestAutomationRule_Update_EmptyName(t *testing.T) {
 
 	err := rule.Update("", true, nil, nil)
 
-	assert.Error(t, err)
-	assert.Equal(t, ErrEmptyRuleName, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "Original", rule.Name)
 }
 

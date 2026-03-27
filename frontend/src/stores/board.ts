@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Board, Column, Card, Label } from '@/types/domain'
+import type { Board, Column, Card, Label, BoardSettings, UserLabel, CardTemplate } from '@/types/domain'
 import type { MemberResponse } from '@/types/api'
 import * as boardsApi from '@/api/boards'
 import { ApiError } from '@/api/client'
@@ -19,6 +19,9 @@ export const useBoardStore = defineStore('board', () => {
   const members = ref<MemberResponse[]>([])
   const memberProfiles = ref<Map<string, MemberWithProfile>>(new Map())
   const labels = ref<Label[]>([])
+  const boardSettings = ref<BoardSettings | null>(null)
+  const globalLabels = ref<UserLabel[]>([])
+  const cardTemplates = ref<CardTemplate[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -37,8 +40,8 @@ export const useBoardStore = defineStore('board', () => {
       members.value = await boardsApi.getMembers(id)
       buildMemberProfiles()
 
-      // Загружаем метки доски
-      await fetchLabels(id)
+      // Загружаем метки доски (board + global) и настройки
+      await Promise.all([fetchAvailableLabels(id), fetchCardTemplates(id)])
 
       // Загружаем карточки для каждой колонки
       await Promise.all(
@@ -120,6 +123,99 @@ export const useBoardStore = defineStore('board', () => {
     } catch (err) {
       console.error('Failed to load labels:', err)
       labels.value = []
+    }
+  }
+
+  async function fetchAvailableLabels(id: string): Promise<void> {
+    try {
+      const result = await boardsApi.getAvailableLabels(id)
+      labels.value = result.boardLabels
+      globalLabels.value = result.globalLabels
+      boardSettings.value = {
+        boardId: id,
+        useBoardLabelsOnly: result.useBoardLabelsOnly,
+      }
+    } catch {
+      // Fallback: load only board labels if available-labels endpoint not ready
+      try {
+        labels.value = await boardsApi.listLabels(id)
+      } catch (err2) {
+        console.error('Failed to load labels:', err2)
+        labels.value = []
+      }
+      globalLabels.value = []
+      boardSettings.value = { boardId: id, useBoardLabelsOnly: false }
+    }
+  }
+
+  async function fetchCardTemplates(id: string): Promise<void> {
+    try {
+      cardTemplates.value = await boardsApi.listCardTemplates(id)
+    } catch (err) {
+      console.error('Failed to load card templates:', err)
+      cardTemplates.value = []
+    }
+  }
+
+  const allAvailableLabels = computed(() => {
+    if (boardSettings.value?.useBoardLabelsOnly) {
+      return labels.value.map(l => ({ ...l, isGlobal: false as const }))
+    }
+    return [
+      ...labels.value.map(l => ({ ...l, isGlobal: false as const })),
+      ...globalLabels.value.map(l => ({
+        id: l.id,
+        boardId: '',
+        name: l.name,
+        color: l.color,
+        createdAt: l.createdAt,
+        isGlobal: true as const,
+      })),
+    ]
+  })
+
+  async function createBoardLabel(name: string, color: string): Promise<void> {
+    if (!boardId.value) return
+    try {
+      const label = await boardsApi.createLabel(boardId.value, name, color)
+      labels.value.push(label)
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка создания метки'
+      throw err
+    }
+  }
+
+  async function updateBoardLabel(labelId: string, name: string, color: string): Promise<void> {
+    if (!boardId.value) return
+    try {
+      const updated = await boardsApi.updateLabel(boardId.value, labelId, name, color)
+      const idx = labels.value.findIndex(l => l.id === labelId)
+      if (idx !== -1) labels.value[idx] = updated
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка обновления метки'
+      throw err
+    }
+  }
+
+  async function deleteBoardLabel(labelId: string): Promise<void> {
+    if (!boardId.value) return
+    try {
+      await boardsApi.deleteLabel(boardId.value, labelId)
+      labels.value = labels.value.filter(l => l.id !== labelId)
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка удаления метки'
+      throw err
+    }
+  }
+
+  async function saveBoardSettings(useBoardLabelsOnly: boolean): Promise<void> {
+    if (!boardId.value) return
+    try {
+      const updated = await boardsApi.updateBoardSettings(boardId.value, useBoardLabelsOnly)
+      boardSettings.value = updated
+    } catch (err) {
+      error.value = err instanceof ApiError ? err.message : 'Ошибка сохранения настроек'
+      throw err
     }
   }
 
@@ -333,6 +429,9 @@ export const useBoardStore = defineStore('board', () => {
     members.value = []
     memberProfiles.value = new Map()
     labels.value = []
+    boardSettings.value = null
+    globalLabels.value = []
+    cardTemplates.value = []
     error.value = null
   }
 
@@ -342,11 +441,17 @@ export const useBoardStore = defineStore('board', () => {
     members,
     memberProfiles,
     labels,
+    boardSettings,
+    globalLabels,
+    cardTemplates,
+    allAvailableLabels,
     loading,
     error,
     boardId,
     fetchBoard,
     fetchLabels,
+    fetchAvailableLabels,
+    fetchCardTemplates,
     updateBoardInfo,
     createColumn,
     updateColumn,
@@ -359,6 +464,10 @@ export const useBoardStore = defineStore('board', () => {
     moveCard,
     assignCard,
     unassignCard,
+    createBoardLabel,
+    updateBoardLabel,
+    deleteBoardLabel,
+    saveBoardSettings,
     clear,
   }
 })

@@ -152,6 +152,11 @@ func main() {
 	checklistRepo := postgres.NewChecklistRepository(db)
 	customFieldRepo := postgres.NewCustomFieldRepository(db)
 	automationRuleRepo := postgres.NewAutomationRuleRepository(db)
+	boardSettingsRepo := postgres.NewBoardSettingsRepository(db)
+	userLabelRepo := postgres.NewUserLabelRepository(db)
+	cardTemplateRepo := postgres.NewCardTemplateRepository(db)
+	columnTemplateRepo := postgres.NewColumnTemplateRepository(db)
+	boardTemplateRepo := postgres.NewBoardTemplateRepository(db)
 
 	// Membership repository: Redis cache decorator over PostgreSQL.
 	// Если Redis недоступен — используется чистый PostgreSQL.
@@ -181,12 +186,15 @@ func main() {
 		usecase.NewReorderColumnsUseCase(columnRepo, boardRepo, memberRepo, publisher),
 	)
 
+	// Automation executor (для автоматизации при перемещении карточек)
+	automationExecutor := usecase.NewExecuteAutomationsUseCase(automationRuleRepo, cardRepo, labelRepo)
+
 	cardsHandler := delivery.NewCardHandler(
-		usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
+		usecase.NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher, automationExecutor),
 		usecase.NewGetCardUseCase(cardRepo, memberRepo),
 		usecase.NewGetCardsUseCase(cardRepo, memberRepo),
 		usecase.NewUpdateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
-		usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
+		usecase.NewMoveCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher, automationExecutor),
 		usecase.NewDeleteCardUseCase(cardRepo, boardRepo, memberRepo, publisher),
 		usecase.NewAssignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
 		usecase.NewUnassignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
@@ -213,7 +221,7 @@ func main() {
 		usecase.NewListLabelsUseCase(labelRepo, memberRepo),
 		usecase.NewUpdateLabelUseCase(labelRepo, memberRepo, publisher),
 		usecase.NewDeleteLabelUseCase(labelRepo, memberRepo, publisher),
-		usecase.NewAddLabelToCardUseCase(labelRepo, memberRepo, publisher),
+		usecase.NewAddLabelToCardUseCase(labelRepo, userLabelRepo, memberRepo, publisher),
 		usecase.NewRemoveLabelFromCardUseCase(labelRepo, memberRepo, publisher),
 		usecase.NewGetCardLabelsUseCase(labelRepo, memberRepo),
 	)
@@ -253,6 +261,34 @@ func main() {
 		usecase.NewGetAutomationHistoryUseCase(automationRuleRepo, memberRepo),
 	)
 
+	boardSettingsHandler := delivery.NewBoardSettingsHandler(
+		usecase.NewGetBoardSettingsUseCase(boardSettingsRepo, memberRepo),
+		usecase.NewUpdateBoardSettingsUseCase(boardSettingsRepo, memberRepo),
+	)
+
+	userLabelHandler := delivery.NewUserLabelHandler(
+		usecase.NewCreateUserLabelUseCase(userLabelRepo),
+		usecase.NewListUserLabelsUseCase(userLabelRepo),
+		usecase.NewUpdateUserLabelUseCase(userLabelRepo),
+		usecase.NewDeleteUserLabelUseCase(userLabelRepo),
+		usecase.NewListAvailableLabelsUseCase(boardSettingsRepo, labelRepo, userLabelRepo, boardRepo, memberRepo),
+	)
+
+	templateHandler := delivery.NewTemplateHandler(
+		usecase.NewCreateCardTemplateUseCase(cardTemplateRepo, memberRepo),
+		usecase.NewListCardTemplatesUseCase(cardTemplateRepo, memberRepo),
+		usecase.NewDeleteCardTemplateUseCase(cardTemplateRepo, memberRepo),
+		usecase.NewCreateCardFromTemplateUseCase(cardTemplateRepo, cardRepo, memberRepo, checklistRepo, labelRepo, boardRepo),
+		usecase.NewCreateColumnTemplateUseCase(columnTemplateRepo, memberRepo),
+		usecase.NewListColumnTemplatesUseCase(columnTemplateRepo, memberRepo),
+		usecase.NewDeleteColumnTemplateUseCase(columnTemplateRepo, memberRepo),
+		usecase.NewCreateColumnsFromTemplateUseCase(columnTemplateRepo, columnRepo, memberRepo, boardRepo),
+		usecase.NewCreateBoardTemplateUseCase(boardTemplateRepo),
+		usecase.NewListBoardTemplatesUseCase(boardTemplateRepo),
+		usecase.NewDeleteBoardTemplateUseCase(boardTemplateRepo),
+		usecase.NewCreateBoardFromTemplateUseCase(boardTemplateRepo, boardRepo, memberRepo, columnRepo, labelRepo, publisher),
+	)
+
 	// gRPC server
 	handler := delivery.NewBoardServiceServer(
 		boardsHandler,
@@ -265,6 +301,9 @@ func main() {
 		checklistHandler,
 		customFieldHandler,
 		automationHandler,
+		boardSettingsHandler,
+		userLabelHandler,
+		templateHandler,
 	)
 
 	grpcServer := grpc.NewServer(

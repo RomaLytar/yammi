@@ -1327,7 +1327,7 @@ onMounted(() => {
               </button>
               <div v-if="showLabelPicker" class="ecm-label-picker">
                 <div
-                  v-for="label in boardStore.labels"
+                  v-for="label in boardStore.allAvailableLabels"
                   :key="label.id"
                   class="ecm-label-option"
                   :class="{ 'ecm-label-option--selected': isLabelAssigned(label.id) }"
@@ -1335,9 +1335,10 @@ onMounted(() => {
                 >
                   <span class="ecm-label-option__color" :style="{ background: label.color }" />
                   <span class="ecm-label-option__name">{{ label.name }}</span>
+                  <span v-if="label.isGlobal" class="ecm-label-option__global">глобальная</span>
                   <svg v-if="isLabelAssigned(label.id)" class="ecm-label-option__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
-                <div v-if="boardStore.labels.length === 0" class="ecm-section__empty" style="min-height: 32px;">
+                <div v-if="boardStore.allAvailableLabels.length === 0" class="ecm-section__empty" style="min-height: 32px;">
                   Метки не созданы
                 </div>
               </div>
@@ -2321,6 +2322,16 @@ onMounted(() => {
 .ecm-label-option__check {
   color: var(--color-primary, #7c5cfc);
   flex-shrink: 0;
+}
+
+.ecm-label-option__global {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 1px 6px;
+  border-radius: 8px;
 }
 
 /* ===== Checklists ===== */

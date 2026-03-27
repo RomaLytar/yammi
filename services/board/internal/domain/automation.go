@@ -125,11 +125,9 @@ func NewAutomationRule(id, boardID, name string, triggerType TriggerType, trigge
 
 // Update обновляет правило автоматизации
 func (r *AutomationRule) Update(name string, enabled bool, triggerConfig map[string]string, actionConfig map[string]string) error {
-	if name == "" {
-		return ErrEmptyRuleName
+	if name != "" {
+		r.Name = name
 	}
-
-	r.Name = name
 	r.Enabled = enabled
 
 	if triggerConfig != nil {

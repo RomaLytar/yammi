@@ -162,6 +162,19 @@ export interface ActivityEntry {
   createdAt: string
 }
 
+export interface BoardSettings {
+  boardId: string
+  useBoardLabelsOnly: boolean
+}
+
+export interface UserLabel {
+  id: string
+  userId: string
+  name: string
+  color: string
+  createdAt: string
+}
+
 export interface Notification {
   id: string
   type: string
@@ -175,4 +188,40 @@ export interface Notification {
 export interface NotificationSettings {
   enabled: boolean
   realtimeEnabled: boolean
+}
+
+export interface CardTemplate {
+  id: string
+  boardId: string
+  userId: string
+  name: string
+  title: string
+  description: string
+  priority: Priority
+  taskType: TaskType
+  checklistData: { title: string; items: string[] }[]
+  labelIds: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ColumnTemplate {
+  id: string
+  boardId: string
+  userId: string
+  name: string
+  columnsData: { title: string; position: number }[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface BoardTemplate {
+  id: string
+  userId: string
+  name: string
+  description: string
+  columnsData: { title: string; position: number }[]
+  labelsData: { name: string; color: string }[]
+  createdAt: string
+  updatedAt: string
 }

@@ -19,6 +19,8 @@ import EditCardModal from '@/components/board/EditCardModal.vue'
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
+import BaseModal from '@/components/shared/BaseModal.vue'
+import TemplateManager from '@/components/board/TemplateManager.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -33,6 +35,7 @@ const showCreateColumnModal = ref(false)
 const showCreateCardModal = ref(false)
 const showEditCardModal = ref(false)
 const showConfirmDeleteColumn = ref(false)
+const showTemplateManager = ref(false)
 const showBulkDeleteCards = ref(false)
 const activeColumnId = ref<string | null>(null)
 const activeCardId = ref<string | null>(null)
@@ -480,6 +483,16 @@ function onDragEnd() {
         </div>
         <div class="board-page__actions">
           <button
+            v-if="isOwner"
+            class="settings-btn"
+            title="Настройки доски"
+            @click="router.push(`/boards/${boardStore.boardId}/settings`)"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
+          <button
             class="select-toggle"
             :class="{ 'select-toggle--active': cardSelectMode }"
             @click="toggleCardSelectMode"
@@ -625,6 +638,25 @@ function onDragEnd() {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.settings-btn:hover {
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
 }
 
 .select-toggle {

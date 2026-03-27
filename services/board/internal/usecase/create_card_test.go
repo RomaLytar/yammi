@@ -242,7 +242,7 @@ func TestCreateCardUseCase_Execute(t *testing.T) {
 			activityRepo := new(MockActivityRepository)
 			activityRepo.On("Create", mock.Anything, mock.Anything).Return(nil).Maybe()
 
-			useCase := NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher)
+			useCase := NewCreateCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher, nil)
 			card, err := useCase.Execute(context.Background(), tt.columnID, tt.boardID, tt.userID, tt.title, tt.description, tt.position, tt.assigneeID, nil, "", "")
 
 			if tt.wantErr {

@@ -1551,10 +1551,6 @@ function setupOnceScenario(me, allUsers, h) {
       // Available labels = board labels + user global labels
       getAvailableLabels(h, board.id);
       sleep(randomBetween(0.2, 0.5));
-
-      // Создать card template на этой доске
-      createCardTemplate(h, board.id, 'Bug Report', 'Новый баг', 'high', 'bug');
-      sleep(randomBetween(0.2, 0.5));
     }
   }
 

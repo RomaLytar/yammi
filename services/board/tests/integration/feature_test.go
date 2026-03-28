@@ -120,7 +120,7 @@ func TestFeature_ListBoards_MemberSeesSharedBoards(t *testing.T) {
 	}
 
 	// Add user B as member
-	if err := memberRepo.AddMember(ctx, boardA.ID, userB, domain.RoleMember); err != nil {
+	if _, err := memberRepo.AddMember(ctx, boardA.ID, userB, domain.RoleMember); err != nil {
 		t.Fatalf("Failed to add member: %v", err)
 	}
 
@@ -160,7 +160,7 @@ func TestFeature_ListBoards_OwnerOnlyFilter(t *testing.T) {
 	if err := boardRepo.Create(ctx, otherBoard); err != nil {
 		t.Fatalf("Failed to create other board: %v", err)
 	}
-	if err := memberRepo.AddMember(ctx, otherBoard.ID, userA, domain.RoleMember); err != nil {
+	if _, err := memberRepo.AddMember(ctx, otherBoard.ID, userA, domain.RoleMember); err != nil {
 		t.Fatalf("Failed to add member: %v", err)
 	}
 

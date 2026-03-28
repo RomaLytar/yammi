@@ -164,8 +164,8 @@ func TestCreateBoardFromTemplate_Success(t *testing.T) {
 			},
 		}, nil)
 	boardRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Board")).Return(nil)
-	columnRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Column")).Return(nil).Times(2)
-	labelRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Label")).Return(nil).Times(1)
+	columnRepo.On("BatchCreate", mock.Anything, mock.AnythingOfType("[]*domain.Column")).Return(nil)
+	labelRepo.On("BatchCreate", mock.Anything, mock.AnythingOfType("[]*domain.Label")).Return(nil)
 	publisher.On("PublishBoardCreated", mock.Anything, mock.Anything).Return(nil).Maybe()
 	publisher.On("PublishMemberAdded", mock.Anything, mock.Anything).Return(nil).Maybe()
 

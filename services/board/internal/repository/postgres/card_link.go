@@ -40,6 +40,35 @@ func (r *CardLinkRepository) Create(ctx context.Context, link *domain.CardLink) 
 	return nil
 }
 
+// CreateVerified создает связь, проверяя существование parent card в одном запросе
+func (r *CardLinkRepository) CreateVerified(ctx context.Context, link *domain.CardLink) error {
+	query := `
+		INSERT INTO card_links (id, parent_id, child_id, board_id, link_type, created_at)
+		SELECT $1, $2, $3, $4, $5, $6
+		WHERE EXISTS (SELECT 1 FROM cards WHERE id = $2 AND board_id = $4)
+	`
+
+	result, err := r.db.ExecContext(ctx, query,
+		link.ID, link.ParentID, link.ChildID, link.BoardID, string(link.LinkType), link.CreatedAt,
+	)
+	if err != nil {
+		if isDuplicateKeyError(err) {
+			return domain.ErrLinkAlreadyExists
+		}
+		if isCheckConstraintError(err) {
+			return domain.ErrSelfLink
+		}
+		return fmt.Errorf("insert card link verified: %w", err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return domain.ErrCardNotFound
+	}
+
+	return nil
+}
+
 // Delete удаляет связь по ID (boardID для partition pruning)
 func (r *CardLinkRepository) Delete(ctx context.Context, linkID, boardID string) error {
 	query := `DELETE FROM card_links WHERE id = $1 AND board_id = $2`

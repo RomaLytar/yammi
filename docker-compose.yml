@@ -3,7 +3,26 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    command: ["postgres", "-c", "max_connections=200"]
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=${PG_MAX_CONNECTIONS:-300}"
+      - "-c"
+      - "shared_buffers=${PG_SHARED_BUFFERS:-2GB}"
+      - "-c"
+      - "work_mem=${PG_WORK_MEM:-32MB}"
+      - "-c"
+      - "effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE:-8GB}"
+      - "-c"
+      - "maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM:-256MB}"
+      - "-c"
+      - "random_page_cost=${PG_RANDOM_PAGE_COST:-1.1}"
+      - "-c"
+      - "max_parallel_workers_per_gather=${PG_MAX_PARALLEL_WORKERS:-4}"
+      - "-c"
+      - "wal_buffers=${PG_WAL_BUFFERS:-64MB}"
+      - "-c"
+      - "max_wal_size=${PG_MAX_WAL_SIZE:-2GB}"
     environment:
       POSTGRES_USER: yammi
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
@@ -259,10 +278,10 @@ services:
       BOARD_GRPC_ADDR: "board:50053"
       COMMENT_GRPC_ADDR: "comment:50054"
       NOTIFICATION_GRPC_ADDR: "notification-api:50055"
-      RATE_LIMIT_REGISTER: "${RATE_LIMIT_REGISTER:-100000}"
-      RATE_LIMIT_LOGIN: "${RATE_LIMIT_LOGIN:-100000}"
-      RATE_LIMIT_REFRESH: "${RATE_LIMIT_REFRESH:-100000}"
-      RATE_LIMIT_DEFAULT: "${RATE_LIMIT_DEFAULT:-100000}"
+      RATE_LIMIT_REGISTER: "${RATE_LIMIT_REGISTER:-1000000}"
+      RATE_LIMIT_LOGIN: "${RATE_LIMIT_LOGIN:-1000000}"
+      RATE_LIMIT_REFRESH: "${RATE_LIMIT_REFRESH:-1000000}"
+      RATE_LIMIT_DEFAULT: "${RATE_LIMIT_DEFAULT:-1000000}"
       ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:5173"
     ports:
       - "8080:8080"

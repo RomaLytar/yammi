@@ -25,8 +25,12 @@ func (m *mockPgRepo) IsMember(ctx context.Context, boardID, userID string) (bool
 	return args.Bool(0), args.Get(1).(domain.Role), args.Error(2)
 }
 
-func (m *mockPgRepo) AddMember(ctx context.Context, boardID, userID string, role domain.Role) error {
-	return m.Called(ctx, boardID, userID, role).Error(0)
+func (m *mockPgRepo) AddMember(ctx context.Context, boardID, userID string, role domain.Role) (*domain.Member, error) {
+	args := m.Called(ctx, boardID, userID, role)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Member), args.Error(1)
 }
 
 func (m *mockPgRepo) RemoveMember(ctx context.Context, boardID, userID string) error {
@@ -121,9 +125,9 @@ func TestAddMember_DelegatesToPostgres(t *testing.T) {
 	repo, pg, _ := setupCachedRepo(t)
 	ctx := context.Background()
 
-	pg.On("AddMember", ctx, "board-1", "user-2", domain.RoleMember).Return(nil)
+	pg.On("AddMember", ctx, "board-1", "user-2", domain.RoleMember).Return(&domain.Member{UserID: "user-2", Role: domain.RoleMember}, nil)
 
-	err := repo.AddMember(ctx, "board-1", "user-2", domain.RoleMember)
+	_, err := repo.AddMember(ctx, "board-1", "user-2", domain.RoleMember)
 	require.NoError(t, err)
 
 	pg.AssertCalled(t, "AddMember", ctx, "board-1", "user-2", domain.RoleMember)

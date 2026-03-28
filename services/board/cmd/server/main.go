@@ -167,6 +167,7 @@ func main() {
 		log.Println("membership: using PostgreSQL only (no Redis)")
 	}
 
+
 	// Sub-handlers (группируют use cases по доменным областям)
 	boardsHandler := delivery.NewBoardCoreHandler(
 		usecase.NewCreateBoardUseCase(boardRepo, memberRepo, publisher),

@@ -44,7 +44,7 @@ func (r *MembershipRepository) IsMember(ctx context.Context, boardID, userID str
 
 // AddMember — write pass-through. Пишет ТОЛЬКО в PostgreSQL.
 // Redis обновляется асинхронно через NATS событие member.added → cache consumer.
-func (r *MembershipRepository) AddMember(ctx context.Context, boardID, userID string, role domain.Role) error {
+func (r *MembershipRepository) AddMember(ctx context.Context, boardID, userID string, role domain.Role) (*domain.Member, error) {
 	return r.pg.AddMember(ctx, boardID, userID, role)
 }
 

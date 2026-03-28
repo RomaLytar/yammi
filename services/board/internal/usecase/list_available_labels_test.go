@@ -65,6 +65,8 @@ func TestListAvailableLabels_BoardLabelsOnly(t *testing.T) {
 		Return([]*domain.Label{
 			{ID: "bl-1", BoardID: "board-123", Name: "Bug", Color: "#ef4444"},
 		}, nil)
+	boardRepo.On("GetByID", mock.Anything, "board-123").
+		Return(&domain.Board{ID: "board-123", OwnerID: "owner-123", Title: "Test", Version: 1, CreatedAt: time.Now(), UpdatedAt: time.Now()}, nil)
 
 	uc := NewListAvailableLabelsUseCase(settingsRepo, labelRepo, userLabelRepo, boardRepo, memberRepo)
 	result, err := uc.Execute(context.Background(), "board-123", "user-123")
@@ -75,12 +77,12 @@ func TestListAvailableLabels_BoardLabelsOnly(t *testing.T) {
 	assert.Nil(t, result.UserLabels)
 	assert.True(t, result.UseBoardLabelsOnly)
 
-	// boardRepo.GetByID и userLabelRepo.ListByUserID НЕ должны вызываться
-	boardRepo.AssertNotCalled(t, "GetByID")
+	// userLabelRepo.ListByUserID НЕ должен вызываться при UseBoardLabelsOnly=true
 	userLabelRepo.AssertNotCalled(t, "ListByUserID")
 
 	settingsRepo.AssertExpectations(t)
 	labelRepo.AssertExpectations(t)
+	boardRepo.AssertExpectations(t)
 	memberRepo.AssertExpectations(t)
 }
 

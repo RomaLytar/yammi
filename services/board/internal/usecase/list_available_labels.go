@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"sync"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -38,7 +39,7 @@ func NewListAvailableLabelsUseCase(
 }
 
 func (uc *ListAvailableLabelsUseCase) Execute(ctx context.Context, boardID, userID string) (*AvailableLabelsResult, error) {
-	// 1. Проверка доступа (member может видеть метки)
+	// 1. Проверка доступа (member может видеть метки) — Redis cache, ~1ms
 	isMember, _, err := uc.memberRepo.IsMember(ctx, boardID, userID)
 	if err != nil {
 		return nil, err
@@ -47,16 +48,44 @@ func (uc *ListAvailableLabelsUseCase) Execute(ctx context.Context, boardID, user
 		return nil, domain.ErrAccessDenied
 	}
 
-	// 2. Получаем настройки доски
-	settings, err := uc.settingsRepo.GetByBoardID(ctx, boardID)
-	if err != nil {
-		return nil, err
-	}
+	// 2. Параллельно загружаем настройки, метки доски и данные доски (для ownerID)
+	var (
+		settings    *domain.BoardSettings
+		boardLabels []*domain.Label
+		board       *domain.Board
+		settingsErr error
+		labelsErr   error
+		boardErr    error
+	)
 
-	// 3. Получаем метки доски
-	boardLabels, err := uc.labelRepo.ListByBoardID(ctx, boardID)
-	if err != nil {
-		return nil, err
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		settings, settingsErr = uc.settingsRepo.GetByBoardID(ctx, boardID)
+	}()
+
+	go func() {
+		defer wg.Done()
+		boardLabels, labelsErr = uc.labelRepo.ListByBoardID(ctx, boardID)
+	}()
+
+	go func() {
+		defer wg.Done()
+		board, boardErr = uc.boardRepo.GetByID(ctx, boardID)
+	}()
+
+	wg.Wait()
+
+	if settingsErr != nil {
+		return nil, settingsErr
+	}
+	if labelsErr != nil {
+		return nil, labelsErr
+	}
+	if boardErr != nil {
+		return nil, boardErr
 	}
 
 	result := &AvailableLabelsResult{
@@ -64,18 +93,12 @@ func (uc *ListAvailableLabelsUseCase) Execute(ctx context.Context, boardID, user
 		UseBoardLabelsOnly: settings.UseBoardLabelsOnly,
 	}
 
-	// 4. Если разрешены глобальные метки — получаем user_labels владельца доски
+	// 3. Если разрешены глобальные метки — получаем user_labels владельца доски
 	if !settings.UseBoardLabelsOnly {
-		board, err := uc.boardRepo.GetByID(ctx, boardID)
-		if err != nil {
-			return nil, err
-		}
-
 		userLabels, err := uc.userLabelRepo.ListByUserID(ctx, board.OwnerID)
 		if err != nil {
 			return nil, err
 		}
-
 		result.UserLabels = userLabels
 	}
 

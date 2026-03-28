@@ -62,9 +62,12 @@ type MockMembershipRepository struct {
 	mock.Mock
 }
 
-func (m *MockMembershipRepository) AddMember(ctx context.Context, boardID, userID string, role domain.Role) error {
+func (m *MockMembershipRepository) AddMember(ctx context.Context, boardID, userID string, role domain.Role) (*domain.Member, error) {
 	args := m.Called(ctx, boardID, userID, role)
-	return args.Error(0)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Member), args.Error(1)
 }
 
 func (m *MockMembershipRepository) RemoveMember(ctx context.Context, boardID, userID string) error {

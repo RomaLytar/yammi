@@ -36,6 +36,32 @@ func (r *UserLabelRepository) Create(ctx context.Context, label *domain.UserLabe
 	return nil
 }
 
+// CreateWithLimit создает метку с проверкой лимита в одном запросе (вместо COUNT + INSERT)
+func (r *UserLabelRepository) CreateWithLimit(ctx context.Context, label *domain.UserLabel, maxCount int) error {
+	query := `
+		INSERT INTO user_labels (id, user_id, name, color, created_at)
+		SELECT $1, $2, $3, $4, $5
+		WHERE (SELECT COUNT(*) FROM user_labels WHERE user_id = $2) < $6
+	`
+
+	result, err := r.db.ExecContext(ctx, query,
+		label.ID, label.UserID, label.Name, label.Color, label.CreatedAt, maxCount,
+	)
+	if err != nil {
+		if isDuplicateKeyError(err) {
+			return domain.ErrUserLabelExists
+		}
+		return fmt.Errorf("insert user_label with limit: %w", err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return domain.ErrMaxUserLabelsReached
+	}
+
+	return nil
+}
+
 // GetByID возвращает пользовательскую метку по ID
 func (r *UserLabelRepository) GetByID(ctx context.Context, labelID string) (*domain.UserLabel, error) {
 	query := `

@@ -36,6 +36,35 @@ func (r *LabelRepository) Create(ctx context.Context, label *domain.Label) error
 	return nil
 }
 
+// BatchCreate создает несколько меток в одном запросе
+func (r *LabelRepository) BatchCreate(ctx context.Context, labels []*domain.Label) error {
+	if len(labels) == 0 {
+		return nil
+	}
+
+	query := `INSERT INTO labels (id, board_id, name, color, created_at) VALUES `
+	args := make([]interface{}, 0, len(labels)*5)
+
+	for i, l := range labels {
+		if i > 0 {
+			query += ", "
+		}
+		base := i * 5
+		query += fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", base+1, base+2, base+3, base+4, base+5)
+		args = append(args, l.ID, l.BoardID, l.Name, l.Color, l.CreatedAt)
+	}
+
+	_, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		if isDuplicateKeyError(err) {
+			return domain.ErrLabelExists
+		}
+		return fmt.Errorf("batch insert labels: %w", err)
+	}
+
+	return nil
+}
+
 // GetByID возвращает метку по ID
 func (r *LabelRepository) GetByID(ctx context.Context, labelID string) (*domain.Label, error) {
 	query := `
@@ -199,4 +228,30 @@ func (r *LabelRepository) CountByBoardID(ctx context.Context, boardID string) (i
 	}
 
 	return count, nil
+}
+
+// CreateWithLimit создает метку с проверкой лимита в одном запросе (вместо COUNT + INSERT)
+func (r *LabelRepository) CreateWithLimit(ctx context.Context, label *domain.Label, maxCount int) error {
+	query := `
+		INSERT INTO labels (id, board_id, name, color, created_at)
+		SELECT $1, $2, $3, $4, $5
+		WHERE (SELECT COUNT(*) FROM labels WHERE board_id = $2) < $6
+	`
+
+	result, err := r.db.ExecContext(ctx, query,
+		label.ID, label.BoardID, label.Name, label.Color, label.CreatedAt, maxCount,
+	)
+	if err != nil {
+		if isDuplicateKeyError(err) {
+			return domain.ErrLabelExists
+		}
+		return fmt.Errorf("insert label with limit: %w", err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return domain.ErrMaxLabelsReached
+	}
+
+	return nil
 }

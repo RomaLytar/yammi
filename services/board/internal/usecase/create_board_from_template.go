@@ -53,29 +53,35 @@ func (uc *CreateBoardFromTemplateUseCase) Execute(ctx context.Context, templateI
 		return nil, err
 	}
 
-	// 4. Создаем колонки из шаблона
-	for _, colData := range tmpl.ColumnsData {
-		col, err := domain.NewColumn(board.ID, colData.Title, colData.Position)
-		if err != nil {
-			slog.Error("failed to create column from template", "error", err, "board_id", board.ID)
-			continue
+	// 4. Создаем колонки из шаблона (batch insert — один запрос вместо N)
+	if len(tmpl.ColumnsData) > 0 {
+		columns := make([]*domain.Column, 0, len(tmpl.ColumnsData))
+		for _, colData := range tmpl.ColumnsData {
+			col, err := domain.NewColumn(board.ID, colData.Title, colData.Position)
+			if err != nil {
+				slog.Error("failed to create column from template", "error", err, "board_id", board.ID)
+				continue
+			}
+			columns = append(columns, col)
 		}
-
-		if err := uc.columnRepo.Create(ctx, col); err != nil {
-			slog.Error("failed to save column from template", "error", err, "board_id", board.ID)
+		if err := uc.columnRepo.BatchCreate(ctx, columns); err != nil {
+			slog.Error("failed to batch create columns from template", "error", err, "board_id", board.ID)
 		}
 	}
 
-	// 5. Создаем метки из шаблона
-	for _, labelData := range tmpl.LabelsData {
-		label, err := domain.NewLabel("", board.ID, labelData.Name, labelData.Color)
-		if err != nil {
-			slog.Error("failed to create label from template", "error", err, "board_id", board.ID)
-			continue
+	// 5. Создаем метки из шаблона (batch insert — один запрос вместо M)
+	if len(tmpl.LabelsData) > 0 {
+		labels := make([]*domain.Label, 0, len(tmpl.LabelsData))
+		for _, labelData := range tmpl.LabelsData {
+			label, err := domain.NewLabel("", board.ID, labelData.Name, labelData.Color)
+			if err != nil {
+				slog.Error("failed to create label from template", "error", err, "board_id", board.ID)
+				continue
+			}
+			labels = append(labels, label)
 		}
-
-		if err := uc.labelRepo.Create(ctx, label); err != nil {
-			slog.Error("failed to save label from template", "error", err, "board_id", board.ID)
+		if err := uc.labelRepo.BatchCreate(ctx, labels); err != nil {
+			slog.Error("failed to batch create labels from template", "error", err, "board_id", board.ID)
 		}
 	}
 

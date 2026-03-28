@@ -293,3 +293,24 @@ func (r *ChecklistRepository) ToggleItem(ctx context.Context, itemID, boardID st
 
 	return nil
 }
+
+// ToggleItemAtomic атомарно инвертирует is_checked и возвращает новое значение (один запрос вместо SELECT + UPDATE)
+func (r *ChecklistRepository) ToggleItemAtomic(ctx context.Context, itemID, boardID string) (bool, error) {
+	query := `
+		UPDATE checklist_items
+		SET is_checked = NOT is_checked, updated_at = NOW()
+		WHERE id = $1 AND board_id = $2
+		RETURNING is_checked
+	`
+
+	var newChecked bool
+	err := r.db.QueryRowContext(ctx, query, itemID, boardID).Scan(&newChecked)
+	if err == sql.ErrNoRows {
+		return false, domain.ErrChecklistItemNotFound
+	}
+	if err != nil {
+		return false, fmt.Errorf("toggle checklist item atomic: %w", err)
+	}
+
+	return newChecked, nil
+}

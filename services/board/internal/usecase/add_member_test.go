@@ -40,7 +40,7 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 					UpdatedAt:   time.Now(),
 				}
 				boardRepo.On("GetByID", mock.Anything, "board-123").Return(board, nil)
-				memberRepo.On("AddMember", mock.Anything, "board-123", "user-456", domain.RoleMember).Return(nil)
+				memberRepo.On("AddMember", mock.Anything, "board-123", "user-456", domain.RoleMember).Return(&domain.Member{UserID: "user-456", Role: domain.RoleMember}, nil)
 			},
 			wantErr: false,
 		},
@@ -61,7 +61,7 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 					UpdatedAt:   time.Now(),
 				}
 				boardRepo.On("GetByID", mock.Anything, "board-123").Return(board, nil)
-				memberRepo.On("AddMember", mock.Anything, "board-123", "user-789", domain.RoleOwner).Return(nil)
+				memberRepo.On("AddMember", mock.Anything, "board-123", "user-789", domain.RoleOwner).Return(&domain.Member{UserID: "user-789", Role: domain.RoleOwner}, nil)
 			},
 			wantErr: false,
 		},
@@ -136,7 +136,7 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 					UpdatedAt:   time.Now(),
 				}
 				boardRepo.On("GetByID", mock.Anything, "board-123").Return(board, nil)
-				memberRepo.On("AddMember", mock.Anything, "board-123", "user-456", domain.RoleMember).Return(domain.ErrMemberExists)
+				memberRepo.On("AddMember", mock.Anything, "board-123", "user-456", domain.RoleMember).Return(nil, domain.ErrMemberExists)
 			},
 			wantErr:     true,
 			expectedErr: domain.ErrMemberExists,
@@ -158,7 +158,7 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 					UpdatedAt:   time.Now(),
 				}
 				boardRepo.On("GetByID", mock.Anything, "board-123").Return(board, nil)
-				memberRepo.On("AddMember", mock.Anything, "board-123", "user-456", domain.RoleMember).Return(errors.New("database error"))
+				memberRepo.On("AddMember", mock.Anything, "board-123", "user-456", domain.RoleMember).Return(nil, errors.New("database error"))
 			},
 			wantErr:     true,
 			expectedErr: errors.New("database error"),
@@ -175,15 +175,17 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 			publisher.On("PublishMemberAdded", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 			useCase := NewAddMemberUseCase(boardRepo, memberRepo, publisher)
-			err := useCase.Execute(context.Background(), tt.boardID, tt.userID, tt.memberUserID, tt.role)
+			member, err := useCase.Execute(context.Background(), tt.boardID, tt.userID, tt.memberUserID, tt.role)
 
 			if tt.wantErr {
 				assert.Error(t, err)
+				assert.Nil(t, member)
 				if tt.expectedErr != nil {
 					assert.Equal(t, tt.expectedErr.Error(), err.Error())
 				}
 			} else {
 				assert.NoError(t, err)
+				assert.NotNil(t, member)
 			}
 
 			boardRepo.AssertExpectations(t)

@@ -50,13 +50,17 @@ func (m *MockUserLabelRepository) CountByUserID(ctx context.Context, userID stri
 	return args.Int(0), args.Error(1)
 }
 
+func (m *MockUserLabelRepository) CreateWithLimit(ctx context.Context, label *domain.UserLabel, maxCount int) error {
+	args := m.Called(ctx, label, maxCount)
+	return args.Error(0)
+}
+
 // --- CreateUserLabel tests ---
 
 func TestCreateUserLabel_Success(t *testing.T) {
 	userLabelRepo := new(MockUserLabelRepository)
 
-	userLabelRepo.On("CountByUserID", mock.Anything, "user-123").Return(5, nil)
-	userLabelRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.UserLabel")).Return(nil)
+	userLabelRepo.On("CreateWithLimit", mock.Anything, mock.AnythingOfType("*domain.UserLabel"), 50).Return(nil)
 
 	uc := NewCreateUserLabelUseCase(userLabelRepo)
 	label, err := uc.Execute(context.Background(), "user-123", "Bug", "#ef4444")
@@ -74,8 +78,6 @@ func TestCreateUserLabel_Success(t *testing.T) {
 func TestCreateUserLabel_EmptyName(t *testing.T) {
 	userLabelRepo := new(MockUserLabelRepository)
 
-	userLabelRepo.On("CountByUserID", mock.Anything, "user-123").Return(5, nil)
-
 	uc := NewCreateUserLabelUseCase(userLabelRepo)
 	label, err := uc.Execute(context.Background(), "user-123", "", "#ef4444")
 
@@ -86,8 +88,6 @@ func TestCreateUserLabel_EmptyName(t *testing.T) {
 
 func TestCreateUserLabel_InvalidColor(t *testing.T) {
 	userLabelRepo := new(MockUserLabelRepository)
-
-	userLabelRepo.On("CountByUserID", mock.Anything, "user-123").Return(5, nil)
 
 	uc := NewCreateUserLabelUseCase(userLabelRepo)
 	label, err := uc.Execute(context.Background(), "user-123", "Bug", "invalid")
@@ -100,7 +100,8 @@ func TestCreateUserLabel_InvalidColor(t *testing.T) {
 func TestCreateUserLabel_MaxLabelsReached(t *testing.T) {
 	userLabelRepo := new(MockUserLabelRepository)
 
-	userLabelRepo.On("CountByUserID", mock.Anything, "user-123").Return(50, nil)
+	userLabelRepo.On("CreateWithLimit", mock.Anything, mock.AnythingOfType("*domain.UserLabel"), 50).
+		Return(domain.ErrMaxUserLabelsReached)
 
 	uc := NewCreateUserLabelUseCase(userLabelRepo)
 	label, err := uc.Execute(context.Background(), "user-123", "Bug", "#ef4444")

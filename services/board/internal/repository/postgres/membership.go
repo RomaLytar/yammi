@@ -16,28 +16,32 @@ func NewMembershipRepository(db *sql.DB) *MembershipRepository {
 	return &MembershipRepository{db: db}
 }
 
-// AddMember добавляет пользователя в доску с указанной ролью
-func (r *MembershipRepository) AddMember(ctx context.Context, boardID, userID string, role domain.Role) error {
+// AddMember добавляет пользователя в доску с указанной ролью и возвращает созданного участника
+func (r *MembershipRepository) AddMember(ctx context.Context, boardID, userID string, role domain.Role) (*domain.Member, error) {
 	// Проверяем, что роль валидна
 	if !role.IsValid() {
-		return domain.ErrInvalidRole
+		return nil, domain.ErrInvalidRole
 	}
 
 	query := `
 		INSERT INTO board_members (board_id, user_id, role, joined_at)
 		VALUES ($1, $2, $3, NOW())
+		RETURNING joined_at
 	`
 
-	_, err := r.db.ExecContext(ctx, query, boardID, userID, role.String())
+	var m domain.Member
+	m.UserID = userID
+	m.Role = role
+	err := r.db.QueryRowContext(ctx, query, boardID, userID, role.String()).Scan(&m.JoinedAt)
 	if err != nil {
 		// Проверяем duplicate key constraint (SQLSTATE 23505)
 		if isDuplicateKeyError(err) {
-			return domain.ErrMemberExists
+			return nil, domain.ErrMemberExists
 		}
-		return fmt.Errorf("insert member: %w", err)
+		return nil, fmt.Errorf("insert member: %w", err)
 	}
 
-	return nil
+	return &m, nil
 }
 
 // RemoveMember удаляет пользователя из доски

@@ -35,6 +35,9 @@ type ColumnRepository interface {
 	// Create создает новую колонку
 	Create(ctx context.Context, column *domain.Column) error
 
+	// BatchCreate создает несколько колонок в одном запросе
+	BatchCreate(ctx context.Context, columns []*domain.Column) error
+
 	// GetByID возвращает колонку по ID
 	GetByID(ctx context.Context, columnID string) (*domain.Column, error)
 
@@ -80,8 +83,8 @@ type CardRepository interface {
 
 // MembershipRepository определяет интерфейс для работы с членством в досках
 type MembershipRepository interface {
-	// AddMember добавляет пользователя в доску с указанной ролью
-	AddMember(ctx context.Context, boardID, userID string, role domain.Role) error
+	// AddMember добавляет пользователя в доску с указанной ролью и возвращает созданного участника
+	AddMember(ctx context.Context, boardID, userID string, role domain.Role) (*domain.Member, error)
 
 	// RemoveMember удаляет пользователя из доски
 	RemoveMember(ctx context.Context, boardID, userID string) error
@@ -125,6 +128,9 @@ type LabelRepository interface {
 	// Create создает новую метку
 	Create(ctx context.Context, label *domain.Label) error
 
+	// BatchCreate создает несколько меток в одном запросе
+	BatchCreate(ctx context.Context, labels []*domain.Label) error
+
 	// GetByID возвращает метку по ID
 	GetByID(ctx context.Context, labelID string) (*domain.Label, error)
 
@@ -148,6 +154,9 @@ type LabelRepository interface {
 
 	// CountByBoardID возвращает количество меток доски
 	CountByBoardID(ctx context.Context, boardID string) (int, error)
+
+	// CreateWithLimit создает метку с проверкой лимита в одном запросе
+	CreateWithLimit(ctx context.Context, label *domain.Label, maxCount int) error
 }
 
 // ChecklistRepository определяет интерфейс для работы с чек-листами
@@ -163,12 +172,16 @@ type ChecklistRepository interface {
 	UpdateItem(ctx context.Context, item *domain.ChecklistItem) error
 	DeleteItem(ctx context.Context, itemID, boardID string) error
 	ToggleItem(ctx context.Context, itemID, boardID string, isChecked bool) error
+	ToggleItemAtomic(ctx context.Context, itemID, boardID string) (bool, error)
 }
 
 // CardLinkRepository определяет интерфейс для работы со связями карточек
 type CardLinkRepository interface {
 	// Create создает новую связь между карточками
 	Create(ctx context.Context, link *domain.CardLink) error
+
+	// CreateVerified создает связь, проверяя существование parent card в одном запросе
+	CreateVerified(ctx context.Context, link *domain.CardLink) error
 
 	// Delete удаляет связь по ID (boardID для partition pruning)
 	Delete(ctx context.Context, linkID, boardID string) error
@@ -274,6 +287,9 @@ type UserLabelRepository interface {
 
 	// CountByUserID возвращает количество меток пользователя
 	CountByUserID(ctx context.Context, userID string) (int, error)
+
+	// CreateWithLimit создает метку с проверкой лимита в одном запросе
+	CreateWithLimit(ctx context.Context, label *domain.UserLabel, maxCount int) error
 }
 
 // BoardTemplateRepository определяет интерфейс для работы с шаблонами досок

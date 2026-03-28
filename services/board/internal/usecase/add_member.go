@@ -22,26 +22,27 @@ func NewAddMemberUseCase(boardRepo BoardRepository, memberRepo MembershipReposit
 	}
 }
 
-func (uc *AddMemberUseCase) Execute(ctx context.Context, boardID, userID, memberUserID string, role domain.Role) error {
+func (uc *AddMemberUseCase) Execute(ctx context.Context, boardID, userID, memberUserID string, role domain.Role) (*domain.Member, error) {
 	// 1. Загружаем доску
 	board, err := uc.boardRepo.GetByID(ctx, boardID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// 2. Проверка: только owner может добавлять members
 	if !board.IsOwner(userID) {
-		return domain.ErrNotOwner
+		return nil, domain.ErrNotOwner
 	}
 
 	// 3. Валидация роли
 	if !role.IsValid() {
-		return domain.ErrInvalidRole
+		return nil, domain.ErrInvalidRole
 	}
 
-	// 4. Добавляем member
-	if err := uc.memberRepo.AddMember(ctx, boardID, memberUserID, role); err != nil {
-		return err
+	// 4. Добавляем member (INSERT RETURNING — без повторного SELECT)
+	member, err := uc.memberRepo.AddMember(ctx, boardID, memberUserID, role)
+	if err != nil {
+		return nil, err
 	}
 
 	// 5. Публикуем событие
@@ -62,5 +63,5 @@ func (uc *AddMemberUseCase) Execute(ctx context.Context, boardID, userID, member
 		}
 	}()
 
-	return nil
+	return member, nil
 }

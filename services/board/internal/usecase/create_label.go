@@ -34,23 +34,14 @@ func (uc *CreateLabelUseCase) Execute(ctx context.Context, boardID, userID, name
 		return nil, domain.ErrAccessDenied
 	}
 
-	// 2. Проверка лимита меток на доску
-	count, err := uc.labelRepo.CountByBoardID(ctx, boardID)
-	if err != nil {
-		return nil, err
-	}
-	if count >= maxLabelsPerBoard {
-		return nil, domain.ErrMaxLabelsReached
-	}
-
-	// 3. Создаем метку (валидация внутри)
+	// 2. Создаем метку (валидация внутри)
 	label, err := domain.NewLabel("", boardID, name, color)
 	if err != nil {
 		return nil, err
 	}
 
-	// 4. Сохраняем
-	if err := uc.labelRepo.Create(ctx, label); err != nil {
+	// 3. Сохраняем с проверкой лимита в одном запросе (вместо COUNT + INSERT)
+	if err := uc.labelRepo.CreateWithLimit(ctx, label, maxLabelsPerBoard); err != nil {
 		return nil, err
 	}
 

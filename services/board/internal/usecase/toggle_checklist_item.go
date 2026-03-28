@@ -32,19 +32,13 @@ func (uc *ToggleChecklistItemUseCase) Execute(ctx context.Context, itemID, board
 		return false, domain.ErrAccessDenied
 	}
 
-	// 2. Получаем текущее состояние
-	item, err := uc.checklistRepo.GetItemByID(ctx, itemID, boardID)
+	// 2. Атомарно переключаем (UPDATE ... SET is_checked = NOT is_checked RETURNING — один запрос вместо двух)
+	newChecked, err := uc.checklistRepo.ToggleItemAtomic(ctx, itemID, boardID)
 	if err != nil {
 		return false, err
 	}
 
-	// 3. Инвертируем
-	newChecked := !item.IsChecked
-	if err := uc.checklistRepo.ToggleItem(ctx, itemID, boardID, newChecked); err != nil {
-		return false, err
-	}
-
-	// 4. Публикуем событие (async, non-blocking)
+	// 3. Публикуем событие (async, non-blocking)
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()

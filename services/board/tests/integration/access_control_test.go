@@ -45,7 +45,7 @@ func setupBoard(t *testing.T, db *sql.DB, withCard bool) testBoard {
 	if err := boardRepo.Create(ctx, board); err != nil {
 		t.Fatalf("Create board: %v", err)
 	}
-	if err := memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember); err != nil {
+	if _, err := memberRepo.AddMember(ctx, board.ID, memberID, domain.RoleMember); err != nil {
 		t.Fatalf("AddMember: %v", err)
 	}
 

@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 	"github.com/stretchr/testify/assert"
@@ -54,6 +53,11 @@ func (m *MockCardLinkRepository) Exists(ctx context.Context, parentID, childID, 
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *MockCardLinkRepository) CreateVerified(ctx context.Context, link *domain.CardLink) error {
+	args := m.Called(ctx, link)
+	return args.Error(0)
+}
+
 func TestLinkCards_Success(t *testing.T) {
 	cardLinkRepo := new(MockCardLinkRepository)
 	cardRepo := new(MockCardRepository)
@@ -62,15 +66,7 @@ func TestLinkCards_Success(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	cardRepo.On("GetByID", mock.Anything, "parent-123", "board-123").
-		Return(&domain.Card{
-			ID:        "parent-123",
-			ColumnID:  "col-1",
-			Title:     "Parent Card",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}, nil)
-	cardLinkRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.CardLink")).Return(nil)
+	cardLinkRepo.On("CreateVerified", mock.Anything, mock.AnythingOfType("*domain.CardLink")).Return(nil)
 	publisher.On("PublishCardLinked", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 	uc := NewLinkCardsUseCase(cardLinkRepo, cardRepo, memberRepo, publisher)
@@ -85,7 +81,6 @@ func TestLinkCards_Success(t *testing.T) {
 	assert.NotEmpty(t, link.ID)
 
 	cardLinkRepo.AssertExpectations(t)
-	cardRepo.AssertExpectations(t)
 	memberRepo.AssertExpectations(t)
 }
 
@@ -97,14 +92,6 @@ func TestLinkCards_SelfLink_Error(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	cardRepo.On("GetByID", mock.Anything, "card-123", "board-123").
-		Return(&domain.Card{
-			ID:        "card-123",
-			ColumnID:  "col-1",
-			Title:     "Card",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}, nil)
 
 	uc := NewLinkCardsUseCase(cardLinkRepo, cardRepo, memberRepo, publisher)
 	link, err := uc.Execute(context.Background(), "card-123", "card-123", "board-123", "user-123")
@@ -114,7 +101,6 @@ func TestLinkCards_SelfLink_Error(t *testing.T) {
 	assert.Nil(t, link)
 
 	memberRepo.AssertExpectations(t)
-	cardRepo.AssertExpectations(t)
 }
 
 func TestLinkCards_NonMember_Denied(t *testing.T) {
@@ -144,15 +130,7 @@ func TestLinkCards_AlreadyExists_Error(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	cardRepo.On("GetByID", mock.Anything, "parent-123", "board-123").
-		Return(&domain.Card{
-			ID:        "parent-123",
-			ColumnID:  "col-1",
-			Title:     "Parent Card",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}, nil)
-	cardLinkRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.CardLink")).
+	cardLinkRepo.On("CreateVerified", mock.Anything, mock.AnythingOfType("*domain.CardLink")).
 		Return(domain.ErrLinkAlreadyExists)
 
 	uc := NewLinkCardsUseCase(cardLinkRepo, cardRepo, memberRepo, publisher)
@@ -163,7 +141,6 @@ func TestLinkCards_AlreadyExists_Error(t *testing.T) {
 	assert.Nil(t, link)
 
 	cardLinkRepo.AssertExpectations(t)
-	cardRepo.AssertExpectations(t)
 	memberRepo.AssertExpectations(t)
 }
 
@@ -175,8 +152,8 @@ func TestLinkCards_ParentNotFound_Error(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	cardRepo.On("GetByID", mock.Anything, "parent-999", "board-123").
-		Return(nil, domain.ErrCardNotFound)
+	cardLinkRepo.On("CreateVerified", mock.Anything, mock.AnythingOfType("*domain.CardLink")).
+		Return(domain.ErrCardNotFound)
 
 	uc := NewLinkCardsUseCase(cardLinkRepo, cardRepo, memberRepo, publisher)
 	link, err := uc.Execute(context.Background(), "parent-999", "child-456", "board-123", "user-123")
@@ -185,8 +162,8 @@ func TestLinkCards_ParentNotFound_Error(t *testing.T) {
 	assert.Equal(t, domain.ErrCardNotFound, err)
 	assert.Nil(t, link)
 
+	cardLinkRepo.AssertExpectations(t)
 	memberRepo.AssertExpectations(t)
-	cardRepo.AssertExpectations(t)
 }
 
 func TestUnlinkCards_Success(t *testing.T) {

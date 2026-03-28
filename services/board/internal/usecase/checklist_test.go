@@ -81,6 +81,11 @@ func (m *MockChecklistRepository) ToggleItem(ctx context.Context, itemID, boardI
 	return args.Error(0)
 }
 
+func (m *MockChecklistRepository) ToggleItemAtomic(ctx context.Context, itemID, boardID string) (bool, error) {
+	args := m.Called(ctx, itemID, boardID)
+	return args.Bool(0), args.Error(1)
+}
+
 func TestCreateChecklist_Success(t *testing.T) {
 	checklistRepo := new(MockChecklistRepository)
 	memberRepo := new(MockMembershipRepository)
@@ -148,15 +153,14 @@ func TestToggleChecklistItem_Success(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	checklistRepo.On("GetItemByID", mock.Anything, "item-123", "board-123").
-		Return(&domain.ChecklistItem{ID: "item-123", IsChecked: false}, nil)
-	checklistRepo.On("ToggleItem", mock.Anything, "item-123", "board-123", true).Return(nil)
+	checklistRepo.On("ToggleItemAtomic", mock.Anything, "item-123", "board-123").Return(true, nil)
 	publisher.On("PublishChecklistItemToggled", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 	uc := NewToggleChecklistItemUseCase(checklistRepo, memberRepo, publisher)
-	_, err := uc.Execute(context.Background(), "item-123", "board-123", "user-123")
+	result, err := uc.Execute(context.Background(), "item-123", "board-123", "user-123")
 
 	assert.NoError(t, err)
+	assert.True(t, result)
 
 	checklistRepo.AssertExpectations(t)
 	memberRepo.AssertExpectations(t)

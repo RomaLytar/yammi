@@ -25,7 +25,7 @@ func TestMembershipRepository_AddMember(t *testing.T) {
 
 	// Add member
 	userID := uuid.NewString()
-	err := memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
+	_, err := memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 	if err != nil {
 		t.Fatalf("Failed to add member: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestMembershipRepository_AddMember_Duplicate(t *testing.T) {
 	memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 
 	// Try to add same member again
-	err := memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
+	_, err := memberRepo.AddMember(ctx, board.ID, userID, domain.RoleMember)
 	if err != domain.ErrMemberExists {
 		t.Errorf("Expected ErrMemberExists, got %v", err)
 	}
@@ -84,7 +84,7 @@ func TestMembershipRepository_AddMember_InvalidRole(t *testing.T) {
 
 	// Try to add member with invalid role
 	userID := uuid.NewString()
-	err := memberRepo.AddMember(ctx, board.ID, userID, domain.Role("invalid"))
+	_, err := memberRepo.AddMember(ctx, board.ID, userID, domain.Role("invalid"))
 	if err != domain.ErrInvalidRole {
 		t.Errorf("Expected ErrInvalidRole, got %v", err)
 	}

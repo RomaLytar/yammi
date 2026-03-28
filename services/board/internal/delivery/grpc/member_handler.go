@@ -48,32 +48,13 @@ func (s *BoardServiceServer) AddMember(ctx context.Context, req *boardpb.AddMemb
 		return nil, status.Error(codes.InvalidArgument, "invalid role")
 	}
 
-	err := s.members.add.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetMemberUserId(), role)
+	member, err := s.members.add.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetMemberUserId(), role)
 	if err != nil {
 		return nil, mapDomainError(err)
-	}
-
-	// AddMemberUseCase не возвращает member, загружаем его отдельно
-	members, err := s.members.list.Execute(ctx, req.GetBoardId(), req.GetUserId())
-	if err != nil {
-		return nil, mapDomainError(err)
-	}
-
-	// Находим добавленного member
-	var addedMember *domain.Member
-	for _, m := range members {
-		if m.UserID == req.GetMemberUserId() {
-			addedMember = m
-			break
-		}
-	}
-
-	if addedMember == nil {
-		return nil, status.Error(codes.Internal, "member was added but not found")
 	}
 
 	return &boardpb.AddMemberResponse{
-		Member: mapMemberToProto(addedMember),
+		Member: mapMemberToProto(member),
 	}, nil
 }
 

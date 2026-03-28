@@ -196,15 +196,8 @@ func (s *BoardServiceServer) MoveCard(ctx context.Context, req *boardpb.MoveCard
 		return nil, mapDomainError(err)
 	}
 
-	// Доступ проверен в moveCard — загружаем карточки без повторного IsMember
-	cardsInColumn, err := s.cards.getAll.ExecuteAuthorized(ctx, req.GetToColumnId())
-	if err != nil {
-		return nil, mapDomainError(err)
-	}
-
 	return &boardpb.MoveCardResponse{
-		Card:          mapCardToProto(card, req.GetBoardId()),
-		CardsInColumn: mapCardsToProto(cardsInColumn, req.GetBoardId()),
+		Card: mapCardToProto(card, req.GetBoardId()),
 	}, nil
 }
 

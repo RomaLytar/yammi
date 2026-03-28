@@ -68,6 +68,16 @@ func (m *MockLabelRepository) CountByBoardID(ctx context.Context, boardID string
 	return args.Int(0), args.Error(1)
 }
 
+func (m *MockLabelRepository) BatchCreate(ctx context.Context, labels []*domain.Label) error {
+	args := m.Called(ctx, labels)
+	return args.Error(0)
+}
+
+func (m *MockLabelRepository) CreateWithLimit(ctx context.Context, label *domain.Label, maxCount int) error {
+	args := m.Called(ctx, label, maxCount)
+	return args.Error(0)
+}
+
 func TestCreateLabel_Success(t *testing.T) {
 	labelRepo := new(MockLabelRepository)
 	memberRepo := new(MockMembershipRepository)
@@ -75,8 +85,7 @@ func TestCreateLabel_Success(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	labelRepo.On("CountByBoardID", mock.Anything, "board-123").Return(5, nil)
-	labelRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Label")).Return(nil)
+	labelRepo.On("CreateWithLimit", mock.Anything, mock.AnythingOfType("*domain.Label"), 50).Return(nil)
 	publisher.On("PublishLabelCreated", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 	uc := NewCreateLabelUseCase(labelRepo, memberRepo, publisher)
@@ -118,7 +127,6 @@ func TestCreateLabel_EmptyName_Error(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	labelRepo.On("CountByBoardID", mock.Anything, "board-123").Return(5, nil)
 
 	uc := NewCreateLabelUseCase(labelRepo, memberRepo, publisher)
 	label, err := uc.Execute(context.Background(), "board-123", "user-123", "", "#ef4444")
@@ -137,7 +145,8 @@ func TestCreateLabel_MaxLabelsReached(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	labelRepo.On("CountByBoardID", mock.Anything, "board-123").Return(50, nil)
+	labelRepo.On("CreateWithLimit", mock.Anything, mock.AnythingOfType("*domain.Label"), 50).
+		Return(domain.ErrMaxLabelsReached)
 
 	uc := NewCreateLabelUseCase(labelRepo, memberRepo, publisher)
 	label, err := uc.Execute(context.Background(), "board-123", "user-123", "Bug", "#ef4444")

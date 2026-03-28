@@ -33,6 +33,32 @@ func (r *ColumnRepository) Create(ctx context.Context, column *domain.Column) er
 	return nil
 }
 
+// BatchCreate создает несколько колонок в одном запросе
+func (r *ColumnRepository) BatchCreate(ctx context.Context, columns []*domain.Column) error {
+	if len(columns) == 0 {
+		return nil
+	}
+
+	query := `INSERT INTO columns (id, board_id, title, position, created_at, updated_at) VALUES `
+	args := make([]interface{}, 0, len(columns)*6)
+
+	for i, col := range columns {
+		if i > 0 {
+			query += ", "
+		}
+		base := i * 6
+		query += fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d)", base+1, base+2, base+3, base+4, base+5, base+6)
+		args = append(args, col.ID, col.BoardID, col.Title, col.Position, col.CreatedAt, col.UpdatedAt)
+	}
+
+	_, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("batch insert columns: %w", err)
+	}
+
+	return nil
+}
+
 // GetByID возвращает колонку по ID
 func (r *ColumnRepository) GetByID(ctx context.Context, columnID string) (*domain.Column, error) {
 	query := `

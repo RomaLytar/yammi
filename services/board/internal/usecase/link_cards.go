@@ -34,20 +34,14 @@ func (uc *LinkCardsUseCase) Execute(ctx context.Context, parentID, childID, boar
 		return nil, domain.ErrAccessDenied
 	}
 
-	// 2. Проверяем что родительская карточка существует
-	_, err = uc.cardRepo.GetByID(ctx, parentID, boardID)
-	if err != nil {
-		return nil, err
-	}
-
-	// 3. Создаем связь (валидация self-link внутри domain)
+	// 2. Создаем связь (валидация self-link внутри domain)
 	link, err := domain.NewCardLink("", parentID, childID, boardID, domain.LinkTypeSubtask)
 	if err != nil {
 		return nil, err
 	}
 
-	// 4. Сохраняем (duplicate constraint в БД вернёт ErrLinkAlreadyExists)
-	if err := uc.cardLinkRepo.Create(ctx, link); err != nil {
+	// 3. Сохраняем с проверкой существования parent card в одном запросе
+	if err := uc.cardLinkRepo.CreateVerified(ctx, link); err != nil {
 		return nil, err
 	}
 

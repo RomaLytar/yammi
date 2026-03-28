@@ -11,6 +11,10 @@
 # Claude Code
 .claude/
 
+# Playwright MCP logs/screenshots
+.playwright-mcp/
+**/.playwright-mcp/
+
 # Internal guides (not for public repo)
 GUIDE.md
 guides/

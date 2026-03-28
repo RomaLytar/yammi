@@ -1,9 +1,7 @@
-// Source of truth: services/board/api/proto/v1/board.proto
-// Копия для генерации Go-клиента в api-gateway (отдельный Go module).
 syntax = "proto3";
 
 package board.v1;
-option go_package = "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board;boardpb";
+option go_package = "github.com/RomaLytar/yammi/services/board/api/proto/v1;boardpb";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
@@ -86,6 +84,25 @@ service BoardService {
   rpc UpdateAutomationRule(UpdateAutomationRuleRequest) returns (UpdateAutomationRuleResponse);
   rpc DeleteAutomationRule(DeleteAutomationRuleRequest) returns (google.protobuf.Empty);
   rpc GetAutomationHistory(GetAutomationHistoryRequest) returns (GetAutomationHistoryResponse);
+
+  // Board Settings operations
+  rpc GetBoardSettings(GetBoardSettingsRequest) returns (GetBoardSettingsResponse);
+  rpc UpdateBoardSettings(UpdateBoardSettingsRequest) returns (UpdateBoardSettingsResponse);
+
+  // User Label operations
+  rpc CreateUserLabel(CreateUserLabelRequest) returns (CreateUserLabelResponse);
+  rpc ListUserLabels(ListUserLabelsRequest) returns (ListUserLabelsResponse);
+  rpc UpdateUserLabel(UpdateUserLabelRequest) returns (UpdateUserLabelResponse);
+  rpc DeleteUserLabel(DeleteUserLabelRequest) returns (google.protobuf.Empty);
+
+  // Available Labels (board labels + user labels combined)
+  rpc ListAvailableLabels(ListAvailableLabelsRequest) returns (ListAvailableLabelsResponse);
+
+  // Template operations
+  rpc CreateBoardTemplate(CreateBoardTemplateRequest) returns (CreateBoardTemplateResponse);
+  rpc ListBoardTemplates(ListBoardTemplatesRequest) returns (ListBoardTemplatesResponse);
+  rpc DeleteBoardTemplate(DeleteBoardTemplateRequest) returns (google.protobuf.Empty);
+  rpc CreateBoardFromTemplate(CreateBoardFromTemplateRequest) returns (CreateBoardResponse);
 }
 
 // ============================================================================
@@ -898,4 +915,153 @@ message GetAutomationHistoryRequest {
 
 message GetAutomationHistoryResponse {
   repeated AutomationExecution executions = 1;
+}
+
+// ============================================================================
+// Board Settings Messages
+// ============================================================================
+
+message BoardSettings {
+  string board_id = 1;
+  bool use_board_labels_only = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+message GetBoardSettingsRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message GetBoardSettingsResponse {
+  BoardSettings settings = 1;
+}
+
+message UpdateBoardSettingsRequest {
+  string board_id = 1;
+  string user_id = 2;
+  bool use_board_labels_only = 3;
+}
+
+message UpdateBoardSettingsResponse {
+  BoardSettings settings = 1;
+}
+
+// ============================================================================
+// User Label Messages
+// ============================================================================
+
+message UserLabel {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  string color = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message CreateUserLabelRequest {
+  string user_id = 1;
+  string name = 2;
+  string color = 3;
+}
+
+message CreateUserLabelResponse {
+  UserLabel label = 1;
+}
+
+message ListUserLabelsRequest {
+  string user_id = 1;
+}
+
+message ListUserLabelsResponse {
+  repeated UserLabel labels = 1;
+}
+
+message UpdateUserLabelRequest {
+  string label_id = 1;
+  string user_id = 2;
+  string name = 3;
+  string color = 4;
+}
+
+message UpdateUserLabelResponse {
+  UserLabel label = 1;
+}
+
+message DeleteUserLabelRequest {
+  string label_id = 1;
+  string user_id = 2;
+}
+
+// ============================================================================
+// Available Labels Messages
+// ============================================================================
+
+message ListAvailableLabelsRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message ListAvailableLabelsResponse {
+  repeated Label board_labels = 1;
+  repeated UserLabel user_labels = 2;
+  bool use_board_labels_only = 3;
+}
+
+// ============================================================================
+// Template Messages
+// ============================================================================
+
+message BoardColumnTemplateData {
+  string title = 1;
+  int32 position = 2;
+}
+
+message LabelTemplateData {
+  string name = 1;
+  string color = 2;
+}
+
+message BoardTemplate {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  string description = 4;
+  repeated BoardColumnTemplateData columns_data = 5;
+  repeated LabelTemplateData labels_data = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// Board Template requests/responses
+
+message CreateBoardTemplateRequest {
+  string user_id = 1;
+  string name = 2;
+  string description = 3;
+  repeated BoardColumnTemplateData columns_data = 4;
+  repeated LabelTemplateData labels_data = 5;
+}
+
+message CreateBoardTemplateResponse {
+  BoardTemplate template = 1;
+}
+
+message ListBoardTemplatesRequest {
+  string user_id = 1;
+}
+
+message ListBoardTemplatesResponse {
+  repeated BoardTemplate templates = 1;
+}
+
+message DeleteBoardTemplateRequest {
+  string template_id = 1;
+  string user_id = 2;
+}
+
+message CreateBoardFromTemplateRequest {
+  string template_id = 1;
+  string title = 2;
+  string user_id = 3;
 }

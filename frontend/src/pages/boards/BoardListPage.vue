@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import { registerHandler, unregisterHandler } from '@/services/realtimeService'
 import type { Board } from '@/types/domain'
 import type { BoardDeletedData, MemberAddedData, MemberRemovedData } from '@/types/events'
-import CreateBoardModal from '@/components/board/CreateBoardModal.vue'
+import CreateBoardModal, { type PresetTemplate } from '@/components/board/CreateBoardModal.vue'
 import BoardDetailsModal from '@/components/board/BoardDetailsModal.vue'
 import MembersModal from '@/components/board/MembersModal.vue'
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
@@ -164,14 +164,33 @@ async function handleCreateBoard(data: { title: string; description: string }) {
   }
 }
 
-async function handleCreateFromTemplate(data: { templateId: string; title: string }) {
+async function handleCreateFromTemplate(data: { templateId: string; title: string; description: string }) {
   try {
     creatingBoard.value = true
     const board = await boardsApi.createBoardFromTemplate(data.templateId, data.title)
+    if (data.description) {
+      await boardsApi.updateBoard(board.id, { title: board.title, description: data.description, version: board.version })
+    }
     showCreateModal.value = false
     router.push(`/boards/${board.id}`)
   } catch (error) {
     console.error('Failed to create board from template:', error)
+  } finally {
+    creatingBoard.value = false
+  }
+}
+
+async function handleCreateFromPreset(data: { preset: PresetTemplate; title: string; description: string }) {
+  try {
+    creatingBoard.value = true
+    const board = await boardsStore.createBoard(data.title, data.description)
+    for (let i = 0; i < data.preset.columns.length; i++) {
+      await boardsApi.createColumn(board.id, { title: data.preset.columns[i], position: i })
+    }
+    showCreateModal.value = false
+    router.push(`/boards/${board.id}`)
+  } catch (error) {
+    console.error('Failed to create board from preset:', error)
   } finally {
     creatingBoard.value = false
   }
@@ -386,7 +405,7 @@ async function handleDeleteBoard() {
     </div>
 
     <!-- Modals -->
-    <CreateBoardModal v-if="showCreateModal" @close="showCreateModal = false" @create="handleCreateBoard" @createFromTemplate="handleCreateFromTemplate" />
+    <CreateBoardModal v-if="showCreateModal" @close="showCreateModal = false" @create="handleCreateBoard" @createFromTemplate="handleCreateFromTemplate" @createFromPreset="handleCreateFromPreset" />
 
     <ConfirmModal
       v-if="deleteTarget"

@@ -154,8 +154,6 @@ func main() {
 	automationRuleRepo := postgres.NewAutomationRuleRepository(db)
 	boardSettingsRepo := postgres.NewBoardSettingsRepository(db)
 	userLabelRepo := postgres.NewUserLabelRepository(db)
-	cardTemplateRepo := postgres.NewCardTemplateRepository(db)
-	columnTemplateRepo := postgres.NewColumnTemplateRepository(db)
 	boardTemplateRepo := postgres.NewBoardTemplateRepository(db)
 
 	// Membership repository: Redis cache decorator over PostgreSQL.
@@ -275,14 +273,6 @@ func main() {
 	)
 
 	templateHandler := delivery.NewTemplateHandler(
-		usecase.NewCreateCardTemplateUseCase(cardTemplateRepo, memberRepo),
-		usecase.NewListCardTemplatesUseCase(cardTemplateRepo, memberRepo),
-		usecase.NewDeleteCardTemplateUseCase(cardTemplateRepo, memberRepo),
-		usecase.NewCreateCardFromTemplateUseCase(cardTemplateRepo, cardRepo, memberRepo, checklistRepo, labelRepo, boardRepo),
-		usecase.NewCreateColumnTemplateUseCase(columnTemplateRepo, memberRepo),
-		usecase.NewListColumnTemplatesUseCase(columnTemplateRepo, memberRepo),
-		usecase.NewDeleteColumnTemplateUseCase(columnTemplateRepo, memberRepo),
-		usecase.NewCreateColumnsFromTemplateUseCase(columnTemplateRepo, columnRepo, memberRepo, boardRepo),
 		usecase.NewCreateBoardTemplateUseCase(boardTemplateRepo),
 		usecase.NewListBoardTemplatesUseCase(boardTemplateRepo),
 		usecase.NewDeleteBoardTemplateUseCase(boardTemplateRepo),

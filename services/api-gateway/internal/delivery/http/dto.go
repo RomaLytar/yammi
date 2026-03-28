@@ -244,7 +244,48 @@ type automationExecutionResponse struct {
 	ExecutedAt     string `json:"executed_at"`
 }
 
+// --- Board Settings responses ---
+
+type boardSettingsResponse struct {
+	BoardID            string `json:"board_id"`
+	UseBoardLabelsOnly bool   `json:"use_board_labels_only"`
+	CreatedAt          string `json:"created_at"`
+	UpdatedAt          string `json:"updated_at"`
+}
+
+// --- User Label responses ---
+
+type userLabelResponse struct {
+	ID        string `json:"id"`
+	UserID    string `json:"user_id"`
+	Name      string `json:"name"`
+	Color     string `json:"color"`
+	CreatedAt string `json:"created_at"`
+}
+
 // --- Generic responses ---
+
+// Template DTOs
+type boardColumnTemplateDataResponse struct {
+	Title    string `json:"title"`
+	Position int32  `json:"position"`
+}
+
+type labelTemplateDataResponse struct {
+	Name  string `json:"name"`
+	Color string `json:"color"`
+}
+
+type boardTemplateResponse struct {
+	ID          string                            `json:"id"`
+	UserID      string                            `json:"user_id"`
+	Name        string                            `json:"name"`
+	Description string                            `json:"description"`
+	ColumnsData []boardColumnTemplateDataResponse `json:"columns_data"`
+	LabelsData  []labelTemplateDataResponse       `json:"labels_data"`
+	CreatedAt   string                            `json:"created_at"`
+	UpdatedAt   string                            `json:"updated_at"`
+}
 
 type statusResponse struct {
 	Status string `json:"status"`

@@ -318,6 +318,33 @@ func mapChecklistItemFromProto(pb *boardpb.ChecklistItem) checklistItemResponse 
 	}
 }
 
+func mapBoardSettingsFromProto(pb *boardpb.BoardSettings) boardSettingsResponse {
+	return boardSettingsResponse{
+		BoardID:            pb.BoardId,
+		UseBoardLabelsOnly: pb.UseBoardLabelsOnly,
+		CreatedAt:          pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt:          pb.UpdatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+func mapUserLabelFromProto(pb *boardpb.UserLabel) userLabelResponse {
+	return userLabelResponse{
+		ID:        pb.Id,
+		UserID:    pb.UserId,
+		Name:      pb.Name,
+		Color:     pb.Color,
+		CreatedAt: pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+func mapUserLabelsFromProto(pbs []*boardpb.UserLabel) []userLabelResponse {
+	labels := make([]userLabelResponse, len(pbs))
+	for i, pb := range pbs {
+		labels[i] = mapUserLabelFromProto(pb)
+	}
+	return labels
+}
+
 func parseIntQueryParam(r *http.Request, key string, defaultValue int) int {
 	val := r.URL.Query().Get(key)
 	if val == "" {
@@ -328,4 +355,49 @@ func parseIntQueryParam(r *http.Request, key string, defaultValue int) int {
 		return defaultValue
 	}
 	return n
+}
+
+// ============================================================================
+// Template Mappers
+// ============================================================================
+
+func mapBoardTemplateFromProto(t *boardpb.BoardTemplate) boardTemplateResponse {
+	var columnsData []boardColumnTemplateDataResponse
+	for _, col := range t.ColumnsData {
+		columnsData = append(columnsData, boardColumnTemplateDataResponse{
+			Title:    col.Title,
+			Position: col.Position,
+		})
+	}
+	if columnsData == nil {
+		columnsData = []boardColumnTemplateDataResponse{}
+	}
+	var labelsData []labelTemplateDataResponse
+	for _, lbl := range t.LabelsData {
+		labelsData = append(labelsData, labelTemplateDataResponse{
+			Name:  lbl.Name,
+			Color: lbl.Color,
+		})
+	}
+	if labelsData == nil {
+		labelsData = []labelTemplateDataResponse{}
+	}
+	return boardTemplateResponse{
+		ID:          t.Id,
+		UserID:      t.UserId,
+		Name:        t.Name,
+		Description: t.Description,
+		ColumnsData: columnsData,
+		LabelsData:  labelsData,
+		CreatedAt:   t.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:   t.UpdatedAt.AsTime().Format("2006-01-02T15:04:05Z"),
+	}
+}
+
+func mapBoardTemplatesFromProto(templates []*boardpb.BoardTemplate) []boardTemplateResponse {
+	result := make([]boardTemplateResponse, len(templates))
+	for i, t := range templates {
+		result[i] = mapBoardTemplateFromProto(t)
+	}
+	return result
 }

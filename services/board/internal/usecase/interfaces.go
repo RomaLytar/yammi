@@ -246,6 +246,45 @@ type AutomationRuleRepository interface {
 	ListExecutionsByRuleID(ctx context.Context, ruleID, boardID string, limit int) ([]*domain.AutomationExecution, error)
 }
 
+// BoardSettingsRepository определяет интерфейс для работы с настройками доски
+type BoardSettingsRepository interface {
+	// GetByBoardID возвращает настройки доски (дефолтные, если не найдены)
+	GetByBoardID(ctx context.Context, boardID string) (*domain.BoardSettings, error)
+
+	// Upsert создает или обновляет настройки доски
+	Upsert(ctx context.Context, settings *domain.BoardSettings) error
+}
+
+// UserLabelRepository определяет интерфейс для работы с пользовательскими метками
+type UserLabelRepository interface {
+	// Create создает новую пользовательскую метку
+	Create(ctx context.Context, label *domain.UserLabel) error
+
+	// GetByID возвращает метку по ID
+	GetByID(ctx context.Context, labelID string) (*domain.UserLabel, error)
+
+	// ListByUserID возвращает все метки пользователя
+	ListByUserID(ctx context.Context, userID string) ([]*domain.UserLabel, error)
+
+	// Update обновляет метку
+	Update(ctx context.Context, label *domain.UserLabel) error
+
+	// Delete удаляет метку по ID
+	Delete(ctx context.Context, labelID string) error
+
+	// CountByUserID возвращает количество меток пользователя
+	CountByUserID(ctx context.Context, userID string) (int, error)
+}
+
+// BoardTemplateRepository определяет интерфейс для работы с шаблонами досок
+type BoardTemplateRepository interface {
+	Create(ctx context.Context, t *domain.BoardTemplate) error
+	GetByID(ctx context.Context, id string) (*domain.BoardTemplate, error)
+	ListByUserID(ctx context.Context, userID string) ([]*domain.BoardTemplate, error)
+	Update(ctx context.Context, t *domain.BoardTemplate) error
+	Delete(ctx context.Context, id string) error
+}
+
 // FileStorage определяет интерфейс для работы с файловым хранилищем
 type FileStorage interface {
 	// GenerateUploadURL генерирует pre-signed URL для загрузки файла

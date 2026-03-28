@@ -130,6 +130,25 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("DELETE /api/v1/boards/{boardId}/automations/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteAutomationRule))))
 	mux.Handle("GET /api/v1/boards/{boardId}/automations/{id}/history", rateLimit(requireAuth(http.HandlerFunc(board.GetAutomationHistory))))
 
+	// Board Settings routes
+	mux.Handle("GET /api/v1/boards/{id}/settings", rateLimit(requireAuth(http.HandlerFunc(board.GetBoardSettings))))
+	mux.Handle("PUT /api/v1/boards/{id}/settings", rateLimit(requireAuth(http.HandlerFunc(board.UpdateBoardSettings))))
+
+	// User Label routes
+	mux.Handle("POST /api/v1/user-labels", rateLimit(requireAuth(http.HandlerFunc(board.CreateUserLabel))))
+	mux.Handle("GET /api/v1/user-labels", rateLimit(requireAuth(http.HandlerFunc(board.ListUserLabels))))
+	mux.Handle("PUT /api/v1/user-labels/{id}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateUserLabel))))
+	mux.Handle("DELETE /api/v1/user-labels/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteUserLabel))))
+
+	// Available Labels route
+	mux.Handle("GET /api/v1/boards/{id}/available-labels", rateLimit(requireAuth(http.HandlerFunc(board.GetAvailableLabels))))
+
+	// Board Template routes
+	mux.Handle("POST /api/v1/board-templates", rateLimit(requireAuth(http.HandlerFunc(board.CreateBoardTemplate))))
+	mux.Handle("GET /api/v1/board-templates", rateLimit(requireAuth(http.HandlerFunc(board.ListBoardTemplates))))
+	mux.Handle("DELETE /api/v1/board-templates/{id}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteBoardTemplate))))
+	mux.Handle("POST /api/v1/boards/from-template", rateLimit(requireAuth(http.HandlerFunc(board.CreateBoardFromTemplate))))
+
 	// Comment routes
 	comment := NewCommentHandler(clients.CommentClient)
 	mux.Handle("POST /api/v1/cards/{id}/comments", rateLimit(requireAuth(http.HandlerFunc(comment.CreateComment))))

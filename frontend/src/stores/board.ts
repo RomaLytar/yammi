@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Board, Column, Card, Label, BoardSettings, UserLabel, CardTemplate } from '@/types/domain'
+import type { Board, Column, Card, Label, BoardSettings, UserLabel } from '@/types/domain'
 import type { MemberResponse } from '@/types/api'
 import * as boardsApi from '@/api/boards'
 import { ApiError } from '@/api/client'
@@ -21,7 +21,6 @@ export const useBoardStore = defineStore('board', () => {
   const labels = ref<Label[]>([])
   const boardSettings = ref<BoardSettings | null>(null)
   const globalLabels = ref<UserLabel[]>([])
-  const cardTemplates = ref<CardTemplate[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -41,7 +40,7 @@ export const useBoardStore = defineStore('board', () => {
       buildMemberProfiles()
 
       // Загружаем метки доски (board + global) и настройки
-      await Promise.all([fetchAvailableLabels(id), fetchCardTemplates(id)])
+      await fetchAvailableLabels(id)
 
       // Загружаем карточки для каждой колонки
       await Promise.all(
@@ -145,15 +144,6 @@ export const useBoardStore = defineStore('board', () => {
       }
       globalLabels.value = []
       boardSettings.value = { boardId: id, useBoardLabelsOnly: false }
-    }
-  }
-
-  async function fetchCardTemplates(id: string): Promise<void> {
-    try {
-      cardTemplates.value = await boardsApi.listCardTemplates(id)
-    } catch (err) {
-      console.error('Failed to load card templates:', err)
-      cardTemplates.value = []
     }
   }
 
@@ -431,7 +421,6 @@ export const useBoardStore = defineStore('board', () => {
     labels.value = []
     boardSettings.value = null
     globalLabels.value = []
-    cardTemplates.value = []
     error.value = null
   }
 
@@ -443,7 +432,6 @@ export const useBoardStore = defineStore('board', () => {
     labels,
     boardSettings,
     globalLabels,
-    cardTemplates,
     allAvailableLabels,
     loading,
     error,
@@ -451,7 +439,6 @@ export const useBoardStore = defineStore('board', () => {
     fetchBoard,
     fetchLabels,
     fetchAvailableLabels,
-    fetchCardTemplates,
     updateBoardInfo,
     createColumn,
     updateColumn,

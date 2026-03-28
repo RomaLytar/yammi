@@ -366,31 +366,6 @@ export interface ErrorResponse {
 
 // --- Templates ---
 
-export interface CardTemplateResponse {
-  id: string
-  board_id: string
-  user_id: string
-  name: string
-  title: string
-  description: string
-  priority: string
-  task_type: string
-  checklist_data: { title: string; items: string[] }[]
-  label_ids: string[]
-  created_at: string
-  updated_at: string
-}
-
-export interface ColumnTemplateResponse {
-  id: string
-  board_id: string
-  user_id: string
-  name: string
-  columns_data: { title: string; position: number }[]
-  created_at: string
-  updated_at: string
-}
-
 export interface BoardTemplateResponse {
   id: string
   user_id: string

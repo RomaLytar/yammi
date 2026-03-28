@@ -19,8 +19,6 @@ import EditCardModal from '@/components/board/EditCardModal.vue'
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
-import BaseModal from '@/components/shared/BaseModal.vue'
-import TemplateManager from '@/components/board/TemplateManager.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,7 +33,6 @@ const showCreateColumnModal = ref(false)
 const showCreateCardModal = ref(false)
 const showEditCardModal = ref(false)
 const showConfirmDeleteColumn = ref(false)
-const showTemplateManager = ref(false)
 const showBulkDeleteCards = ref(false)
 const activeColumnId = ref<string | null>(null)
 const activeCardId = ref<string | null>(null)

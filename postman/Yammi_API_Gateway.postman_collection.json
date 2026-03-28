@@ -3825,6 +3825,465 @@
 						}
 					],
 					"description": "Управление правилами автоматизации доски."
+				},
+				{
+					"name": "Board Settings",
+					"item": [
+						{
+							"name": "Get Board Settings",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id/settings",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":id",
+										"settings"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Получить настройки доски."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Board Settings",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"use_board_labels_only\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id/settings",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":id",
+										"settings"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Обновить настройки доски (только owner)."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Available Labels",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id/available-labels",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":id",
+										"available-labels"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Доступные метки (доска + глобальные)."
+							},
+							"response": []
+						}
+					],
+					"description": "Настройки доски и доступные метки."
+				},
+				{
+					"name": "User Labels (Global)",
+					"item": [
+						{
+							"name": "Create User Label",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Срочно\",\n\t\"color\": \"#ef4444\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/user-labels",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user-labels"
+									]
+								},
+								"description": "Создать глобальную метку."
+							},
+							"response": []
+						},
+						{
+							"name": "List User Labels",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/user-labels",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user-labels"
+									]
+								},
+								"description": "Список глобальных меток."
+							},
+							"response": []
+						},
+						{
+							"name": "Update User Label",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Важно\",\n\t\"color\": \"#f59e0b\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/user-labels/:id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user-labels",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Обновить глобальную метку."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete User Label",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/user-labels/:id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user-labels",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Удалить глобальную метку."
+							},
+							"response": []
+						}
+					],
+					"description": "Глобальные метки пользователя (видны на всех досках)."
+				},
+				{
+					"name": "Templates",
+					"item": [
+						{
+							"name": "Create Card Template",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Bug Report\",\n\t\"title\": \"[BUG] \",\n\t\"description\": \"Steps:\\n1.\\n2.\",\n\t\"priority\": \"high\",\n\t\"task_type\": \"bug\",\n\t\"checklist_data\": [],\n\t\"label_ids\": []\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id/card-templates",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":id",
+										"card-templates"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Создать шаблон карточки."
+							},
+							"response": []
+						},
+						{
+							"name": "List Card Templates",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:id/card-templates",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":id",
+										"card-templates"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Список шаблонов карточек."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Card Template",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/card-templates/:id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"card-templates",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Удалить шаблон карточки."
+							},
+							"response": []
+						},
+						{
+							"name": "Create Card From Template",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"column_id\": \"{{column_id}}\",\n\t\"position\": \"m\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/:boardId/cards/from-template",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										":boardId",
+										"cards",
+										"from-template"
+									],
+									"variable": [
+										{
+											"key": "boardId",
+											"value": "{{board_id}}"
+										}
+									]
+								},
+								"description": "Создать карточку из шаблона."
+							},
+							"response": []
+						},
+						{
+							"name": "Create Board Template",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Kanban\",\n\t\"description\": \"Standard kanban\",\n\t\"columns_data\": [{\"title\":\"Backlog\",\"position\":0},{\"title\":\"In Progress\",\"position\":1},{\"title\":\"Done\",\"position\":2}],\n\t\"labels_data\": [{\"name\":\"Bug\",\"color\":\"#ef4444\"}]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/board-templates",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"board-templates"
+									]
+								},
+								"description": "Создать шаблон доски."
+							},
+							"response": []
+						},
+						{
+							"name": "List Board Templates",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/board-templates",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"board-templates"
+									]
+								},
+								"description": "Список шаблонов досок."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Board Template",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/board-templates/:id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"board-templates",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								},
+								"description": "Удалить шаблон доски."
+							},
+							"response": []
+						},
+						{
+							"name": "Create Board From Template",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"title\": \"My New Board\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/boards/from-template",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"boards",
+										"from-template"
+									]
+								},
+								"description": "Создать доску из шаблона."
+							},
+							"response": []
+						}
+					],
+					"description": "Шаблоны карточек, колонок и досок."
 				}
 			],
 			"description": "Эндпоинты Board Service для управления досками, колонками, карточками и участниками.",

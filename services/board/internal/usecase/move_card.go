@@ -9,20 +9,22 @@ import (
 )
 
 type MoveCardUseCase struct {
-	cardRepo     CardRepository
-	boardRepo    BoardRepository
-	memberRepo   MembershipRepository
-	activityRepo ActivityRepository
-	publisher    EventPublisher
+	cardRepo            CardRepository
+	boardRepo           BoardRepository
+	memberRepo          MembershipRepository
+	activityRepo        ActivityRepository
+	publisher           EventPublisher
+	automationExecutor  *ExecuteAutomationsUseCase
 }
 
-func NewMoveCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, activityRepo ActivityRepository, publisher EventPublisher) *MoveCardUseCase {
+func NewMoveCardUseCase(cardRepo CardRepository, boardRepo BoardRepository, memberRepo MembershipRepository, activityRepo ActivityRepository, publisher EventPublisher, automationExecutor *ExecuteAutomationsUseCase) *MoveCardUseCase {
 	return &MoveCardUseCase{
-		cardRepo:     cardRepo,
-		boardRepo:    boardRepo,
-		memberRepo:   memberRepo,
-		activityRepo: activityRepo,
-		publisher:    publisher,
+		cardRepo:            cardRepo,
+		boardRepo:           boardRepo,
+		memberRepo:          memberRepo,
+		activityRepo:        activityRepo,
+		publisher:           publisher,
+		automationExecutor:  automationExecutor,
 	}
 }
 
@@ -94,6 +96,21 @@ func (uc *MoveCardUseCase) Execute(ctx context.Context, cardID, boardID, fromCol
 			slog.Error("failed to publish CardMoved", "error", err, "card_id", cardID, "board_id", boardID)
 		}
 	}()
+
+	// 8. Выполняем правила автоматизации (async, non-blocking)
+	if uc.automationExecutor != nil {
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			if err := uc.automationExecutor.Execute(ctx, boardID, cardID,
+				domain.TriggerCardMovedToColumn, map[string]string{
+					"from_column_id": fromColumnID,
+					"to_column_id":   toColumnID,
+				}); err != nil {
+				slog.Error("failed to execute automations", "error", err, "card_id", cardID, "board_id", boardID)
+			}
+		}()
+	}
 
 	return card, nil
 }

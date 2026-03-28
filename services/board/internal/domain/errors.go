@@ -92,6 +92,20 @@ var (
 	ErrMaxRulesReached        = errors.New("maximum automation rules per board reached")
 )
 
+// User Label errors
+var (
+	ErrUserLabelNotFound    = errors.New("user label not found")
+	ErrUserLabelExists      = errors.New("user label with this name already exists")
+	ErrMaxUserLabelsReached = errors.New("maximum user labels reached")
+)
+
+// Template errors
+var (
+	ErrTemplateNotFound    = errors.New("template not found")
+	ErrEmptyTemplateName   = errors.New("template name cannot be empty")
+	ErrMaxTemplatesReached = errors.New("maximum templates per board reached")
+)
+
 // Activity errors
 var (
 	ErrEmptyActorID      = errors.New("actor ID cannot be empty")

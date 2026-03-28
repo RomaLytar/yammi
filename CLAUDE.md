@@ -93,7 +93,20 @@ Cards can be linked in parent-child relationships for subtask tracking. A card c
 Board-scoped custom field definitions with types: text, number, date, dropdown. Dropdown fields have configurable options. Max 30 custom fields per board. Values are stored per card. Stored in `custom_fields` and `card_custom_field_values` tables.
 
 ### Automation Rules
-Board-scoped trigger-action rules. Trigger types: `card_moved_to_column`, `card_created`, `label_added`, `due_date_approaching`, `checklist_completed`. Action types: `set_priority`, `move_card`, `add_label`, `assign_member`, `send_notification`. Max 25 rules per board. Execution history is tracked. Stored in `automation_rules` and `automation_history` tables.
+Board-scoped trigger-action rules. Trigger types: `card_moved_to_column`, `card_created`, `label_added`, `due_date_approaching`, `checklist_completed`. Action types: `set_priority`, `move_card`, `add_label`, `assign_member`, `send_notification`. Max 25 rules per board. Execution history is tracked. Stored in `automation_rules` and `automation_history` tables. **Automation execution engine** fires matching rules async when cards are moved (wired into `MoveCardUseCase`).
+
+### Global Labels (User Labels)
+User-scoped labels visible on all user's boards. Stored in `user_labels` table (Board Service DB). Max 50 per user. `ListAvailableLabels` merges board labels + owner's global labels based on board settings.
+
+### Board Settings
+Per-board configuration stored in `board_settings` table (lazy-created on first update). Current settings: `use_board_labels_only` (boolean, default false). Owner-only for updates, member for reads.
+
+### Templates
+Three template types for reuse:
+- **Card templates** (`card_templates`): title, description, priority, task_type, checklist_data (JSONB), label_ids (UUID[]). Board-scoped or user-scoped.
+- **Column templates** (`column_templates`): columns_data (JSONB with title+position). Board-scoped or user-scoped.
+- **Board templates** (`board_templates`): columns_data + labels_data (JSONB). User-scoped.
+Create-from-template flows build cards/columns/boards from saved templates.
 
 ## Clean Architecture (per service)
 
@@ -129,6 +142,9 @@ The gRPC handler in Board Service is decomposed into 10 domain-specific sub-hand
 | `ChecklistHandler` | Checklists | 8 |
 | `CustomFieldHandler` | Custom fields | 6 |
 | `AutomationHandler` | Automation rules | 5 |
+| `BoardSettingsHandler` | Board settings | 2 |
+| `UserLabelHandler` | Global user labels + available labels | 5 |
+| `TemplateHandler` | Card/column/board templates | 12 |
 
 Each sub-handler has its own struct + constructor in the corresponding `*_handler.go` file. The main `NewBoardServiceServer()` takes 10 sub-handler params instead of 52 positional args. Methods remain on `*BoardServiceServer` (required by gRPC interface) but access deps through sub-handlers (e.g., `s.cards.create.Execute(...)`).
 
@@ -269,9 +285,31 @@ TEST_DATABASE_URL="postgres://yammi:yammi@localhost:5432/board_test?sslmode=disa
 - `DELETE /api/v1/boards/:boardId/automations/:ruleId` — delete rule
 - `GET    /api/v1/boards/:boardId/automations/:ruleId/history` — get rule execution history
 
+### Board Settings (3 routes)
+- `GET    /api/v1/boards/:boardId/settings` — get board settings
+- `PUT    /api/v1/boards/:boardId/settings` — update board settings (owner only)
+- `GET    /api/v1/boards/:boardId/available-labels` — get merged board + global labels
+
+### User Labels / Global (4 routes)
+- `POST   /api/v1/user-labels` — create global label
+- `GET    /api/v1/user-labels` — list user's global labels
+- `PUT    /api/v1/user-labels/:id` — update global label
+- `DELETE /api/v1/user-labels/:id` — delete global label
+
+### Templates (12 routes)
+- `POST/GET    /api/v1/boards/:boardId/card-templates` — create/list card templates
+- `DELETE      /api/v1/card-templates/:id` — delete card template
+- `POST        /api/v1/boards/:boardId/cards/from-template` — create card from template
+- `POST/GET    /api/v1/boards/:boardId/column-templates` — create/list column templates
+- `DELETE      /api/v1/column-templates/:id` — delete column template
+- `POST        /api/v1/boards/:boardId/columns/from-template` — create columns from template
+- `POST/GET    /api/v1/board-templates` — create/list board templates
+- `DELETE      /api/v1/board-templates/:id` — delete board template
+- `POST        /api/v1/boards/from-template` — create board from template
+
 ## Migrations
 
-Board Service migrations: `services/board/migrations/` — files `000001_init.up.sql` through `000012_*.up.sql`.
+Board Service migrations: `services/board/migrations/` — files `000001_init.up.sql` through `000015_*.up.sql`.
 
 Key migrations for new features:
 - `000007` — Labels table and card_labels junction table
@@ -280,6 +318,9 @@ Key migrations for new features:
 - `000010` — Custom fields definitions and card_custom_field_values tables
 - `000011` — Automation rules and automation_history tables
 - `000012` — Card metadata columns (due_date, priority, task_type)
+- `000013` — Optimize indexes
+- `000014` — Board settings + user labels (global labels)
+- `000015` — Templates (card_templates, column_templates, board_templates)
 
 ## Access Control
 
@@ -290,3 +331,6 @@ Feature-specific authorization rules (enforced in usecase layer):
 - **Card Links**: member for link/unlink/view
 - **Custom Fields**: owner-only for field definitions (create/update/delete); member for setting values and viewing
 - **Automation Rules**: owner-only for CRUD (create/update/delete); member for list and history viewing
+- **Board Settings**: owner-only for update; member for read
+- **User Labels**: user owns their own labels (no board membership check)
+- **Templates**: member check for board-scoped templates; ownership check for delete

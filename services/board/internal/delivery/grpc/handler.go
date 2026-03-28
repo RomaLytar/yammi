@@ -9,16 +9,19 @@ import (
 type BoardServiceServer struct {
 	boardpb.UnimplementedBoardServiceServer
 
-	boards       BoardCoreHandler
-	columns      ColumnHandler
-	cards        CardHandler
-	members      MemberHandler
-	attachments  AttachmentHandler
-	labels       LabelHandler
-	cardLinks    CardLinkHandler
-	checklists   ChecklistHandler
-	customFields CustomFieldHandler
-	automations  AutomationHandler
+	boards        BoardCoreHandler
+	columns       ColumnHandler
+	cards         CardHandler
+	members       MemberHandler
+	attachments   AttachmentHandler
+	labels        LabelHandler
+	cardLinks     CardLinkHandler
+	checklists    ChecklistHandler
+	customFields  CustomFieldHandler
+	automations   AutomationHandler
+	boardSettings BoardSettingsHandler
+	userLabels    UserLabelHandler
+	templates     TemplateHandler
 }
 
 // NewBoardServiceServer создает gRPC сервер с доменными суб-хендлерами
@@ -33,18 +36,24 @@ func NewBoardServiceServer(
 	checklists ChecklistHandler,
 	customFields CustomFieldHandler,
 	automations AutomationHandler,
+	boardSettings BoardSettingsHandler,
+	userLabels UserLabelHandler,
+	templates TemplateHandler,
 ) *BoardServiceServer {
 	return &BoardServiceServer{
-		boards:       boards,
-		columns:      columns,
-		cards:        cards,
-		members:      members,
-		attachments:  attachments,
-		labels:       labels,
-		cardLinks:    cardLinks,
-		checklists:   checklists,
-		customFields: customFields,
-		automations:  automations,
+		boards:        boards,
+		columns:       columns,
+		cards:         cards,
+		members:       members,
+		attachments:   attachments,
+		labels:        labels,
+		cardLinks:     cardLinks,
+		checklists:    checklists,
+		customFields:  customFields,
+		automations:   automations,
+		boardSettings: boardSettings,
+		userLabels:    userLabels,
+		templates:     templates,
 	}
 }
 

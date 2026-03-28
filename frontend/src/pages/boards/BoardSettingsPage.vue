@@ -10,6 +10,7 @@ import type { Label, UserLabel, AutomationRule } from '@/types/domain'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
+import TemplateManager from '@/components/board/TemplateManager.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,7 +20,7 @@ const authStore = useAuthStore()
 const boardId = route.params.boardId as string
 
 // --- Tabs ---
-type Tab = 'labels' | 'members' | 'automations' | 'settings'
+type Tab = 'labels' | 'members' | 'automations' | 'templates' | 'settings'
 const activeTab = ref<Tab>('labels')
 
 // --- Loading ---
@@ -512,6 +513,16 @@ function goBack() {
         </button>
         <button
           class="bsp-tab"
+          :class="{ 'bsp-tab--active': activeTab === 'templates' }"
+          @click="activeTab = 'templates'"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M7 7h10M7 12h10M7 17h6" />
+          </svg>
+          Шаблоны
+        </button>
+        <button
+          class="bsp-tab"
           :class="{ 'bsp-tab--active': activeTab === 'settings' }"
           @click="activeTab = 'settings'"
         >
@@ -852,6 +863,11 @@ function goBack() {
             </BaseButton>
           </div>
         </div>
+      </div>
+
+      <!-- Tab: Templates -->
+      <div v-if="activeTab === 'templates'" class="bsp-panel">
+        <TemplateManager />
       </div>
 
       <!-- Tab: Settings -->

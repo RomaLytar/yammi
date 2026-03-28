@@ -190,31 +190,6 @@ export interface NotificationSettings {
   realtimeEnabled: boolean
 }
 
-export interface CardTemplate {
-  id: string
-  boardId: string
-  userId: string
-  name: string
-  title: string
-  description: string
-  priority: Priority
-  taskType: TaskType
-  checklistData: { title: string; items: string[] }[]
-  labelIds: string[]
-  createdAt: string
-  updatedAt: string
-}
-
-export interface ColumnTemplate {
-  id: string
-  boardId: string
-  userId: string
-  name: string
-  columnsData: { title: string; position: number }[]
-  createdAt: string
-  updatedAt: string
-}
-
 export interface BoardTemplate {
   id: string
   userId: string

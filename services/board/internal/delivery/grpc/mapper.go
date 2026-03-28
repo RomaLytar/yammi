@@ -349,6 +349,72 @@ func mapAutomationExecutionsToProto(executions []*domain.AutomationExecution) []
 	return result
 }
 
+func mapBoardSettingsToProto(s *domain.BoardSettings) *boardpb.BoardSettings {
+	return &boardpb.BoardSettings{
+		BoardId:            s.BoardID,
+		UseBoardLabelsOnly: s.UseBoardLabelsOnly,
+		CreatedAt:          timestamppb.New(s.CreatedAt),
+		UpdatedAt:          timestamppb.New(s.UpdatedAt),
+	}
+}
+
+func mapUserLabelToProto(l *domain.UserLabel) *boardpb.UserLabel {
+	return &boardpb.UserLabel{
+		Id:        l.ID,
+		UserId:    l.UserID,
+		Name:      l.Name,
+		Color:     l.Color,
+		CreatedAt: timestamppb.New(l.CreatedAt),
+	}
+}
+
+func mapUserLabelsToProto(labels []*domain.UserLabel) []*boardpb.UserLabel {
+	result := make([]*boardpb.UserLabel, len(labels))
+	for i, l := range labels {
+		result[i] = mapUserLabelToProto(l)
+	}
+	return result
+}
+
+// ============================================================================
+// Template Mappers
+// ============================================================================
+
+func mapBoardTemplateToProto(t *domain.BoardTemplate) *boardpb.BoardTemplate {
+	var columnsData []*boardpb.BoardColumnTemplateData
+	for _, col := range t.ColumnsData {
+		columnsData = append(columnsData, &boardpb.BoardColumnTemplateData{
+			Title:    col.Title,
+			Position: int32(col.Position),
+		})
+	}
+	var labelsData []*boardpb.LabelTemplateData
+	for _, lbl := range t.LabelsData {
+		labelsData = append(labelsData, &boardpb.LabelTemplateData{
+			Name:  lbl.Name,
+			Color: lbl.Color,
+		})
+	}
+	return &boardpb.BoardTemplate{
+		Id:          t.ID,
+		UserId:      t.UserID,
+		Name:        t.Name,
+		Description: t.Description,
+		ColumnsData: columnsData,
+		LabelsData:  labelsData,
+		CreatedAt:   timestamppb.New(t.CreatedAt),
+		UpdatedAt:   timestamppb.New(t.UpdatedAt),
+	}
+}
+
+func mapBoardTemplatesToProto(templates []*domain.BoardTemplate) []*boardpb.BoardTemplate {
+	result := make([]*boardpb.BoardTemplate, len(templates))
+	for i, t := range templates {
+		result[i] = mapBoardTemplateToProto(t)
+	}
+	return result
+}
+
 // ============================================================================
 // Error Mapping (domain errors → gRPC codes)
 // ============================================================================
@@ -366,7 +432,9 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrChecklistItemNotFound) ||
 		errors.Is(err, domain.ErrCustomFieldNotFound) ||
 		errors.Is(err, domain.ErrCustomFieldValueNotFound) ||
-		errors.Is(err, domain.ErrAutomationRuleNotFound) {
+		errors.Is(err, domain.ErrAutomationRuleNotFound) ||
+		errors.Is(err, domain.ErrUserLabelNotFound) ||
+		errors.Is(err, domain.ErrTemplateNotFound) {
 		return status.Error(codes.NotFound, err.Error())
 	}
 
@@ -401,15 +469,18 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrInvalidFieldValue) ||
 		errors.Is(err, domain.ErrEmptyRuleName) ||
 		errors.Is(err, domain.ErrInvalidTriggerType) ||
-		errors.Is(err, domain.ErrInvalidActionType) {
+		errors.Is(err, domain.ErrInvalidActionType) ||
+		errors.Is(err, domain.ErrEmptyTemplateName) {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	// ResourceExhausted errors
 	if errors.Is(err, domain.ErrMaxAttachmentsReached) ||
 		errors.Is(err, domain.ErrMaxLabelsReached) ||
+		errors.Is(err, domain.ErrMaxUserLabelsReached) ||
 		errors.Is(err, domain.ErrMaxCustomFieldsReached) ||
-		errors.Is(err, domain.ErrMaxRulesReached) {
+		errors.Is(err, domain.ErrMaxRulesReached) ||
+		errors.Is(err, domain.ErrMaxTemplatesReached) {
 		return status.Error(codes.ResourceExhausted, err.Error())
 	}
 
@@ -418,7 +489,8 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrLabelExists) ||
 		errors.Is(err, domain.ErrLabelAlreadyOnCard) ||
 		errors.Is(err, domain.ErrLinkAlreadyExists) ||
-		errors.Is(err, domain.ErrCustomFieldExists) {
+		errors.Is(err, domain.ErrCustomFieldExists) ||
+		errors.Is(err, domain.ErrUserLabelExists) {
 		return status.Error(codes.AlreadyExists, err.Error())
 	}
 

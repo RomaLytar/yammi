@@ -119,6 +119,7 @@ func runMigrationsRaw(db *sql.DB) {
 		"../../migrations/000011_custom_fields.up.sql",
 		"../../migrations/000012_automation_rules.up.sql",
 		"../../migrations/000013_optimize_indexes.up.sql",
+		"../../migrations/000014_board_settings_user_labels.up.sql",
 	}
 
 	for _, path := range migrationFiles {

@@ -20,8 +20,8 @@ func (m *MockAutomationRuleRepository) Create(ctx context.Context, rule *domain.
 	return args.Error(0)
 }
 
-func (m *MockAutomationRuleRepository) GetByID(ctx context.Context, ruleID string) (*domain.AutomationRule, error) {
-	args := m.Called(ctx, ruleID)
+func (m *MockAutomationRuleRepository) GetByID(ctx context.Context, ruleID, boardID string) (*domain.AutomationRule, error) {
+	args := m.Called(ctx, ruleID, boardID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -49,8 +49,8 @@ func (m *MockAutomationRuleRepository) Update(ctx context.Context, rule *domain.
 	return args.Error(0)
 }
 
-func (m *MockAutomationRuleRepository) Delete(ctx context.Context, ruleID string) error {
-	args := m.Called(ctx, ruleID)
+func (m *MockAutomationRuleRepository) Delete(ctx context.Context, ruleID, boardID string) error {
+	args := m.Called(ctx, ruleID, boardID)
 	return args.Error(0)
 }
 
@@ -220,7 +220,7 @@ func TestUpdateRule_Owner(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleOwner, nil)
-	ruleRepo.On("GetByID", mock.Anything, "rule-123").Return(existingRule, nil)
+	ruleRepo.On("GetByID", mock.Anything, "rule-123", "board-123").Return(existingRule, nil)
 	ruleRepo.On("Update", mock.Anything, mock.AnythingOfType("*domain.AutomationRule")).Return(nil)
 	publisher.On("PublishAutomationRuleUpdated", mock.Anything, mock.Anything).Return(nil).Maybe()
 
@@ -263,7 +263,7 @@ func TestDeleteRule_Owner(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleOwner, nil)
-	ruleRepo.On("Delete", mock.Anything, "rule-123").Return(nil)
+	ruleRepo.On("Delete", mock.Anything, "rule-123", "board-123").Return(nil)
 	publisher.On("PublishAutomationRuleDeleted", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 	uc := NewDeleteAutomationRuleUseCase(ruleRepo, memberRepo, publisher)

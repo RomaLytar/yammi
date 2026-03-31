@@ -35,8 +35,8 @@ func (uc *UpdateAutomationRuleUseCase) Execute(ctx context.Context, ruleID, boar
 		return nil, domain.ErrNotOwner
 	}
 
-	// 2. Загружаем правило
-	rule, err := uc.ruleRepo.GetByID(ctx, ruleID)
+	// 2. Загружаем правило (с проверкой boardID)
+	rule, err := uc.ruleRepo.GetByID(ctx, ruleID, boardID)
 	if err != nil {
 		return nil, err
 	}

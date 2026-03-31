@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type JWTGenerator struct {
@@ -30,9 +31,11 @@ func NewJWTGenerator(privateKey ed25519.PrivateKey, publicKey ed25519.PublicKey,
 func (g *JWTGenerator) GenerateAccessToken(userID, email string) (string, error) {
 	now := time.Now()
 	claims := jwt.MapClaims{
+		"jti":   uuid.NewString(),
 		"sub":   userID,
 		"email": email,
 		"iss":   g.issuer,
+		"aud":   "yammi",
 		"iat":   now.Unix(),
 		"exp":   now.Add(g.accessTTL).Unix(),
 	}

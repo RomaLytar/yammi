@@ -9,6 +9,7 @@ import (
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 )
 
 // memberCacheEntry — запись в кеше членства
@@ -28,9 +29,23 @@ type BoardMembershipChecker struct {
 	ttl   time.Duration
 }
 
+// grpcSecretClientInterceptor добавляет shared secret в metadata исходящих gRPC вызовов
+// для аутентификации между внутренними сервисами.
+func grpcSecretClientInterceptor(secret string) grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		if secret != "" {
+			ctx = metadata.AppendToOutgoingContext(ctx, "x-internal-secret", secret)
+		}
+		return invoker(ctx, method, req, reply, cc, opts...)
+	}
+}
+
 // NewBoardMembershipChecker создает клиент для проверки членства
-func NewBoardMembershipChecker(boardGRPCAddr string) (*BoardMembershipChecker, error) {
-	conn, err := grpc.NewClient(boardGRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func NewBoardMembershipChecker(boardGRPCAddr, sharedSecret string) (*BoardMembershipChecker, error) {
+	conn, err := grpc.NewClient(boardGRPCAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(grpcSecretClientInterceptor(sharedSecret)),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("connect to board service: %w", err)
 	}

@@ -156,11 +156,12 @@ services:
       dockerfile: services/auth/Dockerfile
     environment:
       AUTH_GRPC_PORT: "50051"
-      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer:6432/yammi_auth?sslmode=disable"
-      MIGRATION_DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@postgres:5432/yammi_auth?sslmode=disable"
+      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer:6432/yammi_auth?sslmode=${DB_SSLMODE:-disable}"
+      MIGRATION_DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@postgres:5432/yammi_auth?sslmode=${DB_SSLMODE:-disable}"
       NATS_URL: "nats://yammi:${NATS_PASSWORD}@nats:4222"
       BCRYPT_COST: "10"
       JWT_SEED: "${JWT_SEED}"
+      GRPC_SHARED_SECRET: "${GRPC_SHARED_SECRET}"
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -173,11 +174,10 @@ services:
       dockerfile: services/user/Dockerfile
     environment:
       USER_GRPC_PORT: "50052"
-      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer:6432/yammi_user?sslmode=disable"
-      MIGRATION_DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@postgres:5432/yammi_user?sslmode=disable"
+      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer:6432/yammi_user?sslmode=${DB_SSLMODE:-disable}"
+      MIGRATION_DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@postgres:5432/yammi_user?sslmode=${DB_SSLMODE:-disable}"
       NATS_URL: "nats://yammi:${NATS_PASSWORD}@nats:4222"
-    ports:
-      - "50052:50052"
+      GRPC_SHARED_SECRET: "${GRPC_SHARED_SECRET}"
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -190,16 +190,15 @@ services:
       dockerfile: Dockerfile
     environment:
       BOARD_GRPC_PORT: "50053"
-      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer:6432/yammi_board?sslmode=disable"
-      MIGRATION_DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@postgres:5432/yammi_board?sslmode=disable"
+      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer:6432/yammi_board?sslmode=${DB_SSLMODE:-disable}"
+      MIGRATION_DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@postgres:5432/yammi_board?sslmode=${DB_SSLMODE:-disable}"
       NATS_URL: "nats://yammi:${NATS_PASSWORD}@nats:4222"
       MINIO_URL: "minio:9000"
       MINIO_PUBLIC_URL: "localhost:9002"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
       MINIO_SECRET_KEY: "${MINIO_ROOT_PASSWORD}"
       REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/2"
-    ports:
-      - "50053:50053"
+      GRPC_SHARED_SECRET: "${GRPC_SHARED_SECRET}"
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -216,12 +215,11 @@ services:
       dockerfile: services/comment/Dockerfile
     environment:
       COMMENT_GRPC_PORT: "50054"
-      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer:6432/yammi_comment?sslmode=disable"
-      MIGRATION_DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@postgres:5432/yammi_comment?sslmode=disable"
+      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer:6432/yammi_comment?sslmode=${DB_SSLMODE:-disable}"
+      MIGRATION_DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@postgres:5432/yammi_comment?sslmode=${DB_SSLMODE:-disable}"
       NATS_URL: "nats://yammi:${NATS_PASSWORD}@nats:4222"
       BOARD_GRPC_ADDR: "board:50053"
-    ports:
-      - "50054:50054"
+      GRPC_SHARED_SECRET: "${GRPC_SHARED_SECRET}"
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -236,10 +234,11 @@ services:
       target: api
     environment:
       NOTIFICATION_GRPC_PORT: "50055"
-      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer:6432/yammi_notification?sslmode=disable"
-      MIGRATION_DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@postgres:5432/yammi_notification?sslmode=disable"
+      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer:6432/yammi_notification?sslmode=${DB_SSLMODE:-disable}"
+      MIGRATION_DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@postgres:5432/yammi_notification?sslmode=${DB_SSLMODE:-disable}"
       NATS_URL: "nats://yammi:${NATS_PASSWORD}@nats:4222"
       REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/1"
+      GRPC_SHARED_SECRET: "${GRPC_SHARED_SECRET}"
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -255,7 +254,7 @@ services:
       dockerfile: services/notification/Dockerfile
       target: consumer
     environment:
-      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer-consumer:6432/yammi_notification?sslmode=disable"
+      DATABASE_URL: "postgres://yammi:${POSTGRES_PASSWORD}@pgbouncer-consumer:6432/yammi_notification?sslmode=${DB_SSLMODE:-disable}"
       NATS_URL: "nats://yammi:${NATS_PASSWORD}@nats:4222"
       REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/1"
       METRICS_PORT: "2113"
@@ -278,11 +277,12 @@ services:
       BOARD_GRPC_ADDR: "board:50053"
       COMMENT_GRPC_ADDR: "comment:50054"
       NOTIFICATION_GRPC_ADDR: "notification-api:50055"
-      RATE_LIMIT_REGISTER: "${RATE_LIMIT_REGISTER:-1000000}"
-      RATE_LIMIT_LOGIN: "${RATE_LIMIT_LOGIN:-1000000}"
-      RATE_LIMIT_REFRESH: "${RATE_LIMIT_REFRESH:-1000000}"
-      RATE_LIMIT_DEFAULT: "${RATE_LIMIT_DEFAULT:-1000000}"
+      RATE_LIMIT_REGISTER: "${RATE_LIMIT_REGISTER:-5}"
+      RATE_LIMIT_LOGIN: "${RATE_LIMIT_LOGIN:-15}"
+      RATE_LIMIT_REFRESH: "${RATE_LIMIT_REFRESH:-50}"
+      RATE_LIMIT_DEFAULT: "${RATE_LIMIT_DEFAULT:-300}"
       ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:5173"
+      GRPC_SHARED_SECRET: "${GRPC_SHARED_SECRET}"
     ports:
       - "8080:8080"
     depends_on:

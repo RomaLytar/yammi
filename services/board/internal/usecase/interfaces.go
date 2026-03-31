@@ -131,8 +131,8 @@ type LabelRepository interface {
 	// BatchCreate создает несколько меток в одном запросе
 	BatchCreate(ctx context.Context, labels []*domain.Label) error
 
-	// GetByID возвращает метку по ID
-	GetByID(ctx context.Context, labelID string) (*domain.Label, error)
+	// GetByID возвращает метку по ID (фильтруется по boardID для защиты от IDOR)
+	GetByID(ctx context.Context, labelID, boardID string) (*domain.Label, error)
 
 	// ListByBoardID возвращает все метки доски
 	ListByBoardID(ctx context.Context, boardID string) ([]*domain.Label, error)
@@ -140,8 +140,8 @@ type LabelRepository interface {
 	// Update обновляет метку
 	Update(ctx context.Context, label *domain.Label) error
 
-	// Delete удаляет метку по ID
-	Delete(ctx context.Context, labelID string) error
+	// Delete удаляет метку по ID (фильтруется по boardID для защиты от IDOR)
+	Delete(ctx context.Context, labelID, boardID string) error
 
 	// AddToCard назначает метку на карточку
 	AddToCard(ctx context.Context, cardID, boardID, labelID string) error
@@ -204,8 +204,8 @@ type CustomFieldRepository interface {
 	// CreateDefinition создает новое определение кастомного поля
 	CreateDefinition(ctx context.Context, def *domain.CustomFieldDefinition) error
 
-	// GetDefinitionByID возвращает определение по ID
-	GetDefinitionByID(ctx context.Context, defID string) (*domain.CustomFieldDefinition, error)
+	// GetDefinitionByID возвращает определение по ID (фильтруется по boardID для защиты от IDOR)
+	GetDefinitionByID(ctx context.Context, defID, boardID string) (*domain.CustomFieldDefinition, error)
 
 	// ListDefinitionsByBoardID возвращает все определения кастомных полей доски
 	ListDefinitionsByBoardID(ctx context.Context, boardID string) ([]*domain.CustomFieldDefinition, error)
@@ -213,8 +213,8 @@ type CustomFieldRepository interface {
 	// UpdateDefinition обновляет определение кастомного поля
 	UpdateDefinition(ctx context.Context, def *domain.CustomFieldDefinition) error
 
-	// DeleteDefinition удаляет определение кастомного поля (CASCADE удалит значения)
-	DeleteDefinition(ctx context.Context, defID string) error
+	// DeleteDefinition удаляет определение кастомного поля (CASCADE удалит значения, фильтруется по boardID)
+	DeleteDefinition(ctx context.Context, defID, boardID string) error
 
 	// CountDefinitionsByBoardID возвращает количество определений кастомных полей доски
 	CountDefinitionsByBoardID(ctx context.Context, boardID string) (int, error)
@@ -234,8 +234,8 @@ type AutomationRuleRepository interface {
 	// Create создает новое правило автоматизации
 	Create(ctx context.Context, rule *domain.AutomationRule) error
 
-	// GetByID возвращает правило по ID
-	GetByID(ctx context.Context, ruleID string) (*domain.AutomationRule, error)
+	// GetByID возвращает правило по ID (фильтруется по boardID для защиты от IDOR)
+	GetByID(ctx context.Context, ruleID, boardID string) (*domain.AutomationRule, error)
 
 	// ListByBoardID возвращает все правила доски
 	ListByBoardID(ctx context.Context, boardID string) ([]*domain.AutomationRule, error)
@@ -246,8 +246,8 @@ type AutomationRuleRepository interface {
 	// Update обновляет правило
 	Update(ctx context.Context, rule *domain.AutomationRule) error
 
-	// Delete удаляет правило по ID
-	Delete(ctx context.Context, ruleID string) error
+	// Delete удаляет правило по ID (фильтруется по boardID для защиты от IDOR)
+	Delete(ctx context.Context, ruleID, boardID string) error
 
 	// CountByBoardID возвращает количество правил доски
 	CountByBoardID(ctx context.Context, boardID string) (int, error)

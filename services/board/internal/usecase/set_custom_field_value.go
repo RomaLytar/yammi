@@ -32,8 +32,8 @@ func (uc *SetCustomFieldValueUseCase) Execute(ctx context.Context, cardID, board
 		return nil, domain.ErrAccessDenied
 	}
 
-	// 2. Проверяем, что определение поля существует
-	def, err := uc.customFieldRepo.GetDefinitionByID(ctx, fieldID)
+	// 2. Проверяем, что определение поля существует (с проверкой boardID)
+	def, err := uc.customFieldRepo.GetDefinitionByID(ctx, fieldID, boardID)
 	if err != nil {
 		return nil, err
 	}

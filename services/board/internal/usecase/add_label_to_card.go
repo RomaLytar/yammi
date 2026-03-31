@@ -34,8 +34,8 @@ func (uc *AddLabelToCardUseCase) Execute(ctx context.Context, cardID, boardID, l
 		return domain.ErrAccessDenied
 	}
 
-	// 2. Проверяем, есть ли метка в board labels
-	_, err = uc.labelRepo.GetByID(ctx, labelID)
+	// 2. Проверяем, есть ли метка в board labels (с проверкой boardID)
+	_, err = uc.labelRepo.GetByID(ctx, labelID, boardID)
 	if err != nil {
 		// Метка не найдена в board labels — проверяем глобальные метки
 		userLabel, ulErr := uc.userLabelRepo.GetByID(ctx, labelID)

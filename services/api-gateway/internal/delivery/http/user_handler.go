@@ -78,6 +78,10 @@ func (h *UserHandler) SearchByEmail(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "q query parameter is required")
 		return
 	}
+	if len(query) < 3 {
+		writeError(w, http.StatusBadRequest, "search query must be at least 3 characters")
+		return
+	}
 
 	resp, err := h.client.SearchByEmail(r.Context(), &userpb.SearchByEmailRequest{
 		Query: query,

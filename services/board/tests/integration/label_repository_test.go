@@ -35,7 +35,7 @@ func TestLabelRepository_Create(t *testing.T) {
 	}
 
 	// Verify label exists
-	loaded, err := labelRepo.GetByID(ctx, label.ID)
+	loaded, err := labelRepo.GetByID(ctx, label.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to load label: %v", err)
 	}
@@ -134,7 +134,7 @@ func TestLabelRepository_Update(t *testing.T) {
 	}
 
 	// Verify updates
-	loaded, _ := labelRepo.GetByID(ctx, label.ID)
+	loaded, _ := labelRepo.GetByID(ctx, label.ID, board.ID)
 	if loaded.Name != "Feature" {
 		t.Errorf("Expected name Feature, got %s", loaded.Name)
 	}
@@ -160,13 +160,13 @@ func TestLabelRepository_Delete(t *testing.T) {
 	labelRepo.Create(ctx, label)
 
 	// Delete label
-	err := labelRepo.Delete(ctx, label.ID)
+	err := labelRepo.Delete(ctx, label.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete label: %v", err)
 	}
 
 	// Verify deleted
-	_, err = labelRepo.GetByID(ctx, label.ID)
+	_, err = labelRepo.GetByID(ctx, label.ID, board.ID)
 	if err != domain.ErrLabelNotFound {
 		t.Errorf("Expected ErrLabelNotFound after delete, got %v", err)
 	}

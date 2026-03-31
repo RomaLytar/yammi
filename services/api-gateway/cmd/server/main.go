@@ -43,8 +43,10 @@ func main() {
 		notificationAddr = "localhost:50055"
 	}
 
+	grpcSharedSecret := os.Getenv("GRPC_SHARED_SECRET")
+
 	// gRPC clients
-	clients, err := infrastructure.NewGRPCClients(authAddr, userAddr, boardAddr, commentAddr, notificationAddr)
+	clients, err := infrastructure.NewGRPCClients(authAddr, userAddr, boardAddr, commentAddr, notificationAddr, grpcSharedSecret)
 	if err != nil {
 		log.Fatalf("failed to create grpc clients: %v", err)
 	}

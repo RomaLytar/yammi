@@ -42,19 +42,19 @@ func (r *CustomFieldRepository) CreateDefinition(ctx context.Context, def *domai
 	return nil
 }
 
-// GetDefinitionByID возвращает определение по ID
-func (r *CustomFieldRepository) GetDefinitionByID(ctx context.Context, defID string) (*domain.CustomFieldDefinition, error) {
+// GetDefinitionByID возвращает определение по ID (фильтруется по boardID для защиты от IDOR)
+func (r *CustomFieldRepository) GetDefinitionByID(ctx context.Context, defID, boardID string) (*domain.CustomFieldDefinition, error) {
 	query := `
 		SELECT id, board_id, name, field_type, options, position, required, created_at, updated_at
 		FROM custom_field_definitions
-		WHERE id = $1
+		WHERE id = $1 AND board_id = $2
 	`
 
 	var def domain.CustomFieldDefinition
 	var fieldType string
 	var optionsJSON []byte
 
-	err := r.db.QueryRowContext(ctx, query, defID).Scan(
+	err := r.db.QueryRowContext(ctx, query, defID, boardID).Scan(
 		&def.ID, &def.BoardID, &def.Name, &fieldType, &optionsJSON, &def.Position, &def.Required, &def.CreatedAt, &def.UpdatedAt,
 	)
 
@@ -125,10 +125,10 @@ func (r *CustomFieldRepository) UpdateDefinition(ctx context.Context, def *domai
 	query := `
 		UPDATE custom_field_definitions
 		SET name = $1, options = $2, required = $3, updated_at = $4
-		WHERE id = $5
+		WHERE id = $5 AND board_id = $6
 	`
 
-	result, err := r.db.ExecContext(ctx, query, def.Name, optionsJSON, def.Required, def.UpdatedAt, def.ID)
+	result, err := r.db.ExecContext(ctx, query, def.Name, optionsJSON, def.Required, def.UpdatedAt, def.ID, def.BoardID)
 	if err != nil {
 		if isDuplicateKeyError(err) {
 			return domain.ErrCustomFieldExists
@@ -144,10 +144,10 @@ func (r *CustomFieldRepository) UpdateDefinition(ctx context.Context, def *domai
 	return nil
 }
 
-// DeleteDefinition удаляет определение кастомного поля (CASCADE удалит значения)
-func (r *CustomFieldRepository) DeleteDefinition(ctx context.Context, defID string) error {
-	query := `DELETE FROM custom_field_definitions WHERE id = $1`
-	result, err := r.db.ExecContext(ctx, query, defID)
+// DeleteDefinition удаляет определение кастомного поля (CASCADE удалит значения, фильтруется по boardID)
+func (r *CustomFieldRepository) DeleteDefinition(ctx context.Context, defID, boardID string) error {
+	query := `DELETE FROM custom_field_definitions WHERE id = $1 AND board_id = $2`
+	result, err := r.db.ExecContext(ctx, query, defID, boardID)
 	if err != nil {
 		return fmt.Errorf("delete custom field definition: %w", err)
 	}

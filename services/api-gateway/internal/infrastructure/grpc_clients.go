@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
+	"google.golang.org/grpc/metadata"
 
 	authpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1"
 	boardpb "github.com/RomaLytar/yammi/services/api-gateway/api/proto/v1/board"
@@ -31,6 +32,17 @@ func timeoutInterceptor(timeout time.Duration) grpc.UnaryClientInterceptor {
 	}
 }
 
+// grpcSecretClientInterceptor добавляет shared secret в metadata исходящих gRPC вызовов
+// для аутентификации между внутренними сервисами.
+func grpcSecretClientInterceptor(secret string) grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		if secret != "" {
+			ctx = metadata.AppendToOutgoingContext(ctx, "x-internal-secret", secret)
+		}
+		return invoker(ctx, method, req, reply, cc, opts...)
+	}
+}
+
 type GRPCClients struct {
 	authConn           *grpc.ClientConn
 	AuthClient         authpb.AuthServiceClient
@@ -44,36 +56,42 @@ type GRPCClients struct {
 	NotificationClient notificationpb.NotificationServiceClient
 }
 
-var defaultDialOpts = []grpc.DialOption{
-	grpc.WithTransportCredentials(insecure.NewCredentials()),
-	grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`),
-	grpc.WithKeepaliveParams(keepalive.ClientParameters{
-		Time:                5 * time.Minute,
-		Timeout:             10 * time.Second,
-		PermitWithoutStream: false,
-	}),
-	grpc.WithConnectParams(grpc.ConnectParams{
-		MinConnectTimeout: 5 * time.Second,
-		Backoff:           backoff.DefaultConfig,
-	}),
-	grpc.WithUnaryInterceptor(timeoutInterceptor(10 * time.Second)),
+func buildDialOpts(sharedSecret string) []grpc.DialOption {
+	return []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:                5 * time.Minute,
+			Timeout:             10 * time.Second,
+			PermitWithoutStream: false,
+		}),
+		grpc.WithConnectParams(grpc.ConnectParams{
+			MinConnectTimeout: 5 * time.Second,
+			Backoff:           backoff.DefaultConfig,
+		}),
+		grpc.WithChainUnaryInterceptor(
+			grpcSecretClientInterceptor(sharedSecret),
+			timeoutInterceptor(10*time.Second),
+		),
+	}
 }
 
-func NewGRPCClients(authAddr, userAddr, boardAddr, commentAddr, notificationAddr string) (*GRPCClients, error) {
-	authConn, err := grpc.NewClient("dns:///"+authAddr, defaultDialOpts...)
+func NewGRPCClients(authAddr, userAddr, boardAddr, commentAddr, notificationAddr, sharedSecret string) (*GRPCClients, error) {
+	dialOpts := buildDialOpts(sharedSecret)
+	authConn, err := grpc.NewClient("dns:///"+authAddr, dialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to auth service: %w", err)
 	}
 	log.Printf("connected to auth service at %s", authAddr)
 
-	userConn, err := grpc.NewClient("dns:///"+userAddr, defaultDialOpts...)
+	userConn, err := grpc.NewClient("dns:///"+userAddr, dialOpts...)
 	if err != nil {
 		authConn.Close()
 		return nil, fmt.Errorf("failed to connect to user service: %w", err)
 	}
 	log.Printf("connected to user service at %s", userAddr)
 
-	boardConn, err := grpc.NewClient("dns:///"+boardAddr, defaultDialOpts...)
+	boardConn, err := grpc.NewClient("dns:///"+boardAddr, dialOpts...)
 	if err != nil {
 		authConn.Close()
 		userConn.Close()
@@ -81,7 +99,7 @@ func NewGRPCClients(authAddr, userAddr, boardAddr, commentAddr, notificationAddr
 	}
 	log.Printf("connected to board service at %s", boardAddr)
 
-	commentConn, err := grpc.NewClient("dns:///"+commentAddr, defaultDialOpts...)
+	commentConn, err := grpc.NewClient("dns:///"+commentAddr, dialOpts...)
 	if err != nil {
 		authConn.Close()
 		userConn.Close()
@@ -90,7 +108,7 @@ func NewGRPCClients(authAddr, userAddr, boardAddr, commentAddr, notificationAddr
 	}
 	log.Printf("connected to comment service at %s", commentAddr)
 
-	notificationConn, err := grpc.NewClient("dns:///"+notificationAddr, defaultDialOpts...)
+	notificationConn, err := grpc.NewClient("dns:///"+notificationAddr, dialOpts...)
 	if err != nil {
 		authConn.Close()
 		userConn.Close()

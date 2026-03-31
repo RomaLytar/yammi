@@ -26,7 +26,17 @@ func writeGRPCError(w http.ResponseWriter, err error) {
 	}
 
 	httpCode := grpcToHTTPStatus(st.Code())
-	writeError(w, httpCode, st.Message())
+	writeError(w, httpCode, sanitizeGRPCMessage(st.Code(), st.Message()))
+}
+
+// sanitizeGRPCMessage скрывает детали внутренних ошибок от клиента.
+func sanitizeGRPCMessage(code codes.Code, msg string) string {
+	switch code {
+	case codes.Internal, codes.Unavailable, codes.Unknown, codes.DataLoss:
+		return "internal error"
+	default:
+		return msg
+	}
 }
 
 func grpcToHTTPStatus(code codes.Code) int {

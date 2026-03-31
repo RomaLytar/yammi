@@ -47,19 +47,19 @@ func (r *AutomationRuleRepository) Create(ctx context.Context, rule *domain.Auto
 	return nil
 }
 
-// GetByID возвращает правило по ID
-func (r *AutomationRuleRepository) GetByID(ctx context.Context, ruleID string) (*domain.AutomationRule, error) {
+// GetByID возвращает правило по ID (фильтруется по boardID для защиты от IDOR)
+func (r *AutomationRuleRepository) GetByID(ctx context.Context, ruleID, boardID string) (*domain.AutomationRule, error) {
 	query := `
 		SELECT id, board_id, name, enabled, trigger_type, trigger_config, action_type, action_config, created_by, created_at, updated_at
 		FROM automation_rules
-		WHERE id = $1
+		WHERE id = $1 AND board_id = $2
 	`
 
 	var rule domain.AutomationRule
 	var triggerType, actionType string
 	var triggerConfigJSON, actionConfigJSON []byte
 
-	err := r.db.QueryRowContext(ctx, query, ruleID).Scan(
+	err := r.db.QueryRowContext(ctx, query, ruleID, boardID).Scan(
 		&rule.ID, &rule.BoardID, &rule.Name, &rule.Enabled,
 		&triggerType, &triggerConfigJSON,
 		&actionType, &actionConfigJSON,
@@ -125,13 +125,13 @@ func (r *AutomationRuleRepository) Update(ctx context.Context, rule *domain.Auto
 	query := `
 		UPDATE automation_rules
 		SET name = $1, enabled = $2, trigger_config = $3, action_config = $4, updated_at = $5
-		WHERE id = $6
+		WHERE id = $6 AND board_id = $7
 	`
 
 	result, err := r.db.ExecContext(ctx, query,
 		rule.Name, rule.Enabled,
 		triggerConfigJSON, actionConfigJSON,
-		rule.UpdatedAt, rule.ID,
+		rule.UpdatedAt, rule.ID, rule.BoardID,
 	)
 	if err != nil {
 		return fmt.Errorf("update automation_rule: %w", err)
@@ -145,10 +145,10 @@ func (r *AutomationRuleRepository) Update(ctx context.Context, rule *domain.Auto
 	return nil
 }
 
-// Delete удаляет правило по ID
-func (r *AutomationRuleRepository) Delete(ctx context.Context, ruleID string) error {
-	query := `DELETE FROM automation_rules WHERE id = $1`
-	result, err := r.db.ExecContext(ctx, query, ruleID)
+// Delete удаляет правило по ID (фильтруется по boardID для защиты от IDOR)
+func (r *AutomationRuleRepository) Delete(ctx context.Context, ruleID, boardID string) error {
+	query := `DELETE FROM automation_rules WHERE id = $1 AND board_id = $2`
+	result, err := r.db.ExecContext(ctx, query, ruleID, boardID)
 	if err != nil {
 		return fmt.Errorf("delete automation_rule: %w", err)
 	}

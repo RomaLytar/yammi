@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/ed25519"
+	"crypto/subtle"
 	"log"
 	"net"
 	"os"
@@ -14,6 +15,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	authpb "github.com/RomaLytar/yammi/services/auth/api/proto/v1"
@@ -105,14 +107,21 @@ func main() {
 	userRepo := postgres.NewUserRepo(db)
 	refreshTokenRepo := postgres.NewRefreshTokenRepo(db)
 
-	// Usecase
-	authUC := usecase.NewAuthUseCase(userRepo, refreshTokenRepo, tokenGenerator, publisher, hasher, 7*24*time.Hour)
+	// Login limiter (brute-force protection: 5 attempts, 15 min lockout)
+	loginLimiter := infrastructure.NewLoginLimiter(5, 15*time.Minute)
 
-	// gRPC server
-	handler := delivery.NewAuthHandler(authUC)
+	// Usecase
+	authUC := usecase.NewAuthUseCase(userRepo, refreshTokenRepo, tokenGenerator, publisher, hasher, loginLimiter, 7*24*time.Hour)
+
+	// gRPC server with shared secret interceptor
+	grpcSecret := os.Getenv("GRPC_SHARED_SECRET")
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(recoveryInterceptor()),
+		grpc.ChainUnaryInterceptor(
+			grpcSecretInterceptor(grpcSecret),
+			recoveryInterceptor(),
+		),
 	)
+	handler := delivery.NewAuthHandler(authUC)
 	authpb.RegisterAuthServiceServer(grpcServer, handler)
 
 	lis, err := net.Listen("tcp", ":"+port)
@@ -133,6 +142,23 @@ func main() {
 
 	log.Println("auth-service shutting down...")
 	grpcServer.GracefulStop()
+}
+
+func grpcSecretInterceptor(secret string) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+		if secret == "" {
+			return handler(ctx, req)
+		}
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, status.Error(codes.Unauthenticated, "missing metadata")
+		}
+		values := md.Get("x-internal-secret")
+		if len(values) == 0 || subtle.ConstantTimeCompare([]byte(values[0]), []byte(secret)) != 1 {
+			return nil, status.Error(codes.Unauthenticated, "unauthorized")
+		}
+		return handler(ctx, req)
+	}
 }
 
 func recoveryInterceptor() grpc.UnaryServerInterceptor {

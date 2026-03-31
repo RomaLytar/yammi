@@ -35,8 +35,8 @@ func (uc *DeleteAutomationRuleUseCase) Execute(ctx context.Context, ruleID, boar
 		return domain.ErrNotOwner
 	}
 
-	// 2. Удаляем правило (CASCADE удалит executions)
-	if err := uc.ruleRepo.Delete(ctx, ruleID); err != nil {
+	// 2. Удаляем правило (CASCADE удалит executions, с проверкой boardID)
+	if err := uc.ruleRepo.Delete(ctx, ruleID, boardID); err != nil {
 		return err
 	}
 

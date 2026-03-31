@@ -40,7 +40,7 @@ func TestAutomationRuleRepository_Create(t *testing.T) {
 	}
 
 	// Verify rule exists
-	loaded, err := ruleRepo.GetByID(ctx, rule.ID)
+	loaded, err := ruleRepo.GetByID(ctx, rule.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to load rule: %v", err)
 	}
@@ -69,7 +69,7 @@ func TestAutomationRuleRepository_GetByID_NotFound(t *testing.T) {
 	ruleRepo := postgres.NewAutomationRuleRepository(db)
 	ctx := context.Background()
 
-	_, err := ruleRepo.GetByID(ctx, uuid.NewString())
+	_, err := ruleRepo.GetByID(ctx, uuid.NewString(), uuid.NewString())
 	if err != domain.ErrAutomationRuleNotFound {
 		t.Errorf("Expected ErrAutomationRuleNotFound, got %v", err)
 	}
@@ -173,7 +173,7 @@ func TestAutomationRuleRepository_Update(t *testing.T) {
 		t.Fatalf("Failed to update rule: %v", err)
 	}
 
-	loaded, _ := ruleRepo.GetByID(ctx, rule.ID)
+	loaded, _ := ruleRepo.GetByID(ctx, rule.ID, board.ID)
 	if loaded.Name != "Updated" {
 		t.Errorf("Expected name 'Updated', got %s", loaded.Name)
 	}
@@ -204,12 +204,12 @@ func TestAutomationRuleRepository_Delete(t *testing.T) {
 		domain.TriggerCardCreated, nil, domain.ActionMoveCard, nil, ownerID)
 	ruleRepo.Create(ctx, rule)
 
-	err := ruleRepo.Delete(ctx, rule.ID)
+	err := ruleRepo.Delete(ctx, rule.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete rule: %v", err)
 	}
 
-	_, err = ruleRepo.GetByID(ctx, rule.ID)
+	_, err = ruleRepo.GetByID(ctx, rule.ID, board.ID)
 	if err != domain.ErrAutomationRuleNotFound {
 		t.Errorf("Expected ErrAutomationRuleNotFound after delete, got %v", err)
 	}
@@ -278,7 +278,7 @@ func TestAutomationRuleRepository_CascadeDelete(t *testing.T) {
 		t.Fatalf("Failed to delete board: %v", err)
 	}
 
-	_, err = ruleRepo.GetByID(ctx, rule.ID)
+	_, err = ruleRepo.GetByID(ctx, rule.ID, board.ID)
 	if err != domain.ErrAutomationRuleNotFound {
 		t.Errorf("Expected ErrAutomationRuleNotFound after cascade delete, got %v", err)
 	}

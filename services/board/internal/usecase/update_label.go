@@ -32,8 +32,8 @@ func (uc *UpdateLabelUseCase) Execute(ctx context.Context, labelID, boardID, use
 		return nil, domain.ErrAccessDenied
 	}
 
-	// 2. Загружаем метку
-	label, err := uc.labelRepo.GetByID(ctx, labelID)
+	// 2. Загружаем метку (с проверкой принадлежности к доске)
+	label, err := uc.labelRepo.GetByID(ctx, labelID, boardID)
 	if err != nil {
 		return nil, err
 	}

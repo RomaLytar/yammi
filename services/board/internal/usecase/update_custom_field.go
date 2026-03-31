@@ -35,8 +35,8 @@ func (uc *UpdateCustomFieldUseCase) Execute(ctx context.Context, fieldID, boardI
 		return nil, domain.ErrNotOwner
 	}
 
-	// 2. Загружаем определение
-	def, err := uc.customFieldRepo.GetDefinitionByID(ctx, fieldID)
+	// 2. Загружаем определение (с проверкой boardID)
+	def, err := uc.customFieldRepo.GetDefinitionByID(ctx, fieldID, boardID)
 	if err != nil {
 		return nil, err
 	}

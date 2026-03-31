@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"errors"
+	"math"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -10,6 +11,17 @@ import (
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
+
+// safeInt32 безопасно конвертирует int в int32 (для proto полей position/version/progress).
+func safeInt32(v int) int32 {
+	if v > math.MaxInt32 {
+		return math.MaxInt32
+	}
+	if v < math.MinInt32 {
+		return math.MinInt32
+	}
+	return int32(v)
+}
 
 // ============================================================================
 // Mappers (domain → proto)
@@ -21,7 +33,7 @@ func mapBoardToProto(b *domain.Board) *boardpb.Board {
 		Title:       b.Title,
 		Description: b.Description,
 		OwnerId:     b.OwnerID,
-		Version:     int32(b.Version),
+		Version:     safeInt32(b.Version),
 		CreatedAt:   timestamppb.New(b.CreatedAt),
 		UpdatedAt:   timestamppb.New(b.UpdatedAt),
 	}
@@ -40,7 +52,7 @@ func mapColumnToProto(c *domain.Column) *boardpb.Column {
 		Id:        c.ID,
 		BoardId:   c.BoardID,
 		Title:     c.Title,
-		Position:  int32(c.Position),
+		Position:  safeInt32(c.Position),
 		Version:   0, // Column не имеет version в domain.Column, но есть в proto
 		CreatedAt: timestamppb.New(c.CreatedAt),
 		UpdatedAt: timestamppb.New(c.UpdatedAt),
@@ -60,7 +72,7 @@ func mapColumnsWithCountsToProto(columns []*domain.Column, counts map[string]int
 	for i, c := range columns {
 		col := mapColumnToProto(c)
 		if counts != nil {
-			col.CardCount = int32(counts[c.ID])
+			col.CardCount = safeInt32(counts[c.ID])
 		}
 		result[i] = col
 	}
@@ -210,7 +222,7 @@ func mapChecklistToProto(c *domain.Checklist) *boardpb.Checklist {
 			BoardId:     item.BoardID,
 			Title:       item.Title,
 			IsChecked:   item.IsChecked,
-			Position:    int32(item.Position),
+			Position:    safeInt32(item.Position),
 			CreatedAt:   timestamppb.New(item.CreatedAt),
 			UpdatedAt:   timestamppb.New(item.UpdatedAt),
 		}
@@ -221,9 +233,9 @@ func mapChecklistToProto(c *domain.Checklist) *boardpb.Checklist {
 		CardId:    c.CardID,
 		BoardId:   c.BoardID,
 		Title:     c.Title,
-		Position:  int32(c.Position),
+		Position:  safeInt32(c.Position),
 		Items:     items,
-		Progress:  int32(c.Progress()),
+		Progress:  safeInt32(c.Progress()),
 		CreatedAt: timestamppb.New(c.CreatedAt),
 		UpdatedAt: timestamppb.New(c.UpdatedAt),
 	}
@@ -244,7 +256,7 @@ func mapChecklistItemToProto(item *domain.ChecklistItem) *boardpb.ChecklistItem 
 		BoardId:     item.BoardID,
 		Title:       item.Title,
 		IsChecked:   item.IsChecked,
-		Position:    int32(item.Position),
+		Position:    safeInt32(item.Position),
 		CreatedAt:   timestamppb.New(item.CreatedAt),
 		UpdatedAt:   timestamppb.New(item.UpdatedAt),
 	}
@@ -257,7 +269,7 @@ func mapCustomFieldDefToProto(d *domain.CustomFieldDefinition) *boardpb.CustomFi
 		Name:      d.Name,
 		FieldType: string(d.FieldType),
 		Options:   d.Options,
-		Position:  int32(d.Position),
+		Position:  safeInt32(d.Position),
 		Required:  d.Required,
 		CreatedAt: timestamppb.New(d.CreatedAt),
 		UpdatedAt: timestamppb.New(d.UpdatedAt),
@@ -385,7 +397,7 @@ func mapBoardTemplateToProto(t *domain.BoardTemplate) *boardpb.BoardTemplate {
 	for _, col := range t.ColumnsData {
 		columnsData = append(columnsData, &boardpb.BoardColumnTemplateData{
 			Title:    col.Title,
-			Position: int32(col.Position),
+			Position: safeInt32(col.Position),
 		})
 	}
 	var labelsData []*boardpb.LabelTemplateData

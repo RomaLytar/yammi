@@ -89,24 +89,19 @@ func (r *LabelRepository) Update(ctx context.Context, label *domain.Label) error
 	return nil
 }
 
-func (r *LabelRepository) Delete(ctx context.Context, labelID string) error {
-	// Нужен boardID для инвалидации — получаем метку перед удалением
-	label, err := r.pg.GetByID(ctx, labelID)
-	if err != nil {
-		return r.pg.Delete(ctx, labelID) // fallback: delete without invalidation
-	}
-	if err := r.pg.Delete(ctx, labelID); err != nil {
+func (r *LabelRepository) Delete(ctx context.Context, labelID, boardID string) error {
+	if err := r.pg.Delete(ctx, labelID, boardID); err != nil {
 		return err
 	}
 	if r.cache != nil {
-		_ = r.cache.InvalidateBoardLabels(ctx, label.BoardID)
+		_ = r.cache.InvalidateBoardLabels(ctx, boardID)
 	}
 	return nil
 }
 
 // Pass-through methods (не кешируются)
-func (r *LabelRepository) GetByID(ctx context.Context, labelID string) (*domain.Label, error) {
-	return r.pg.GetByID(ctx, labelID)
+func (r *LabelRepository) GetByID(ctx context.Context, labelID, boardID string) (*domain.Label, error) {
+	return r.pg.GetByID(ctx, labelID, boardID)
 }
 
 func (r *LabelRepository) AddToCard(ctx context.Context, cardID, boardID, labelID string) error {

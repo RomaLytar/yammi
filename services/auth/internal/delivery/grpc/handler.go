@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/RomaLytar/yammi/services/auth/internal/domain"
+	"github.com/RomaLytar/yammi/services/auth/internal/infrastructure"
 	"github.com/RomaLytar/yammi/services/auth/internal/usecase"
 	authpb "github.com/RomaLytar/yammi/services/auth/api/proto/v1"
 )
@@ -114,7 +115,9 @@ func (h *AuthHandler) DeleteUser(ctx context.Context, req *authpb.DeleteUserRequ
 func mapDomainError(err error) error {
 	switch {
 	case errors.Is(err, domain.ErrEmailExists):
-		return status.Error(codes.AlreadyExists, err.Error())
+		return status.Error(codes.AlreadyExists, "registration failed")
+	case errors.Is(err, infrastructure.ErrAccountLocked):
+		return status.Error(codes.ResourceExhausted, "too many login attempts, try again later")
 	case errors.Is(err, domain.ErrUserNotFound), errors.Is(err, domain.ErrTokenNotFound):
 		return status.Error(codes.NotFound, err.Error())
 	case errors.Is(err, domain.ErrInvalidPassword):

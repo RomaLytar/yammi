@@ -116,14 +116,14 @@ func (r *BoardRepository) ListByUserID(ctx context.Context, userID string, limit
 		orderBy = "ORDER BY b.title ASC, b.id ASC"
 	}
 
-	query := fmt.Sprintf(`
+	query := fmt.Sprintf(` -- nosec
 		SELECT b.id, b.title, b.description, b.owner_id, b.version, b.created_at, b.updated_at
 		FROM boards b
 		INNER JOIN board_members bm ON b.id = bm.board_id
 		%s
 		%s
 		LIMIT $%d OFFSET $%d
-	`, where, orderBy, argIdx, argIdx+1)
+	`, where, orderBy, argIdx, argIdx+1) // #nosec G201 -- sortBy is allowlisted via switch, where uses parameterized args
 
 	args = append(args, limit+1, offset)
 

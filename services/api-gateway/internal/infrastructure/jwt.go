@@ -145,5 +145,10 @@ func (v *JWTVerifier) verifyWithCurrentKey(tokenString string) (string, error) {
 		return "", ErrInvalidClaims
 	}
 
+	// Проверяем audience (если присутствует)
+	if aud, ok := claims["aud"].(string); ok && aud != "yammi" {
+		return "", ErrInvalidClaims
+	}
+
 	return sub, nil
 }

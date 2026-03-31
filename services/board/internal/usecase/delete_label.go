@@ -35,8 +35,8 @@ func (uc *DeleteLabelUseCase) Execute(ctx context.Context, labelID, boardID, use
 		return domain.ErrNotOwner
 	}
 
-	// 2. Удаляем метку (CASCADE удалит card_labels)
-	if err := uc.labelRepo.Delete(ctx, labelID); err != nil {
+	// 2. Удаляем метку (CASCADE удалит card_labels, с проверкой boardID)
+	if err := uc.labelRepo.Delete(ctx, labelID, boardID); err != nil {
 		return err
 	}
 

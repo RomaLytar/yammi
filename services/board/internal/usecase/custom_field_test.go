@@ -20,8 +20,8 @@ func (m *MockCustomFieldRepository) CreateDefinition(ctx context.Context, def *d
 	return args.Error(0)
 }
 
-func (m *MockCustomFieldRepository) GetDefinitionByID(ctx context.Context, defID string) (*domain.CustomFieldDefinition, error) {
-	args := m.Called(ctx, defID)
+func (m *MockCustomFieldRepository) GetDefinitionByID(ctx context.Context, defID, boardID string) (*domain.CustomFieldDefinition, error) {
+	args := m.Called(ctx, defID, boardID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -41,8 +41,8 @@ func (m *MockCustomFieldRepository) UpdateDefinition(ctx context.Context, def *d
 	return args.Error(0)
 }
 
-func (m *MockCustomFieldRepository) DeleteDefinition(ctx context.Context, defID string) error {
-	args := m.Called(ctx, defID)
+func (m *MockCustomFieldRepository) DeleteDefinition(ctx context.Context, defID, boardID string) error {
+	args := m.Called(ctx, defID, boardID)
 	return args.Error(0)
 }
 
@@ -195,7 +195,7 @@ func TestSetCustomFieldValue_Success(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	cfRepo.On("GetDefinitionByID", mock.Anything, "field-123").
+	cfRepo.On("GetDefinitionByID", mock.Anything, "field-123", "board-123").
 		Return(&domain.CustomFieldDefinition{
 			ID:        "field-123",
 			BoardID:   "board-123",
@@ -225,7 +225,7 @@ func TestSetCustomFieldValue_Number(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	cfRepo.On("GetDefinitionByID", mock.Anything, "field-123").
+	cfRepo.On("GetDefinitionByID", mock.Anything, "field-123", "board-123").
 		Return(&domain.CustomFieldDefinition{
 			ID:        "field-123",
 			BoardID:   "board-123",
@@ -255,7 +255,7 @@ func TestSetCustomFieldValue_Date(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	cfRepo.On("GetDefinitionByID", mock.Anything, "field-123").
+	cfRepo.On("GetDefinitionByID", mock.Anything, "field-123", "board-123").
 		Return(&domain.CustomFieldDefinition{
 			ID:        "field-123",
 			BoardID:   "board-123",
@@ -284,7 +284,7 @@ func TestSetCustomFieldValue_Dropdown(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	cfRepo.On("GetDefinitionByID", mock.Anything, "field-123").
+	cfRepo.On("GetDefinitionByID", mock.Anything, "field-123", "board-123").
 		Return(&domain.CustomFieldDefinition{
 			ID:        "field-123",
 			BoardID:   "board-123",
@@ -315,7 +315,7 @@ func TestSetCustomFieldValue_Dropdown_InvalidOption(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	cfRepo.On("GetDefinitionByID", mock.Anything, "field-123").
+	cfRepo.On("GetDefinitionByID", mock.Anything, "field-123", "board-123").
 		Return(&domain.CustomFieldDefinition{
 			ID:        "field-123",
 			BoardID:   "board-123",
@@ -362,7 +362,7 @@ func TestDeleteCustomField_Owner(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleOwner, nil)
-	cfRepo.On("DeleteDefinition", mock.Anything, "field-123").Return(nil)
+	cfRepo.On("DeleteDefinition", mock.Anything, "field-123", "board-123").Return(nil)
 	publisher.On("PublishCustomFieldDeleted", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 	uc := NewDeleteCustomFieldUseCase(cfRepo, memberRepo, publisher)

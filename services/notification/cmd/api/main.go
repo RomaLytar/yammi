@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"log"
 	"net"
@@ -16,6 +17,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	notificationpb "github.com/RomaLytar/yammi/services/notification/api/proto/v1"
@@ -137,10 +139,12 @@ func main() {
 	unreadUC := usecase.NewGetUnreadCountUseCase(boardEventRepo, boardMemberRepo, notificationRepo, unreadCounter)
 	settingsUC := usecase.NewSettingsUseCase(settingsCache, publisher)
 
-	// gRPC server
+	// gRPC server with shared secret interceptor
+	grpcSecret := os.Getenv("GRPC_SHARED_SECRET")
 	handler := delivery.NewHandler(listUC, markReadUC, markAllUC, unreadUC, settingsUC)
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
+			grpcSecretInterceptor(grpcSecret),
 			recoveryInterceptor(),
 			metrics.UnaryServerInterceptor(),
 		),
@@ -165,6 +169,23 @@ func main() {
 
 	log.Println("shutting down...")
 	grpcServer.GracefulStop()
+}
+
+func grpcSecretInterceptor(secret string) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+		if secret == "" {
+			return handler(ctx, req)
+		}
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, status.Error(codes.Unauthenticated, "missing metadata")
+		}
+		values := md.Get("x-internal-secret")
+		if len(values) == 0 || subtle.ConstantTimeCompare([]byte(values[0]), []byte(secret)) != 1 {
+			return nil, status.Error(codes.Unauthenticated, "unauthorized")
+		}
+		return handler(ctx, req)
+	}
 }
 
 func recoveryInterceptor() grpc.UnaryServerInterceptor {

@@ -4,12 +4,20 @@ import (
 	"time"
 )
 
+// LoginLimiter tracks failed login attempts and enforces temporary lockouts.
+type LoginLimiter interface {
+	Check(email string) error
+	RecordFailure(email string)
+	Reset(email string)
+}
+
 type AuthUseCase struct {
 	userRepo         UserRepository
 	refreshTokenRepo RefreshTokenRepository
 	tokenGenerator   TokenGenerator
 	eventPublisher   EventPublisher
 	hasher           PasswordHasher
+	loginLimiter     LoginLimiter
 	refreshTokenTTL  time.Duration
 }
 
@@ -19,6 +27,7 @@ func NewAuthUseCase(
 	tokenGenerator TokenGenerator,
 	eventPublisher EventPublisher,
 	hasher PasswordHasher,
+	loginLimiter LoginLimiter,
 	refreshTokenTTL time.Duration,
 ) *AuthUseCase {
 	return &AuthUseCase{
@@ -27,6 +36,7 @@ func NewAuthUseCase(
 		tokenGenerator:   tokenGenerator,
 		eventPublisher:   eventPublisher,
 		hasher:           hasher,
+		loginLimiter:     loginLimiter,
 		refreshTokenTTL:  refreshTokenTTL,
 	}
 }

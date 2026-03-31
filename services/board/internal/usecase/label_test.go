@@ -19,8 +19,8 @@ func (m *MockLabelRepository) Create(ctx context.Context, label *domain.Label) e
 	return args.Error(0)
 }
 
-func (m *MockLabelRepository) GetByID(ctx context.Context, labelID string) (*domain.Label, error) {
-	args := m.Called(ctx, labelID)
+func (m *MockLabelRepository) GetByID(ctx context.Context, labelID, boardID string) (*domain.Label, error) {
+	args := m.Called(ctx, labelID, boardID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -40,8 +40,8 @@ func (m *MockLabelRepository) Update(ctx context.Context, label *domain.Label) e
 	return args.Error(0)
 }
 
-func (m *MockLabelRepository) Delete(ctx context.Context, labelID string) error {
-	args := m.Called(ctx, labelID)
+func (m *MockLabelRepository) Delete(ctx context.Context, labelID, boardID string) error {
+	args := m.Called(ctx, labelID, boardID)
 	return args.Error(0)
 }
 
@@ -185,7 +185,7 @@ func TestDeleteLabel_OwnerCanDelete(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleOwner, nil)
-	labelRepo.On("Delete", mock.Anything, "label-123").Return(nil)
+	labelRepo.On("Delete", mock.Anything, "label-123", "board-123").Return(nil)
 	publisher.On("PublishLabelDeleted", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 	uc := NewDeleteLabelUseCase(labelRepo, memberRepo, publisher)
@@ -238,7 +238,7 @@ func TestAddLabelToCard_Success(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	labelRepo.On("GetByID", mock.Anything, "label-123").Return(&domain.Label{ID: "label-123"}, nil)
+	labelRepo.On("GetByID", mock.Anything, "label-123", "board-123").Return(&domain.Label{ID: "label-123"}, nil)
 	labelRepo.On("AddToCard", mock.Anything, "card-123", "board-123", "label-123").Return(nil)
 	publisher.On("PublishCardLabelAdded", mock.Anything, mock.Anything).Return(nil).Maybe()
 
@@ -275,7 +275,7 @@ func TestAddLabelToCard_AlreadyAssigned(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	labelRepo.On("GetByID", mock.Anything, "label-123").Return(&domain.Label{ID: "label-123"}, nil)
+	labelRepo.On("GetByID", mock.Anything, "label-123", "board-123").Return(&domain.Label{ID: "label-123"}, nil)
 	labelRepo.On("AddToCard", mock.Anything, "card-123", "board-123", "label-123").
 		Return(domain.ErrLabelAlreadyOnCard)
 
@@ -377,7 +377,7 @@ func TestUpdateLabel_Success(t *testing.T) {
 
 	memberRepo.On("IsMember", mock.Anything, "board-123", "user-123").
 		Return(true, domain.RoleMember, nil)
-	labelRepo.On("GetByID", mock.Anything, "label-123").
+	labelRepo.On("GetByID", mock.Anything, "label-123", "board-123").
 		Return(&domain.Label{ID: "label-123", BoardID: "board-123", Name: "Bug", Color: "#ef4444"}, nil)
 	labelRepo.On("Update", mock.Anything, mock.AnythingOfType("*domain.Label")).Return(nil)
 	publisher.On("PublishLabelUpdated", mock.Anything, mock.Anything).Return(nil).Maybe()

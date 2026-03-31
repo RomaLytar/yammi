@@ -44,7 +44,8 @@ func RunMigrations(db *sql.DB, migrationsDir string) error {
 			continue
 		}
 
-		content, err := os.ReadFile(filepath.Join(migrationsDir, fileName))
+		safePath := filepath.Join(migrationsDir, filepath.Base(fileName))
+		content, err := os.ReadFile(safePath) // #nosec G304 -- fileName comes from os.ReadDir, sanitized via filepath.Base
 		if err != nil {
 			return fmt.Errorf("read migration %s: %w", fileName, err)
 		}

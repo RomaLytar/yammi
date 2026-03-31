@@ -65,16 +65,16 @@ func (r *LabelRepository) BatchCreate(ctx context.Context, labels []*domain.Labe
 	return nil
 }
 
-// GetByID возвращает метку по ID
-func (r *LabelRepository) GetByID(ctx context.Context, labelID string) (*domain.Label, error) {
+// GetByID возвращает метку по ID (фильтруется по boardID для защиты от IDOR)
+func (r *LabelRepository) GetByID(ctx context.Context, labelID, boardID string) (*domain.Label, error) {
 	query := `
 		SELECT id, board_id, name, color, created_at
 		FROM labels
-		WHERE id = $1
+		WHERE id = $1 AND board_id = $2
 	`
 
 	var label domain.Label
-	err := r.db.QueryRowContext(ctx, query, labelID).Scan(
+	err := r.db.QueryRowContext(ctx, query, labelID, boardID).Scan(
 		&label.ID, &label.BoardID, &label.Name, &label.Color, &label.CreatedAt,
 	)
 
@@ -120,10 +120,10 @@ func (r *LabelRepository) Update(ctx context.Context, label *domain.Label) error
 	query := `
 		UPDATE labels
 		SET name = $1, color = $2
-		WHERE id = $3
+		WHERE id = $3 AND board_id = $4
 	`
 
-	result, err := r.db.ExecContext(ctx, query, label.Name, label.Color, label.ID)
+	result, err := r.db.ExecContext(ctx, query, label.Name, label.Color, label.ID, label.BoardID)
 	if err != nil {
 		if isDuplicateKeyError(err) {
 			return domain.ErrLabelExists
@@ -139,10 +139,10 @@ func (r *LabelRepository) Update(ctx context.Context, label *domain.Label) error
 	return nil
 }
 
-// Delete удаляет метку по ID (CASCADE удалит card_labels)
-func (r *LabelRepository) Delete(ctx context.Context, labelID string) error {
-	query := `DELETE FROM labels WHERE id = $1`
-	result, err := r.db.ExecContext(ctx, query, labelID)
+// Delete удаляет метку по ID (CASCADE удалит card_labels, фильтруется по boardID)
+func (r *LabelRepository) Delete(ctx context.Context, labelID, boardID string) error {
+	query := `DELETE FROM labels WHERE id = $1 AND board_id = $2`
+	result, err := r.db.ExecContext(ctx, query, labelID, boardID)
 	if err != nil {
 		return fmt.Errorf("delete label: %w", err)
 	}

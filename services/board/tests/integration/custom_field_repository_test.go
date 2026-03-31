@@ -35,7 +35,7 @@ func TestCustomFieldRepository_CreateDefinition(t *testing.T) {
 	}
 
 	// Verify it exists
-	loaded, err := cfRepo.GetDefinitionByID(ctx, def.ID)
+	loaded, err := cfRepo.GetDefinitionByID(ctx, def.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to load definition: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestCustomFieldRepository_CreateDefinition_Dropdown(t *testing.T) {
 		t.Fatalf("Failed to save dropdown definition: %v", err)
 	}
 
-	loaded, _ := cfRepo.GetDefinitionByID(ctx, def.ID)
+	loaded, _ := cfRepo.GetDefinitionByID(ctx, def.ID, board.ID)
 	if len(loaded.Options) != 3 {
 		t.Errorf("Expected 3 options, got %d", len(loaded.Options))
 	}
@@ -159,7 +159,7 @@ func TestCustomFieldRepository_UpdateDefinition(t *testing.T) {
 		t.Fatalf("Failed to update definition: %v", err)
 	}
 
-	loaded, _ := cfRepo.GetDefinitionByID(ctx, def.ID)
+	loaded, _ := cfRepo.GetDefinitionByID(ctx, def.ID, board.ID)
 	if loaded.Name != "Sprint Number" {
 		t.Errorf("Expected name Sprint Number, got %s", loaded.Name)
 	}
@@ -183,12 +183,12 @@ func TestCustomFieldRepository_DeleteDefinition(t *testing.T) {
 	def, _ := domain.NewCustomFieldDefinition("", board.ID, "Sprint", domain.FieldTypeText, nil, 0, false)
 	cfRepo.CreateDefinition(ctx, def)
 
-	err := cfRepo.DeleteDefinition(ctx, def.ID)
+	err := cfRepo.DeleteDefinition(ctx, def.ID, board.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete definition: %v", err)
 	}
 
-	_, err = cfRepo.GetDefinitionByID(ctx, def.ID)
+	_, err = cfRepo.GetDefinitionByID(ctx, def.ID, board.ID)
 	if err != domain.ErrCustomFieldNotFound {
 		t.Errorf("Expected ErrCustomFieldNotFound after delete, got %v", err)
 	}
@@ -383,7 +383,7 @@ func TestCustomFieldRepository_CascadeDelete(t *testing.T) {
 	cfRepo.SetValue(ctx, value)
 
 	// Delete definition — should cascade to values
-	cfRepo.DeleteDefinition(ctx, def.ID)
+	cfRepo.DeleteDefinition(ctx, def.ID, board.ID)
 
 	values, _ := cfRepo.GetCardValues(ctx, card.ID, board.ID)
 	if len(values) != 0 {

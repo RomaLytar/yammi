@@ -35,8 +35,8 @@ func (uc *DeleteCustomFieldUseCase) Execute(ctx context.Context, fieldID, boardI
 		return domain.ErrNotOwner
 	}
 
-	// 2. Удаляем определение (CASCADE удалит значения)
-	if err := uc.customFieldRepo.DeleteDefinition(ctx, fieldID); err != nil {
+	// 2. Удаляем определение (CASCADE удалит значения, с проверкой boardID)
+	if err := uc.customFieldRepo.DeleteDefinition(ctx, fieldID, boardID); err != nil {
 		return err
 	}
 

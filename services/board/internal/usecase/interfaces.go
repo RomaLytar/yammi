@@ -314,4 +314,7 @@ type FileStorage interface {
 
 	// Exists проверяет существование файла в хранилище
 	Exists(ctx context.Context, key string) (bool, error)
+
+	// Stat возвращает размер и content-type загруженного файла
+	Stat(ctx context.Context, key string) (size int64, contentType string, err error)
 }

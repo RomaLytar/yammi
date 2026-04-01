@@ -44,6 +44,9 @@ func main() {
 	}
 
 	grpcSharedSecret := os.Getenv("GRPC_SHARED_SECRET")
+	if grpcSharedSecret == "" {
+		log.Fatal("GRPC_SHARED_SECRET is required")
+	}
 
 	// gRPC clients
 	clients, err := infrastructure.NewGRPCClients(authAddr, userAddr, boardAddr, commentAddr, notificationAddr, grpcSharedSecret)

@@ -44,6 +44,8 @@ var (
 	ErrFileTooLarge          = errors.New("file size exceeds maximum allowed (50 MB)")
 	ErrMaxAttachmentsReached = errors.New("maximum number of attachments per card reached")
 	ErrEmptyFileName         = errors.New("file name cannot be empty")
+	ErrFileSizeMismatch      = errors.New("uploaded file size does not match declared size")
+	ErrFileTypeMismatch      = errors.New("uploaded file content type does not match declared type")
 )
 
 // Label errors

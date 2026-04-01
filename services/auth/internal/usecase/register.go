@@ -29,7 +29,7 @@ func (uc *AuthUseCase) Register(ctx context.Context, email, password, name strin
 		return "", "", "", err
 	}
 
-	rt := domain.NewRefreshToken(user.ID, uc.refreshTokenTTL)
+	rt, rawToken := domain.NewRefreshToken(user.ID, uc.refreshTokenTTL)
 	if err := uc.refreshTokenRepo.Create(ctx, rt); err != nil {
 		return "", "", "", err
 	}
@@ -43,7 +43,7 @@ func (uc *AuthUseCase) Register(ctx context.Context, email, password, name strin
 		}
 	}()
 
-	return user.ID, accessToken, rt.Token, nil
+	return user.ID, accessToken, rawToken, nil
 }
 
 func (uc *AuthUseCase) DeleteUser(ctx context.Context, userID string) error {

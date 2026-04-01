@@ -75,8 +75,15 @@ func main() {
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 		})
+		srv := &http.Server{
+			Addr:         ":" + metricsPort,
+			Handler:      mux,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  60 * time.Second,
+		}
 		log.Printf("metrics server started on :%s", metricsPort)
-		if err := http.ListenAndServe(":"+metricsPort, mux); err != nil {
+		if err := srv.ListenAndServe(); err != nil {
 			log.Fatalf("metrics server failed: %v", err)
 		}
 	}()
@@ -139,8 +146,11 @@ func main() {
 	unreadUC := usecase.NewGetUnreadCountUseCase(boardEventRepo, boardMemberRepo, notificationRepo, unreadCounter)
 	settingsUC := usecase.NewSettingsUseCase(settingsCache, publisher)
 
-	// gRPC server with shared secret interceptor
+	// gRPC server with shared secret interceptor (required)
 	grpcSecret := os.Getenv("GRPC_SHARED_SECRET")
+	if grpcSecret == "" {
+		log.Fatal("GRPC_SHARED_SECRET is required")
+	}
 	handler := delivery.NewHandler(listUC, markReadUC, markAllUC, unreadUC, settingsUC)
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(

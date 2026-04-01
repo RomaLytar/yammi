@@ -32,7 +32,16 @@ func (uc *CreateCommentUseCase) Execute(ctx context.Context, cardID, boardID, us
 		return nil, domain.ErrAccessDenied
 	}
 
-	// 2. Если parent_id задан — проверяем что родительский комментарий существует и является корневым
+	// 2. Проверяем что карточка существует и принадлежит указанной доске
+	exists, err := uc.membership.CardExistsInBoard(ctx, cardID, boardID, userID)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, domain.ErrEmptyCardID
+	}
+
+	// 3. Если parent_id задан — проверяем что родительский комментарий существует и является корневым
 	if parentID != nil && *parentID != "" {
 		parent, err := uc.commentRepo.GetByID(ctx, *parentID)
 		if err != nil {
@@ -40,6 +49,11 @@ func (uc *CreateCommentUseCase) Execute(ctx context.Context, cardID, boardID, us
 				return nil, domain.ErrParentNotFound
 			}
 			return nil, err
+		}
+
+		// Проверяем что родитель принадлежит той же доске (cross-board IDOR защита)
+		if parent.BoardID != boardID {
+			return nil, domain.ErrParentNotFound
 		}
 
 		// Запрещаем ответы на ответы (глубина вложенности = 1)

@@ -28,8 +28,8 @@ func (uc *GetCommentCountUseCase) Execute(ctx context.Context, cardID, boardID, 
 		return 0, domain.ErrAccessDenied
 	}
 
-	// 2. Считаем комментарии
-	count, err := uc.commentRepo.CountByCardID(ctx, cardID)
+	// 2. Считаем комментарии (boardID фильтрация предотвращает cross-board IDOR)
+	count, err := uc.commentRepo.CountByCardID(ctx, cardID, boardID)
 	if err != nil {
 		return 0, err
 	}

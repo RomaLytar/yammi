@@ -36,8 +36,8 @@ func (uc *ListCommentsUseCase) Execute(ctx context.Context, cardID, boardID, use
 		limit = 100
 	}
 
-	// 3. Запрашиваем комментарии
-	comments, nextCursor, err := uc.commentRepo.ListByCardID(ctx, cardID, limit, cursor)
+	// 3. Запрашиваем комментарии (boardID фильтрация предотвращает cross-board IDOR)
+	comments, nextCursor, err := uc.commentRepo.ListByCardID(ctx, cardID, boardID, limit, cursor)
 	if err != nil {
 		return nil, "", err
 	}

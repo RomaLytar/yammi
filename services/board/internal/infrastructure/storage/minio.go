@@ -105,3 +105,15 @@ func (s *MinIOStorage) Exists(ctx context.Context, key string) (bool, error) {
 	}
 	return true, nil
 }
+
+func (s *MinIOStorage) Stat(ctx context.Context, key string) (int64, string, error) {
+	info, err := s.client.StatObject(ctx, bucketName, key, minio.StatObjectOptions{})
+	if err != nil {
+		errResp := minio.ToErrorResponse(err)
+		if errResp.Code == "NoSuchKey" {
+			return 0, "", fmt.Errorf("object not found: %s", key)
+		}
+		return 0, "", fmt.Errorf("stat object %s: %w", key, err)
+	}
+	return info.Size, info.ContentType, nil
+}

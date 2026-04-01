@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"encoding/json"
 	"log"
 	"sync"
 )
@@ -223,6 +224,39 @@ func (h *Hub) BroadcastToBoardAndUser(boardID string, userID string, data []byte
 		UserID:        userID,
 		ExcludeUserID: excludeUserID,
 		Data:          data,
+	}
+}
+
+// UnsubscribeUserFromBoard принудительно отписывает все соединения пользователя от доски.
+// Вызывается при member.removed, чтобы удалённый участник не продолжал получать события.
+func (h *Hub) UnsubscribeUserFromBoard(boardID, userID string) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	userClients, ok := h.clients[userID]
+	if !ok {
+		return
+	}
+
+	subscribers := h.boards[boardID]
+	for client := range userClients {
+		if _, subscribed := client.boards[boardID]; subscribed {
+			delete(client.boards, boardID)
+			if subscribers != nil {
+				delete(subscribers, client)
+			}
+			// Уведомляем клиент об отписке
+			msg, _ := json.Marshal(serverMessage{Type: "unsubscribed", BoardID: boardID, Data: json.RawMessage(`"member removed"`)})
+			select {
+			case client.send <- msg:
+			default:
+			}
+			log.Printf("hub: force-unsubscribed user=%s from board=%s (member removed)", userID, boardID)
+		}
+	}
+
+	if len(subscribers) == 0 {
+		delete(h.boards, boardID)
 	}
 }
 

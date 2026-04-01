@@ -38,6 +38,11 @@ func (uc *UpdateCommentUseCase) Execute(ctx context.Context, commentID, boardID,
 		return nil, err
 	}
 
+	// 2.1. Проверяем что комментарий принадлежит указанной доске (cross-board IDOR защита)
+	if comment.BoardID != boardID {
+		return nil, domain.ErrCommentNotFound
+	}
+
 	// 3. Проверяем автора — редактировать может только автор
 	if comment.AuthorID != userID {
 		return nil, domain.ErrNotAuthor

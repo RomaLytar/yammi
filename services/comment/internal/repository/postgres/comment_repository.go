@@ -69,7 +69,8 @@ func (r *CommentRepository) GetByID(ctx context.Context, commentID string) (*dom
 
 // ListByCardID возвращает комментарии карточки с курсорной пагинацией
 // Cursor формат: "2024-01-01T00:00:00Z|uuid"
-func (r *CommentRepository) ListByCardID(ctx context.Context, cardID string, limit int, cursor string) ([]*domain.Comment, string, error) {
+// boardID используется для фильтрации — предотвращает cross-board IDOR.
+func (r *CommentRepository) ListByCardID(ctx context.Context, cardID, boardID string, limit int, cursor string) ([]*domain.Comment, string, error) {
 	var rows *sql.Rows
 	var err error
 
@@ -88,20 +89,20 @@ func (r *CommentRepository) ListByCardID(ctx context.Context, cardID string, lim
 		query := `
 			SELECT id, card_id, board_id, author_id, parent_id, content, reply_count, created_at, updated_at
 			FROM comments
-			WHERE card_id = $1 AND (created_at, id) > ($2, $3)
+			WHERE card_id = $1 AND board_id = $2 AND (created_at, id) > ($3, $4)
 			ORDER BY created_at ASC, id ASC
-			LIMIT $4
+			LIMIT $5
 		`
-		rows, err = r.db.QueryContext(ctx, query, cardID, cursorTime, cursorID, limit+1)
+		rows, err = r.db.QueryContext(ctx, query, cardID, boardID, cursorTime, cursorID, limit+1)
 	} else {
 		query := `
 			SELECT id, card_id, board_id, author_id, parent_id, content, reply_count, created_at, updated_at
 			FROM comments
-			WHERE card_id = $1
+			WHERE card_id = $1 AND board_id = $2
 			ORDER BY created_at ASC, id ASC
-			LIMIT $2
+			LIMIT $3
 		`
-		rows, err = r.db.QueryContext(ctx, query, cardID, limit+1)
+		rows, err = r.db.QueryContext(ctx, query, cardID, boardID, limit+1)
 	}
 
 	if err != nil {
@@ -177,12 +178,13 @@ func (r *CommentRepository) Delete(ctx context.Context, commentID string) error 
 	return nil
 }
 
-// CountByCardID возвращает количество комментариев к карточке
-func (r *CommentRepository) CountByCardID(ctx context.Context, cardID string) (int, error) {
-	query := `SELECT COUNT(*) FROM comments WHERE card_id = $1`
+// CountByCardID возвращает количество комментариев к карточке.
+// boardID используется для фильтрации — предотвращает cross-board IDOR.
+func (r *CommentRepository) CountByCardID(ctx context.Context, cardID, boardID string) (int, error) {
+	query := `SELECT COUNT(*) FROM comments WHERE card_id = $1 AND board_id = $2`
 
 	var count int
-	if err := r.db.QueryRowContext(ctx, query, cardID).Scan(&count); err != nil {
+	if err := r.db.QueryRowContext(ctx, query, cardID, boardID).Scan(&count); err != nil {
 		return 0, fmt.Errorf("count comments: %w", err)
 	}
 

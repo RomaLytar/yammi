@@ -9,8 +9,9 @@ import (
 )
 
 func (uc *AuthUseCase) Login(ctx context.Context, email, password string) (userID, accessToken, refreshToken string, err error) {
-	// Проверяем блокировку по brute-force
+	// Проверяем блокировку по brute-force (пропускает bcrypt, экономит CPU)
 	if err := uc.loginLimiter.Check(email); err != nil {
+		slog.Warn("login rejected: account locked", "email", email)
 		return "", "", "", err
 	}
 
@@ -41,10 +42,10 @@ func (uc *AuthUseCase) Login(ctx context.Context, email, password string) (userI
 		return "", "", "", err
 	}
 
-	rt := domain.NewRefreshToken(user.ID, uc.refreshTokenTTL)
+	rt, rawToken := domain.NewRefreshToken(user.ID, uc.refreshTokenTTL)
 	if err := uc.refreshTokenRepo.Create(ctx, rt); err != nil {
 		return "", "", "", err
 	}
 
-	return user.ID, accessToken, rt.Token, nil
+	return user.ID, accessToken, rawToken, nil
 }

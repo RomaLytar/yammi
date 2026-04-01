@@ -88,8 +88,11 @@ func main() {
 	}
 	defer dlqMonitor.Close()
 
-	// gRPC server with shared secret interceptor
+	// gRPC server with shared secret interceptor (required)
 	grpcSecret := os.Getenv("GRPC_SHARED_SECRET")
+	if grpcSecret == "" {
+		log.Fatal("GRPC_SHARED_SECRET is required")
+	}
 	handler := delivery.NewUserHandler(userUC)
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(

@@ -39,6 +39,11 @@ func (p *Publisher) Publish(ctx context.Context, subject string, event interface
 	return nil
 }
 
+// Conn возвращает NATS-соединение для подписок (cache invalidation и т.д.)
+func (p *Publisher) Conn() *nats.Conn {
+	return p.conn
+}
+
 func (p *Publisher) Close() {
 	if p.conn != nil {
 		p.conn.Close()

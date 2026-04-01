@@ -8,8 +8,10 @@ import (
 
 	boardpb "github.com/RomaLytar/yammi/services/board/api/proto/v1"
 	"google.golang.org/grpc"
+	grpccodes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 // memberCacheEntry — запись в кеше членства
@@ -54,11 +56,13 @@ func NewBoardMembershipChecker(boardGRPCAddr, sharedSecret string) (*BoardMember
 		client: boardpb.NewBoardServiceClient(conn),
 		conn:   conn,
 		cache:  make(map[string]memberCacheEntry),
-		ttl:    5 * time.Minute,
+		ttl:    30 * time.Second,
 	}, nil
 }
 
-// IsMember проверяет, является ли пользователь членом доски
+// IsMember проверяет, является ли пользователь членом доски.
+// Кэшируются только положительные результаты (isMember=true) — отказ в доступе
+// всегда перепроверяется через Board Service, чтобы отзыв прав действовал немедленно.
 func (c *BoardMembershipChecker) IsMember(ctx context.Context, boardID, userID string) (bool, error) {
 	entry, ok := c.getCached(boardID, userID)
 	if ok {
@@ -70,11 +74,13 @@ func (c *BoardMembershipChecker) IsMember(ctx context.Context, boardID, userID s
 		return false, err
 	}
 
-	c.setCached(boardID, userID, isMember, isOwner)
+	if isMember {
+		c.setCached(boardID, userID, isMember, isOwner)
+	}
 	return isMember, nil
 }
 
-// IsOwner проверяет, является ли пользователь владельцем доски
+// IsOwner проверяет, является ли пользователь владельцем доски.
 func (c *BoardMembershipChecker) IsOwner(ctx context.Context, boardID, userID string) (bool, error) {
 	entry, ok := c.getCached(boardID, userID)
 	if ok {
@@ -86,7 +92,9 @@ func (c *BoardMembershipChecker) IsOwner(ctx context.Context, boardID, userID st
 		return false, err
 	}
 
-	c.setCached(boardID, userID, isMember, isOwner)
+	if isMember {
+		c.setCached(boardID, userID, isMember, isOwner)
+	}
 	return isOwner, nil
 }
 
@@ -125,6 +133,36 @@ func (c *BoardMembershipChecker) setCached(boardID, userID string, isMember, isO
 		isOwner:   isOwner,
 		expiresAt: time.Now().Add(c.ttl),
 	}
+}
+
+// CardExistsInBoard проверяет, что карточка существует и принадлежит указанной доске.
+// Вызывает Board Service GetCard RPC.
+// NotFound/PermissionDenied → (false, nil); инфраструктурные ошибки → (false, err).
+func (c *BoardMembershipChecker) CardExistsInBoard(ctx context.Context, cardID, boardID, userID string) (bool, error) {
+	_, err := c.client.GetCard(ctx, &boardpb.GetCardRequest{
+		CardId:  cardID,
+		BoardId: boardID,
+		UserId:  userID,
+	})
+	if err != nil {
+		st, ok := grpcstatus.FromError(err)
+		if ok {
+			switch st.Code() {
+			case grpccodes.NotFound, grpccodes.PermissionDenied:
+				return false, nil
+			}
+		}
+		return false, fmt.Errorf("check card existence via board service: %w", err)
+	}
+	return true, nil
+}
+
+// InvalidateCache удаляет кэшированный результат для пары boardID:userID.
+func (c *BoardMembershipChecker) InvalidateCache(boardID, userID string) {
+	key := boardID + ":" + userID
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.cache, key)
 }
 
 // Close закрывает gRPC соединение

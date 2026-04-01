@@ -15,22 +15,38 @@ const (
 	pongWait = 60 * time.Second
 	// pingPeriod — период отправки ping (должен быть меньше pongWait).
 	pingPeriod = 54 * time.Second
+	// tokenCheckPeriod — период перепроверки JWT (отсекает истёкшие токены).
+	tokenCheckPeriod = 60 * time.Second
 	// maxMessageSize — максимальный размер входящего сообщения.
 	maxMessageSize = 4096
 	// sendBufferSize — размер буфера канала отправки.
 	sendBufferSize = 256
+	// msgRateLimit — максимум входящих сообщений в окно msgRateWindow.
+	// Защищает от subscribe/unsubscribe спама, который бьёт HTTP-проверкой membership.
+	msgRateLimit  = 30
+	msgRateWindow = 10 * time.Second
 )
+
+// TokenVerifier проверяет валидность JWT (включая exp).
+type TokenVerifier interface {
+	VerifyToken(token string) (userID string, err error)
+}
 
 // Client — одно WebSocket-соединение.
 type Client struct {
-	hub     *Hub
-	conn    *websocket.Conn
-	userID  string
-	token   string // JWT токен для проверки доступа к доскам
-	checker BoardAccessChecker
-	send    chan []byte
+	hub      *Hub
+	conn     *websocket.Conn
+	userID   string
+	token    string // JWT токен для проверки доступа к доскам
+	checker  BoardAccessChecker
+	verifier TokenVerifier
+	send     chan []byte
 	// boards — множество досок, на которые подписан клиент (для быстрой очистки при отключении).
 	boards map[string]bool
+
+	// rate limiting на входящие сообщения (защита от subscribe/unsubscribe flood)
+	msgCount    int
+	msgWindowAt time.Time
 }
 
 // clientMessage — входящее сообщение от клиента.
@@ -48,15 +64,16 @@ type serverMessage struct {
 }
 
 // NewClient создаёт нового клиента.
-func NewClient(hub *Hub, conn *websocket.Conn, userID, token string, checker BoardAccessChecker) *Client {
+func NewClient(hub *Hub, conn *websocket.Conn, userID, token string, checker BoardAccessChecker, verifier TokenVerifier) *Client {
 	return &Client{
-		hub:     hub,
-		conn:    conn,
-		userID:  userID,
-		token:   token,
-		checker: checker,
-		send:    make(chan []byte, sendBufferSize),
-		boards:  make(map[string]bool),
+		hub:      hub,
+		conn:     conn,
+		userID:   userID,
+		token:    token,
+		checker:  checker,
+		verifier: verifier,
+		send:     make(chan []byte, sendBufferSize),
+		boards:   make(map[string]bool),
 	}
 }
 
@@ -87,6 +104,23 @@ func (c *Client) ReadPump() {
 		var msg clientMessage
 		if err := json.Unmarshal(message, &msg); err != nil {
 			log.Printf("ws-client: invalid message from user=%s: %v", c.userID, err)
+			continue
+		}
+
+		// Rate limiting: защита от flood subscribe/unsubscribe, каждое из которых
+		// бьёт HTTP-проверкой membership назад в API Gateway.
+		now := time.Now()
+		if now.Sub(c.msgWindowAt) > msgRateWindow {
+			c.msgCount = 0
+			c.msgWindowAt = now
+		}
+		c.msgCount++
+		if c.msgCount > msgRateLimit {
+			errMsg, _ := json.Marshal(serverMessage{Type: "error", Data: json.RawMessage(`"rate limit exceeded"`)})
+			select {
+			case c.send <- errMsg:
+			default:
+			}
 			continue
 		}
 
@@ -128,9 +162,11 @@ func (c *Client) ReadPump() {
 // WritePump отправляет сообщения из канала send в WebSocket.
 // Запускать в отдельной горутине.
 func (c *Client) WritePump() {
-	ticker := time.NewTicker(pingPeriod)
+	pingTicker := time.NewTicker(pingPeriod)
+	tokenTicker := time.NewTicker(tokenCheckPeriod)
 	defer func() {
-		ticker.Stop()
+		pingTicker.Stop()
+		tokenTicker.Stop()
 		c.conn.Close()
 	}()
 
@@ -156,10 +192,22 @@ func (c *Client) WritePump() {
 				}
 			}
 
-		case <-ticker.C:
+		case <-pingTicker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
+			}
+
+		case <-tokenTicker.C:
+			// Периодическая проверка JWT — отсекаем соединения с истёкшим токеном
+			if c.verifier != nil {
+				if _, err := c.verifier.VerifyToken(c.token); err != nil {
+					log.Printf("ws-client: token expired for user=%s, closing connection", c.userID)
+					c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+					c.conn.WriteMessage(websocket.CloseMessage,
+						websocket.FormatCloseMessage(websocket.ClosePolicyViolation, "token expired"))
+					return
+				}
 			}
 		}
 	}

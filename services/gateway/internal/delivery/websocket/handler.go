@@ -95,18 +95,14 @@ func ServeWS(hub *Hub, verifier *auth.JWTVerifier, checker BoardAccessChecker, w
 		return
 	}
 
-	// Предпочитаем Authorization header — токен не попадёт в логи и историю браузера
+	// JWT только через Authorization header — query string токены утекают через логи,
+	// историю браузера и reverse proxy diagnostics.
 	token := ""
 	if header := r.Header.Get("Authorization"); strings.HasPrefix(header, "Bearer ") {
 		token = strings.TrimPrefix(header, "Bearer ")
-	} else {
-		token = r.URL.Query().Get("token")
-		if token != "" {
-			log.Printf("ws-handler: WARNING — token passed via query param from %s; prefer Authorization header", r.RemoteAddr)
-		}
 	}
 	if token == "" {
-		http.Error(w, "missing token", http.StatusUnauthorized)
+		http.Error(w, "missing or invalid Authorization header", http.StatusUnauthorized)
 		return
 	}
 
@@ -122,7 +118,7 @@ func ServeWS(hub *Hub, verifier *auth.JWTVerifier, checker BoardAccessChecker, w
 		return
 	}
 
-	client := NewClient(hub, conn, userID, token, checker)
+	client := NewClient(hub, conn, userID, token, checker, verifier)
 	hub.register <- client
 
 	go client.WritePump()

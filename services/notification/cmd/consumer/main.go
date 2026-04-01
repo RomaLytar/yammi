@@ -60,8 +60,15 @@ func main() {
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 		})
+		srv := &http.Server{
+			Addr:         ":" + metricsPort,
+			Handler:      mux,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  60 * time.Second,
+		}
 		log.Printf("metrics server started on :%s", metricsPort)
-		if err := http.ListenAndServe(":"+metricsPort, mux); err != nil {
+		if err := srv.ListenAndServe(); err != nil {
 			log.Fatalf("metrics server failed: %v", err)
 		}
 	}()

@@ -156,15 +156,27 @@ Invariants enforced in domain: card belongs to exactly one column, unique orderi
 
 ## Security & Resilience
 
+- **gRPC inter-service auth** — `GRPC_SHARED_SECRET` required on all services; empty secret = fatal on startup. Constant-time comparison via `subtle.ConstantTimeCompare`.
+- **Cross-board IDOR protection** — comment service filters all queries by `board_id` and verifies `comment.BoardID` match after `GetByID`. Card existence validated via Board Service `GetCard` RPC before creating comments.
+- **Refresh token hashing** — tokens stored as SHA-256 hashes in DB; raw value only returned to client. Migration `000003_hash_refresh_tokens` converts existing tokens.
+- **WebSocket security** — JWT only via Authorization header (no query string); periodic JWT re-validation (60s); force-unsubscribe on `member.removed`; per-connection message rate limit (30 msg/10s).
+- **Membership cache** — comment service caches positive results for 30s; negative results never cached; instant invalidation via NATS `member.removed` subscription.
+- **Attachment upload verification** — `confirm_upload` validates actual file size/content-type via `StatObject`; mismatch triggers cleanup of both S3 object and DB metadata. Nginx minio-proxy rate-limited (5 req/s/IP).
 - **Async event publishing** — all `go func()` blocks use `context.WithTimeout(5s)` + `slog.Error` logging. No fire-and-forget.
 - **gRPC timeouts** — API Gateway has 10s default timeout interceptor on all outgoing gRPC calls (`timeoutInterceptor` in `grpc_clients.go`).
 - **Input validation** — API Gateway validates max lengths: title (500), description (5000), name (255), content (10000), search (200), color (7). Defined in `dto.go`.
 - **SQL LIKE injection** — all ILIKE queries use `ESCAPE '\'` clause + `escapeLikePattern()` function.
-- **Timing attack protection** — login always runs bcrypt even for non-existent users.
+- **Timing attack protection** — login always runs bcrypt even for non-existent users. Per-email lockout (5 attempts / 15 min auto-unlock) skips bcrypt to save CPU.
 - **CORS** — requires explicit `ALLOWED_ORIGINS` env var; rejects all origins when not set.
-- **WebSocket** — CheckOrigin rejects when origins not configured; JWT via Authorization header.
+- **WebSocket** — CheckOrigin rejects when origins not configured; JWT via Authorization header only.
 - **Request body limit** — 1MB via `MaxBodyMiddleware`.
-- **Structured logging** — `log/slog` for auth events and event publishing errors.
+- **Metrics servers** — all use `http.Server` with Read/Write/Idle timeouts (slowloris protection).
+- **Infrastructure isolation** — all infra ports (Postgres, Redis, NATS, MinIO console, PgBouncer, Prometheus, Grafana) bound to `127.0.0.1` in docker-compose.
+- **Structured logging** — `log/slog` for auth events, lockout rejections, and event publishing errors.
+
+### Known Residual Risks (architectural, not fixable in application code)
+- **Distributed DDoS** — rate limiting is local in-memory per API Gateway instance. For multi-replica or public deployment, requires external edge layer: CDN/WAF/LB or distributed rate limiting via Redis/ingress.
+- **Login lockout abuse** — per-email lockout is in-memory and can be used to DoS specific emails for 15 min. Mitigated by auto-unlock and gateway rate limit, but not fully eliminable without CAPTCHA or distributed tracking.
 
 ## Conventions
 

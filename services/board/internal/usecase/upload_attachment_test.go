@@ -70,6 +70,11 @@ func (m *MockFileStorage) Exists(ctx context.Context, key string) (bool, error) 
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *MockFileStorage) Stat(ctx context.Context, key string) (int64, string, error) {
+	args := m.Called(ctx, key)
+	return args.Get(0).(int64), args.String(1), args.Error(2)
+}
+
 func TestUploadAttachmentUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name        string

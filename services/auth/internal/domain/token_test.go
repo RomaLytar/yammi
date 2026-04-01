@@ -95,7 +95,7 @@ func TestRefreshToken_Revoke(t *testing.T) {
 
 func TestNewRefreshToken(t *testing.T) {
 	ttl := 24 * time.Hour
-	rt := NewRefreshToken("user-1", ttl)
+	rt, rawToken := NewRefreshToken("user-1", ttl)
 
 	if rt.ID == "" {
 		t.Fatal("expected non-empty ID")
@@ -104,7 +104,18 @@ func TestNewRefreshToken(t *testing.T) {
 		t.Fatalf("expected UserID user-1, got %s", rt.UserID)
 	}
 	if rt.Token == "" {
-		t.Fatal("expected non-empty Token")
+		t.Fatal("expected non-empty Token (hash)")
+	}
+	if rawToken == "" {
+		t.Fatal("expected non-empty rawToken")
+	}
+	// Token в структуре должен быть хэшем, а не сырым значением
+	if rt.Token == rawToken {
+		t.Fatal("expected Token to be hashed, not raw")
+	}
+	// Повторное хэширование raw должно давать тот же Token
+	if HashToken(rawToken) != rt.Token {
+		t.Fatal("expected HashToken(rawToken) to equal rt.Token")
 	}
 	if rt.Revoked {
 		t.Fatal("expected new token to not be revoked")

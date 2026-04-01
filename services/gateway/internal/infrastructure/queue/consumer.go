@@ -215,6 +215,12 @@ func (c *Consumer) handleMemberEvent(subject string, data []byte) {
 
 	// Рассылаем подписчикам доски + отдельно целевому пользователю.
 	c.hub.BroadcastToBoardAndUser(evt.BoardID, evt.UserID, payload, evt.ActorID)
+
+	// При удалении участника — принудительно отписываем от доски,
+	// чтобы он не продолжал получать события.
+	if subject == "member.removed" {
+		c.hub.UnsubscribeUserFromBoard(evt.BoardID, evt.UserID)
+	}
 }
 
 func (c *Consumer) handleNotificationEvent(data []byte) {

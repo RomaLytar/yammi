@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"runtime/debug"
 	"syscall"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
@@ -53,12 +54,19 @@ func main() {
 		boardGRPCAddr = "board:50053"
 	}
 
-	// Metrics HTTP server
+	// Metrics HTTP server (with timeouts to prevent slowloris)
 	go func() {
 		mux := http.NewServeMux()
 		mux.Handle("/metrics", promhttp.Handler())
+		srv := &http.Server{
+			Addr:         ":" + metricsPort,
+			Handler:      mux,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  60 * time.Second,
+		}
 		log.Printf("metrics server started on :%s", metricsPort)
-		if err := http.ListenAndServe(":"+metricsPort, mux); err != nil {
+		if err := srv.ListenAndServe(); err != nil {
 			log.Fatalf("metrics server failed: %v", err)
 		}
 	}()
@@ -98,8 +106,11 @@ func main() {
 	// Event publisher (wraps NATS publisher)
 	publisher := nats.NewEventPublisher(natsPublisher)
 
-	// gRPC shared secret for inter-service auth
+	// gRPC shared secret for inter-service auth (required)
 	grpcSecret := os.Getenv("GRPC_SHARED_SECRET")
+	if grpcSecret == "" {
+		log.Fatal("GRPC_SHARED_SECRET is required")
+	}
 
 	// Board membership checker (gRPC client)
 	membershipChecker, err := boardclient.NewBoardMembershipChecker(boardGRPCAddr, grpcSecret)
@@ -107,6 +118,11 @@ func main() {
 		log.Fatalf("failed to create board membership checker: %v", err)
 	}
 	defer membershipChecker.Close()
+
+	// Cache invalidation: подписываемся на member.removed для немедленного сброса кэша
+	if _, err := nats.SubscribeMemberRemoved(natsPublisher.Conn(), membershipChecker); err != nil {
+		log.Fatalf("failed to subscribe to member.removed for cache invalidation: %v", err)
+	}
 
 	// Repository
 	commentRepo := postgres.NewCommentRepository(db)

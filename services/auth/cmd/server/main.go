@@ -113,8 +113,11 @@ func main() {
 	// Usecase
 	authUC := usecase.NewAuthUseCase(userRepo, refreshTokenRepo, tokenGenerator, publisher, hasher, loginLimiter, 7*24*time.Hour)
 
-	// gRPC server with shared secret interceptor
+	// gRPC server with shared secret interceptor (required)
 	grpcSecret := os.Getenv("GRPC_SHARED_SECRET")
+	if grpcSecret == "" {
+		log.Fatal("GRPC_SHARED_SECRET is required")
+	}
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			grpcSecretInterceptor(grpcSecret),

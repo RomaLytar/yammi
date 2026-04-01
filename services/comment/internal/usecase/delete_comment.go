@@ -38,6 +38,11 @@ func (uc *DeleteCommentUseCase) Execute(ctx context.Context, commentID, boardID,
 		return err
 	}
 
+	// 2.1. Проверяем что комментарий принадлежит указанной доске (cross-board IDOR защита)
+	if comment.BoardID != boardID {
+		return domain.ErrCommentNotFound
+	}
+
 	// 3. Проверяем права: автор ИЛИ владелец доски
 	if comment.AuthorID != userID {
 		isOwner, err := uc.membership.IsOwner(ctx, boardID, userID)

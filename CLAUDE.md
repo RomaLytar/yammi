@@ -101,6 +101,12 @@ User-scoped labels visible on all user's boards. Stored in `user_labels` table (
 ### Board Settings
 Per-board configuration stored in `board_settings` table (lazy-created on first update). Current settings: `use_board_labels_only` (boolean, default false). Owner-only for updates, member for reads.
 
+### Card Search & Filters
+Board-level card search and filtering. Search by title (ILIKE), filter by assignee, priority, and task type. Frontend uses client-side filtering (instant, all cards already in memory). Backend provides `SearchBoardCards` RPC for API consumers. Single SQL query with dynamic WHERE clauses, parameterized — no N+1, partition-pruned by `board_id`.
+
+### Releases
+Jira-like release management. Board-scoped releases with lifecycle: `draft` → `active` → `completed`. Cards assigned to releases or left in backlog (`release_id IS NULL`). Only one active release per board (PostgreSQL partial unique index). Board kanban shows only active release cards. Completed releases are read-only. Done-column configurable in board_settings for auto-backlog on completion. Max 50 releases per board. Stored in `releases` table, `release_id` added to `cards`, `done_column_id` added to `board_settings`.
+
 ### Templates
 Three template types for reuse:
 - **Card templates** (`card_templates`): title, description, priority, task_type, checklist_data (JSONB), label_ids (UUID[]). Board-scoped or user-scoped.
@@ -144,6 +150,7 @@ The gRPC handler in Board Service is decomposed into 10 domain-specific sub-hand
 | `AutomationHandler` | Automation rules | 5 |
 | `BoardSettingsHandler` | Board settings | 2 |
 | `UserLabelHandler` | Global user labels + available labels | 5 |
+| `ReleaseHandler` | Releases lifecycle + cards | 12 |
 | `TemplateHandler` | Card/column/board templates | 12 |
 
 Each sub-handler has its own struct + constructor in the corresponding `*_handler.go` file. The main `NewBoardServiceServer()` takes 10 sub-handler params instead of 52 positional args. Methods remain on `*BoardServiceServer` (required by gRPC interface) but access deps through sub-handlers (e.g., `s.cards.create.Execute(...)`).
@@ -308,6 +315,23 @@ TEST_DATABASE_URL="postgres://yammi:yammi@localhost:5432/board_test?sslmode=disa
 - `PUT    /api/v1/user-labels/:id` — update global label
 - `DELETE /api/v1/user-labels/:id` — delete global label
 
+### Card Search (1 route)
+- `GET    /api/v1/boards/:boardId/cards/search` — search/filter cards (query params: search, assignee_id, priority, task_type)
+
+### Releases (12 routes)
+- `POST   /api/v1/boards/:boardId/releases` — create release
+- `GET    /api/v1/boards/:boardId/releases` — list releases
+- `GET    /api/v1/boards/:boardId/releases/active` — get active release
+- `GET    /api/v1/boards/:boardId/releases/:releaseId` — get release
+- `PUT    /api/v1/boards/:boardId/releases/:releaseId` — update release
+- `DELETE /api/v1/boards/:boardId/releases/:releaseId` — delete release
+- `POST   /api/v1/boards/:boardId/releases/:releaseId/start` — start release
+- `POST   /api/v1/boards/:boardId/releases/:releaseId/complete` — complete release
+- `GET    /api/v1/boards/:boardId/releases/:releaseId/cards` — get release cards
+- `POST   /api/v1/boards/:boardId/releases/:releaseId/cards` — assign card to release
+- `DELETE /api/v1/boards/:boardId/releases/:releaseId/cards/:cardId` — remove card from release
+- `GET    /api/v1/boards/:boardId/backlog` — get backlog cards
+
 ### Templates (12 routes)
 - `POST/GET    /api/v1/boards/:boardId/card-templates` — create/list card templates
 - `DELETE      /api/v1/card-templates/:id` — delete card template
@@ -321,7 +345,7 @@ TEST_DATABASE_URL="postgres://yammi:yammi@localhost:5432/board_test?sslmode=disa
 
 ## Migrations
 
-Board Service migrations: `services/board/migrations/` — files `000001_init.up.sql` through `000015_*.up.sql`.
+Board Service migrations: `services/board/migrations/` — files `000001_init.up.sql` through `000016_*.up.sql`.
 
 Key migrations for new features:
 - `000007` — Labels table and card_labels junction table
@@ -333,6 +357,7 @@ Key migrations for new features:
 - `000013` — Optimize indexes
 - `000014` — Board settings + user labels (global labels)
 - `000015` — Templates (card_templates, column_templates, board_templates)
+- `000016` — Releases table, release_id on cards, done_column_id on board_settings
 
 ## Access Control
 
@@ -345,4 +370,5 @@ Feature-specific authorization rules (enforced in usecase layer):
 - **Automation Rules**: owner-only for CRUD (create/update/delete); member for list and history viewing
 - **Board Settings**: owner-only for update; member for read
 - **User Labels**: user owns their own labels (no board membership check)
+- **Releases**: owner-only for lifecycle (start/complete/delete/update); member for create, assign/remove cards, list, view
 - **Templates**: member check for board-scoped templates; ownership check for delete

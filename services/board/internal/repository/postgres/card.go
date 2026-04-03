@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/RomaLytar/yammi/services/board/internal/domain"
 )
@@ -22,12 +23,13 @@ func scanCard(scanner interface {
 }) (*domain.Card, error) {
 	var card domain.Card
 	var assigneeID sql.NullString
+	var releaseID sql.NullString
 	var dueDate sql.NullTime
 	var priority, taskType string
 
 	err := scanner.Scan(
 		&card.ID, &card.ColumnID, &card.Title, &card.Description,
-		&card.Position, &assigneeID, &card.CreatorID,
+		&card.Position, &assigneeID, &card.CreatorID, &releaseID,
 		&dueDate, &priority, &taskType,
 		&card.CreatedAt, &card.UpdatedAt,
 	)
@@ -37,6 +39,9 @@ func scanCard(scanner interface {
 
 	if assigneeID.Valid {
 		card.AssigneeID = &assigneeID.String
+	}
+	if releaseID.Valid {
+		card.ReleaseID = &releaseID.String
 	}
 	if dueDate.Valid {
 		card.DueDate = &dueDate.Time
@@ -60,13 +65,13 @@ func (r *CardRepository) Create(ctx context.Context, card *domain.Card) error {
 	}
 
 	query := `
-		INSERT INTO cards (id, column_id, board_id, title, description, position, assignee_id, creator_id, due_date, priority, task_type, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		INSERT INTO cards (id, column_id, board_id, title, description, position, assignee_id, creator_id, release_id, due_date, priority, task_type, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 	`
 
 	_, err = r.db.ExecContext(ctx, query,
 		card.ID, card.ColumnID, boardID, card.Title, card.Description,
-		card.Position, card.AssigneeID, card.CreatorID,
+		card.Position, card.AssigneeID, card.CreatorID, card.ReleaseID,
 		card.DueDate, string(card.Priority), string(card.TaskType),
 		card.CreatedAt, card.UpdatedAt,
 	)
@@ -80,7 +85,7 @@ func (r *CardRepository) Create(ctx context.Context, card *domain.Card) error {
 // GetByID возвращает карточку по ID с проверкой принадлежности к доске (IDOR protection)
 func (r *CardRepository) GetByID(ctx context.Context, cardID, boardID string) (*domain.Card, error) {
 	query := `
-		SELECT id, column_id, title, description, position, assignee_id, creator_id, due_date, priority, task_type, created_at, updated_at
+		SELECT id, column_id, title, description, position, assignee_id, creator_id, release_id, due_date, priority, task_type, created_at, updated_at
 		FROM cards
 		WHERE id = $1 AND board_id = $2
 	`
@@ -99,7 +104,7 @@ func (r *CardRepository) GetByID(ctx context.Context, cardID, boardID string) (*
 // GetLastInColumn возвращает последнюю карточку в колонке (для генерации lexorank)
 func (r *CardRepository) GetLastInColumn(ctx context.Context, columnID string) (*domain.Card, error) {
 	query := `
-		SELECT id, column_id, title, description, position, assignee_id, creator_id, due_date, priority, task_type, created_at, updated_at
+		SELECT id, column_id, title, description, position, assignee_id, creator_id, release_id, due_date, priority, task_type, created_at, updated_at
 		FROM cards
 		WHERE column_id = $1
 		ORDER BY position DESC
@@ -120,7 +125,7 @@ func (r *CardRepository) GetLastInColumn(ctx context.Context, columnID string) (
 // ListByColumnID возвращает все карточки колонки в порядке lexorank position
 func (r *CardRepository) ListByColumnID(ctx context.Context, columnID string) ([]*domain.Card, error) {
 	query := `
-		SELECT id, column_id, title, description, position, assignee_id, creator_id, due_date, priority, task_type, created_at, updated_at
+		SELECT id, column_id, title, description, position, assignee_id, creator_id, release_id, due_date, priority, task_type, created_at, updated_at
 		FROM cards
 		WHERE column_id = $1
 		ORDER BY position ASC
@@ -159,13 +164,13 @@ func (r *CardRepository) Update(ctx context.Context, card *domain.Card) error {
 	query := `
 		UPDATE cards
 		SET column_id = $1, title = $2, description = $3, position = $4, assignee_id = $5,
-		    due_date = $6, priority = $7, task_type = $8, updated_at = $9
-		WHERE id = $10 AND board_id = $11
+		    release_id = $6, due_date = $7, priority = $8, task_type = $9, updated_at = $10
+		WHERE id = $11 AND board_id = $12
 	`
 
 	result, err := r.db.ExecContext(ctx, query,
 		card.ColumnID, card.Title, card.Description, card.Position, card.AssigneeID,
-		card.DueDate, string(card.Priority), string(card.TaskType), card.UpdatedAt,
+		card.ReleaseID, card.DueDate, string(card.Priority), string(card.TaskType), card.UpdatedAt,
 		card.ID, boardID,
 	)
 	if err != nil {
@@ -252,6 +257,156 @@ func (r *CardRepository) BatchDelete(ctx context.Context, boardID string, cardID
 	result, err := r.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("batch delete cards: %w", err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return domain.ErrCardNotFound
+	}
+
+	return nil
+}
+
+// escapeLikePatternCard экранирует спецсимволы LIKE/ILIKE в пользовательском вводе.
+func escapeLikePatternCard(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `%`, `\%`)
+	s = strings.ReplaceAll(s, `_`, `\_`)
+	return s
+}
+
+// SearchByBoardID ищет карточки по доске с опциональными фильтрами (search, assignee, priority, task_type)
+func (r *CardRepository) SearchByBoardID(ctx context.Context, boardID string, search string, assigneeID string, priority string, taskType string) ([]*domain.Card, error) {
+	query := `SELECT id, column_id, title, description, position, assignee_id, creator_id, release_id, due_date, priority, task_type, created_at, updated_at FROM cards WHERE board_id = $1`
+	args := []interface{}{boardID}
+	argIdx := 2
+
+	if search != "" {
+		query += fmt.Sprintf(` AND title ILIKE '%%' || $%d || '%%' ESCAPE '\'`, argIdx)
+		args = append(args, escapeLikePatternCard(search))
+		argIdx++
+	}
+
+	if assigneeID != "" {
+		query += fmt.Sprintf(` AND assignee_id = $%d`, argIdx)
+		args = append(args, assigneeID)
+		argIdx++
+	}
+
+	if priority != "" {
+		query += fmt.Sprintf(` AND priority = $%d`, argIdx)
+		args = append(args, priority)
+		argIdx++
+	}
+
+	if taskType != "" {
+		query += fmt.Sprintf(` AND task_type = $%d`, argIdx)
+		args = append(args, taskType)
+		argIdx++
+	}
+
+	query += ` ORDER BY position ASC`
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("search cards: %w", err)
+	}
+	defer rows.Close()
+
+	var cards []*domain.Card
+	for rows.Next() {
+		card, err := scanCard(rows)
+		if err != nil {
+			return nil, fmt.Errorf("scan card: %w", err)
+		}
+		cards = append(cards, card)
+	}
+
+	return cards, rows.Err()
+}
+
+// ListByReleaseID возвращает карточки релиза
+func (r *CardRepository) ListByReleaseID(ctx context.Context, boardID, releaseID string) ([]*domain.Card, error) {
+	query := `
+		SELECT id, column_id, title, description, position, assignee_id, creator_id, release_id, due_date, priority, task_type, created_at, updated_at
+		FROM cards
+		WHERE board_id = $1 AND release_id = $2
+		ORDER BY position ASC
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, boardID, releaseID)
+	if err != nil {
+		return nil, fmt.Errorf("list cards by release: %w", err)
+	}
+	defer rows.Close()
+
+	var cards []*domain.Card
+	for rows.Next() {
+		card, err := scanCard(rows)
+		if err != nil {
+			return nil, fmt.Errorf("scan card: %w", err)
+		}
+		cards = append(cards, card)
+	}
+
+	return cards, rows.Err()
+}
+
+// ListBacklog возвращает карточки без релиза (бэклог)
+func (r *CardRepository) ListBacklog(ctx context.Context, boardID string) ([]*domain.Card, error) {
+	query := `
+		SELECT id, column_id, title, description, position, assignee_id, creator_id, release_id, due_date, priority, task_type, created_at, updated_at
+		FROM cards
+		WHERE board_id = $1 AND release_id IS NULL
+		ORDER BY position ASC
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, boardID)
+	if err != nil {
+		return nil, fmt.Errorf("list backlog cards: %w", err)
+	}
+	defer rows.Close()
+
+	var cards []*domain.Card
+	for rows.Next() {
+		card, err := scanCard(rows)
+		if err != nil {
+			return nil, fmt.Errorf("scan card: %w", err)
+		}
+		cards = append(cards, card)
+	}
+
+	return cards, rows.Err()
+}
+
+// MoveToBacklog снимает release_id со всех карточек релиза
+func (r *CardRepository) MoveToBacklog(ctx context.Context, boardID, releaseID string) (int, error) {
+	query := `UPDATE cards SET release_id = NULL, updated_at = NOW() WHERE board_id = $1 AND release_id = $2`
+	result, err := r.db.ExecContext(ctx, query, boardID, releaseID)
+	if err != nil {
+		return 0, fmt.Errorf("move to backlog: %w", err)
+	}
+	rows, _ := result.RowsAffected()
+	return int(rows), nil
+}
+
+// MoveToBacklogExceptColumn снимает release_id с карточек релиза, кроме указанной колонки
+func (r *CardRepository) MoveToBacklogExceptColumn(ctx context.Context, boardID, releaseID, exceptColumnID string) (int, error) {
+	query := `UPDATE cards SET release_id = NULL, updated_at = NOW() WHERE board_id = $1 AND release_id = $2 AND column_id != $3`
+	result, err := r.db.ExecContext(ctx, query, boardID, releaseID, exceptColumnID)
+	if err != nil {
+		return 0, fmt.Errorf("move to backlog except column: %w", err)
+	}
+	rows, _ := result.RowsAffected()
+	return int(rows), nil
+}
+
+// SetReleaseID устанавливает или снимает release_id у карточки
+func (r *CardRepository) SetReleaseID(ctx context.Context, cardID, boardID string, releaseID *string) error {
+	query := `UPDATE cards SET release_id = $3, updated_at = NOW() WHERE id = $1 AND board_id = $2`
+	result, err := r.db.ExecContext(ctx, query, cardID, boardID, releaseID)
+	if err != nil {
+		return fmt.Errorf("set release_id: %w", err)
 	}
 
 	rows, _ := result.RowsAffected()

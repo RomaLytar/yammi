@@ -40,4 +40,11 @@ type EventPublisher interface {
 	PublishAutomationRuleUpdated(ctx context.Context, event AutomationRuleUpdated) error
 	PublishAutomationRuleDeleted(ctx context.Context, event AutomationRuleDeleted) error
 	PublishAutomationExecuted(ctx context.Context, event AutomationExecuted) error
+	PublishReleaseCreated(ctx context.Context, event ReleaseCreatedEvent) error
+	PublishReleaseUpdated(ctx context.Context, event ReleaseUpdatedEvent) error
+	PublishReleaseStarted(ctx context.Context, event ReleaseStartedEvent) error
+	PublishReleaseCompleted(ctx context.Context, event ReleaseCompletedEvent) error
+	PublishReleaseDeleted(ctx context.Context, event ReleaseDeletedEvent) error
+	PublishCardReleaseAssigned(ctx context.Context, event CardReleaseAssignedEvent) error
+	PublishCardReleaseRemoved(ctx context.Context, event CardReleaseRemovedEvent) error
 }

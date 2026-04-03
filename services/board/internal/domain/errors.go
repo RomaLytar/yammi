@@ -108,6 +108,19 @@ var (
 	ErrMaxTemplatesReached = errors.New("maximum templates per board reached")
 )
 
+// Release errors
+var (
+	ErrReleaseNotFound        = errors.New("release not found")
+	ErrEmptyReleaseName       = errors.New("release name cannot be empty")
+	ErrReleaseCompleted       = errors.New("completed release cannot be modified")
+	ErrReleaseNotDraft        = errors.New("release must be in draft status")
+	ErrReleaseNotActive       = errors.New("release must be in active status")
+	ErrActiveReleaseExists    = errors.New("board already has an active release")
+	ErrMaxReleasesReached     = errors.New("maximum releases per board reached")
+	ErrCardInCompletedRelease = errors.New("cannot modify card in a completed release")
+	ErrInvalidSprintDuration  = errors.New("sprint duration must be at least 7 days")
+)
+
 // Activity errors
 var (
 	ErrEmptyActorID      = errors.New("actor ID cannot be empty")

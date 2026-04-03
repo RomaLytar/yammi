@@ -88,6 +88,23 @@ export const useNotificationsStore = defineStore('notifications', () => {
     toasts.value = toasts.value.filter(t => t.id !== id)
   }
 
+  // Показать локальный toast (не от сервера, а от фронта)
+  function showToast(title: string, message: string, type = 'info'): void {
+    const id = crypto.randomUUID()
+    toasts.value.push({
+      id,
+      type,
+      title,
+      message,
+      metadata: {},
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    })
+    if (toasts.value.length > 5) toasts.value.shift()
+    // Авто-удаление через 5 секунд
+    setTimeout(() => removeToast(id), 5000)
+  }
+
   function clear(): void {
     notifications.value = []
     nextCursor.value = undefined
@@ -100,6 +117,6 @@ export const useNotificationsStore = defineStore('notifications', () => {
     notifications, loading, error, hasMore, unreadCount, settings,
     typeFilter, search, toasts,
     fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead,
-    fetchSettings, updateSettings, addRealtimeNotification, removeToast, clear,
+    fetchSettings, updateSettings, addRealtimeNotification, removeToast, showToast, clear,
   }
 })

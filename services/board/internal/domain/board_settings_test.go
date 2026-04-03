@@ -15,6 +15,10 @@ func TestNewBoardSettings_Valid(t *testing.T) {
 		t.Error("NewBoardSettings() UseBoardLabelsOnly should default to false")
 	}
 
+	if settings.SprintDurationDays != 14 {
+		t.Errorf("NewBoardSettings() SprintDurationDays = %d, want 14", settings.SprintDurationDays)
+	}
+
 	if settings.CreatedAt.IsZero() {
 		t.Error("NewBoardSettings() CreatedAt is zero")
 	}
@@ -28,7 +32,7 @@ func TestBoardSettings_Update(t *testing.T) {
 	settings := NewBoardSettings("board-123")
 	oldUpdatedAt := settings.UpdatedAt
 
-	settings.Update(true)
+	settings.Update(true, nil, 14, false)
 
 	if settings.UseBoardLabelsOnly != true {
 		t.Error("BoardSettings.Update() UseBoardLabelsOnly should be true")
@@ -41,8 +45,8 @@ func TestBoardSettings_Update(t *testing.T) {
 
 func TestBoardSettings_Update_SetFalse(t *testing.T) {
 	settings := NewBoardSettings("board-123")
-	settings.Update(true)
-	settings.Update(false)
+	settings.Update(true, nil, 14, false)
+	settings.Update(false, nil, 14, false)
 
 	if settings.UseBoardLabelsOnly != false {
 		t.Error("BoardSettings.Update() UseBoardLabelsOnly should be false after setting back")
@@ -51,7 +55,7 @@ func TestBoardSettings_Update_SetFalse(t *testing.T) {
 
 func TestBoardSettings_BoardID_Preserved(t *testing.T) {
 	settings := NewBoardSettings("board-abc")
-	settings.Update(true)
+	settings.Update(true, nil, 14, false)
 
 	if settings.BoardID != "board-abc" {
 		t.Error("BoardSettings.Update() changed BoardID")

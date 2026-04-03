@@ -88,6 +88,7 @@ type cardResponse struct {
 	DueDate     string `json:"due_date,omitempty"`
 	Priority    string `json:"priority"`
 	TaskType    string `json:"task_type"`
+	ReleaseID   string `json:"release_id,omitempty"`
 }
 
 type memberResponse struct {
@@ -249,6 +250,9 @@ type automationExecutionResponse struct {
 type boardSettingsResponse struct {
 	BoardID            string `json:"board_id"`
 	UseBoardLabelsOnly bool   `json:"use_board_labels_only"`
+	DoneColumnID       string `json:"done_column_id,omitempty"`
+	SprintDurationDays int32  `json:"sprint_duration_days"`
+	ReleasesEnabled    bool   `json:"releases_enabled"`
 	CreatedAt          string `json:"created_at"`
 	UpdatedAt          string `json:"updated_at"`
 }
@@ -285,6 +289,24 @@ type boardTemplateResponse struct {
 	LabelsData  []labelTemplateDataResponse       `json:"labels_data"`
 	CreatedAt   string                            `json:"created_at"`
 	UpdatedAt   string                            `json:"updated_at"`
+}
+
+// --- Release responses ---
+
+type releaseResponse struct {
+	ID          string `json:"id"`
+	BoardID     string `json:"board_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	StartDate   string `json:"start_date,omitempty"`
+	EndDate     string `json:"end_date,omitempty"`
+	StartedAt   string `json:"started_at,omitempty"`
+	CompletedAt string `json:"completed_at,omitempty"`
+	CreatedBy   string `json:"created_by"`
+	Version     int32  `json:"version"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
 }
 
 type statusResponse struct {

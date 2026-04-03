@@ -51,7 +51,16 @@ func (s *BoardServiceServer) UpdateBoardSettings(ctx context.Context, req *board
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	settings, err := s.boardSettings.update.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetUseBoardLabelsOnly())
+	var doneColumnID *string
+	if req.GetDoneColumnId() != "" {
+		id := req.GetDoneColumnId()
+		doneColumnID = &id
+	}
+	sprintDurationDays := int(req.GetSprintDurationDays())
+	if sprintDurationDays == 0 {
+		sprintDurationDays = 14 // default
+	}
+	settings, err := s.boardSettings.update.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetUseBoardLabelsOnly(), doneColumnID, sprintDurationDays, req.GetReleasesEnabled())
 	if err != nil {
 		return nil, mapDomainError(err)
 	}

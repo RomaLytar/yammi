@@ -77,6 +77,7 @@ func mapCardFromProto(pb *boardpb.Card) cardResponse {
 		UpdatedAt:   pb.UpdatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
 		Priority:    pb.Priority,
 		TaskType:    pb.TaskType,
+		ReleaseID:   pb.ReleaseId,
 	}
 	if pb.DueDate != nil {
 		resp.DueDate = pb.DueDate.AsTime().Format("2006-01-02T15:04:05Z07:00")
@@ -322,6 +323,9 @@ func mapBoardSettingsFromProto(pb *boardpb.BoardSettings) boardSettingsResponse 
 	return boardSettingsResponse{
 		BoardID:            pb.BoardId,
 		UseBoardLabelsOnly: pb.UseBoardLabelsOnly,
+		DoneColumnID:       pb.DoneColumnId,
+		SprintDurationDays: pb.SprintDurationDays,
+		ReleasesEnabled:    pb.ReleasesEnabled,
 		CreatedAt:          pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt:          pb.UpdatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
 	}
@@ -400,4 +404,43 @@ func mapBoardTemplatesFromProto(templates []*boardpb.BoardTemplate) []boardTempl
 		result[i] = mapBoardTemplateFromProto(t)
 	}
 	return result
+}
+
+// ============================================================================
+// Release Mappers
+// ============================================================================
+
+func mapReleaseFromProto(pb *boardpb.Release) releaseResponse {
+	resp := releaseResponse{
+		ID:          pb.Id,
+		BoardID:     pb.BoardId,
+		Name:        pb.Name,
+		Description: pb.Description,
+		Status:      pb.Status,
+		CreatedBy:   pb.CreatedBy,
+		Version:     pb.Version,
+		CreatedAt:   pb.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt:   pb.UpdatedAt.AsTime().Format("2006-01-02T15:04:05Z07:00"),
+	}
+	if pb.StartDate != nil {
+		resp.StartDate = pb.StartDate.AsTime().Format("2006-01-02T15:04:05Z07:00")
+	}
+	if pb.EndDate != nil {
+		resp.EndDate = pb.EndDate.AsTime().Format("2006-01-02T15:04:05Z07:00")
+	}
+	if pb.StartedAt != nil {
+		resp.StartedAt = pb.StartedAt.AsTime().Format("2006-01-02T15:04:05Z07:00")
+	}
+	if pb.CompletedAt != nil {
+		resp.CompletedAt = pb.CompletedAt.AsTime().Format("2006-01-02T15:04:05Z07:00")
+	}
+	return resp
+}
+
+func mapReleasesFromProto(pbs []*boardpb.Release) []releaseResponse {
+	releases := make([]releaseResponse, len(pbs))
+	for i, pb := range pbs {
+		releases[i] = mapReleaseFromProto(pb)
+	}
+	return releases
 }

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBoardStore } from '@/stores/board'
 import { useAuthStore } from '@/stores/auth'
+import { useReleasesStore } from '@/stores/releases'
 import { useRealtimeConnection } from '@/composables/useRealtimeBoard'
 import { registerHandler, unregisterHandler } from '@/services/realtimeService'
 import type { Card } from '@/types/domain'
@@ -13,6 +14,12 @@ import type {
   BoardUpdatedData, BoardDeletedData, MemberRemovedData,
 } from '@/types/events'
 import BoardColumn from '@/components/board/BoardColumn.vue'
+import BoardSubNav from '@/components/board/BoardSubNav.vue'
+import type { BoardTab } from '@/components/board/BoardSubNav.vue'
+import BoardFilterBar from '@/components/board/BoardFilterBar.vue'
+import type { BoardFilters } from '@/components/board/BoardFilterBar.vue'
+import ReleasesPanel from '@/components/board/ReleasesPanel.vue'
+import BacklogPanel from '@/components/board/BacklogPanel.vue'
 import CreateColumnModal from '@/components/board/CreateColumnModal.vue'
 import CreateCardModal from '@/components/board/CreateCardModal.vue'
 import EditCardModal from '@/components/board/EditCardModal.vue'
@@ -24,7 +31,38 @@ const route = useRoute()
 const router = useRouter()
 const boardStore = useBoardStore()
 const authStore = useAuthStore()
+const releasesStore = useReleasesStore()
 const { subscribeBoard, unsubscribeBoard } = useRealtimeConnection()
+
+// Tab + release detail state synced with URL query params
+// ?tab=releases — releases list
+// ?tab=releases&release=<id> — release detail (tasks)
+// ?tab=backlog — backlog
+const validTabs: BoardTab[] = ['board', 'releases', 'backlog']
+const activeTab = computed<BoardTab>({
+  get() {
+    const t = route.query.tab as string
+    return validTabs.includes(t as BoardTab) ? (t as BoardTab) : 'board'
+  },
+  set(tab: BoardTab) {
+    const boardId = route.params.boardId as string
+    const query: Record<string, string> = tab === 'board' ? {} : { tab }
+    router.push({ path: `/boards/${boardId}`, query })
+  },
+})
+
+// Selected release ID from URL
+const selectedReleaseId = computed(() => (route.query.release as string) || '')
+
+function openReleaseDetail(releaseId: string) {
+  const boardId = route.params.boardId as string
+  router.push({ path: `/boards/${boardId}`, query: { tab: 'releases', release: releaseId } })
+}
+
+function closeReleaseDetail() {
+  const boardId = route.params.boardId as string
+  router.push({ path: `/boards/${boardId}`, query: { tab: 'releases' } })
+}
 
 const isOwner = computed(() => boardStore.board?.ownerId === authStore.userId)
 const currentUserId = computed(() => authStore.userId || '')
@@ -68,6 +106,63 @@ function toggleCardSelect(cardId: string) {
   else s.add(cardId)
   selectedCardIds.value = s
 }
+
+// --- Filters ---
+const activeFilters = ref<BoardFilters>({
+  search: '',
+  assigneeIds: [],
+  priority: '',
+  taskType: '',
+})
+
+function onFiltersUpdate(filters: BoardFilters) {
+  activeFilters.value = filters
+}
+
+const hasActiveFilters = computed(() =>
+  (boardStore.boardSettings?.releasesEnabled ?? false) ||
+  activeFilters.value.search !== '' ||
+  activeFilters.value.assigneeIds.length > 0 ||
+  activeFilters.value.priority !== '' ||
+  activeFilters.value.taskType !== ''
+)
+
+function cardMatchesFilter(card: Card): boolean {
+  // Фильтр по активному релизу: только если релизы включены в настройках
+  const releasesOn = boardStore.boardSettings?.releasesEnabled ?? false
+  if (releasesOn) {
+    const ar = releasesStore.activeRelease
+    if (!ar) return false // нет активного релиза — доска пустая
+    if (card.releaseId !== ar.id) return false
+  }
+
+  const f = activeFilters.value
+  if (f.search && !card.title.toLowerCase().includes(f.search.toLowerCase())) return false
+  if (f.assigneeIds.length > 0 && (!card.assigneeId || !f.assigneeIds.includes(card.assigneeId))) return false
+  if (f.priority && card.priority !== f.priority) return false
+  if (f.taskType && card.taskType !== f.taskType) return false
+  return true
+}
+
+const hiddenCardIds = computed<Set<string>>(() => {
+  if (!hasActiveFilters.value) return new Set()
+  const hidden = new Set<string>()
+  for (const col of boardStore.columns) {
+    for (const card of col.cards) {
+      if (!cardMatchesFilter(card)) hidden.add(card.id)
+    }
+  }
+  return hidden
+})
+
+const filteredCardCounts = computed(() => {
+  if (!hasActiveFilters.value) return null
+  const counts = new Map<string, number>()
+  for (const col of boardStore.columns) {
+    counts.set(col.id, col.cards.filter(c => cardMatchesFilter(c)).length)
+  }
+  return counts
+})
 
 async function handleBulkDeleteCards() {
   if (selectedCardIds.value.size === 0) return
@@ -215,6 +310,20 @@ onMounted(async () => {
   const boardId = route.params.boardId as string
   try {
     await boardStore.fetchBoard(boardId)
+    // Загружаем релизы и активный релиз
+    // Load full board settings (releasesEnabled, doneColumnId, sprintDurationDays)
+    try {
+      const fullSettings = await boardsApi.getBoardSettings(boardId)
+      boardStore.boardSettings = fullSettings
+    } catch { /* fallback to partial settings from fetchAvailableLabels */ }
+
+    // Load releases if enabled
+    if (boardStore.boardSettings?.releasesEnabled) {
+      await Promise.all([
+        releasesStore.fetchReleases(boardId),
+        releasesStore.fetchActiveRelease(boardId),
+      ])
+    }
   } catch (error) {
     console.error('Failed to load board:', error)
     router.push('/boards')
@@ -242,6 +351,7 @@ onUnmounted(() => {
   }
 
   boardStore.clear()
+  releasesStore.clear()
 })
 
 async function handleCreateColumn(title: string) {
@@ -290,7 +400,7 @@ function handleAddCard(columnId: string) {
 
 async function handleCreateCard(data: {
   title: string; description: string; assigneeId?: string; files?: File[];
-  dueDate?: string; priority?: string; taskType?: string
+  dueDate?: string; priority?: string; taskType?: string; releaseId?: string
 }) {
   if (!activeColumnId.value) return
 
@@ -330,6 +440,25 @@ async function handleCreateCard(data: {
             console.error('Failed to upload file:', file.name, err)
           }
         }
+      }
+
+      // Назначаем релиз если выбран
+      if (data.releaseId) {
+        try {
+          await releasesStore.assignCard(boardStore.boardId, data.releaseId, newCard.id)
+        } catch (err) {
+          console.error('Failed to assign card to release:', err)
+        }
+      }
+
+      // Toast: карточка ушла в бэклог если релизы включены но нет активного спринта
+      const releasesOn = boardStore.boardSettings?.releasesEnabled ?? false
+      if (releasesOn && !data.releaseId && !releasesStore.activeRelease) {
+        const { useNotificationsStore } = await import('@/stores/notifications')
+        useNotificationsStore().showToast(
+          'Карточка создана',
+          `"${data.title}" добавлена в бэклог — нет активного релиза`,
+        )
       }
     }
 
@@ -490,6 +619,7 @@ function onDragEnd() {
             </svg>
           </button>
           <button
+            v-if="activeTab === 'board'"
             class="select-toggle"
             :class="{ 'select-toggle--active': cardSelectMode }"
             @click="toggleCardSelectMode"
@@ -501,55 +631,84 @@ function onDragEnd() {
             {{ cardSelectMode ? 'Отмена' : 'Выбрать' }}
           </button>
           <button
-            v-if="cardSelectMode && selectedCardCount > 0"
+            v-if="activeTab === 'board' && cardSelectMode && selectedCardCount > 0"
             class="bulk-delete-btn"
             @click="showBulkDeleteCards = true"
           >
             Удалить ({{ selectedCardCount }})
           </button>
-          <BaseButton v-if="isOwner && !cardSelectMode" @click="showCreateColumnModal = true">
+          <BaseButton v-if="activeTab === 'board' && isOwner && !cardSelectMode" @click="showCreateColumnModal = true">
             + Добавить колонку
           </BaseButton>
         </div>
       </div>
 
-      <div
-        ref="boardContentRef"
-        class="board-page__content"
-        :class="{ 'board-page__content--grabbing': isDragScrolling }"
-        @mousedown="onDragStart"
-        @mousemove="onDragMove"
-        @mouseup="onDragEnd"
-        @mouseleave="onDragEnd"
-      >
-        <div class="board-columns">
-          <BoardColumn
-            v-for="column in boardStore.columns"
-            :key="column.id"
-            :column="column"
-            :is-owner="isOwner"
-            :current-user-id="currentUserId"
-            :select-mode="cardSelectMode"
-            :selected-ids="selectedCardIds"
-            @add-card="handleAddCard(column.id)"
-            @card-click="handleCardClick"
-            @card-delete="handleDeleteCard"
-            @card-move="handleCardMove"
-            @card-toggle-select="toggleCardSelect"
-            @update-title="(title) => handleUpdateColumn(column.id, title)"
-            @delete="handleDeleteColumn(column.id)"
-          />
+      <BoardSubNav
+        v-model="activeTab"
+        :active-release-name="releasesStore.activeRelease?.name"
+        :releases-enabled="boardStore.boardSettings?.releasesEnabled ?? false"
+      />
 
-          <div v-if="isOwner" class="board-columns__placeholder">
-            <button
-              class="add-column-button"
-              @click="showCreateColumnModal = true"
-            >
-              + Добавить колонку
-            </button>
+      <!-- TAB: Board (kanban) -->
+      <template v-if="activeTab === 'board'">
+        <BoardFilterBar
+          :members="boardStore.members"
+          :board-id="boardStore.boardId || ''"
+          @update:filters="onFiltersUpdate"
+        />
+
+        <div
+          ref="boardContentRef"
+          class="board-page__content"
+          :class="{ 'board-page__content--grabbing': isDragScrolling }"
+          @mousedown="onDragStart"
+          @mousemove="onDragMove"
+          @mouseup="onDragEnd"
+          @mouseleave="onDragEnd"
+        >
+          <div class="board-columns">
+            <BoardColumn
+              v-for="column in boardStore.columns"
+              :key="column.id"
+              :column="column"
+              :is-owner="isOwner"
+              :current-user-id="currentUserId"
+              :select-mode="cardSelectMode"
+              :selected-ids="selectedCardIds"
+              :hidden-card-ids="hiddenCardIds"
+              :filtered-card-count="filteredCardCounts?.get(column.id)"
+              @add-card="handleAddCard(column.id)"
+              @card-click="handleCardClick"
+              @card-delete="handleDeleteCard"
+              @card-move="handleCardMove"
+              @card-toggle-select="toggleCardSelect"
+              @update-title="(title) => handleUpdateColumn(column.id, title)"
+              @delete="handleDeleteColumn(column.id)"
+            />
+
+            <div v-if="isOwner" class="board-columns__placeholder">
+              <button
+                class="add-column-button"
+                @click="showCreateColumnModal = true"
+              >
+                + Добавить колонку
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
+
+      <!-- TAB: Releases -->
+      <ReleasesPanel
+        v-else-if="activeTab === 'releases'"
+        :selected-release-id="selectedReleaseId"
+        @open-card="handleCardClick"
+        @open-release="openReleaseDetail"
+        @close-release="closeReleaseDetail"
+      />
+
+      <!-- TAB: Backlog -->
+      <BacklogPanel v-else-if="activeTab === 'backlog'" @open-card="handleCardClick" />
     </template>
 
     <CreateColumnModal
@@ -635,6 +794,7 @@ function onDragEnd() {
   display: flex;
   align-items: center;
   gap: 8px;
+  height: 36px;
 }
 
 .settings-btn {
@@ -727,7 +887,7 @@ function onDragEnd() {
 }
 
 .board-columns__placeholder {
-  min-width: 300px;
+  min-width: 360px;
   flex-shrink: 0;
 }
 

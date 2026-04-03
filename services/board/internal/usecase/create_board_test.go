@@ -273,6 +273,41 @@ func (m *MockEventPublisher) PublishAutomationExecuted(ctx context.Context, even
 	return args.Error(0)
 }
 
+func (m *MockEventPublisher) PublishReleaseCreated(ctx context.Context, event ReleaseCreatedEvent) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishReleaseUpdated(ctx context.Context, event ReleaseUpdatedEvent) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishReleaseStarted(ctx context.Context, event ReleaseStartedEvent) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishReleaseCompleted(ctx context.Context, event ReleaseCompletedEvent) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishReleaseDeleted(ctx context.Context, event ReleaseDeletedEvent) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishCardReleaseAssigned(ctx context.Context, event CardReleaseAssignedEvent) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishCardReleaseRemoved(ctx context.Context, event CardReleaseRemovedEvent) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
 func TestCreateBoardUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name        string

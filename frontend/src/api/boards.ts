@@ -71,6 +71,7 @@ function mapCard(dto: CardResponse): Card {
     columnId: dto.column_id,
     assigneeId: dto.assignee_id,
     creatorId: dto.creator_id,
+    releaseId: dto.release_id,
     version: dto.version,
     createdAt: dto.created_at,
     dueDate: dto.due_date,
@@ -267,6 +268,23 @@ export async function createCard(columnId: string, req: CreateCardRequest): Prom
 export async function getCards(columnId: string, boardId: string): Promise<Card[]> {
   const { data } = await api.get<{ cards: CardResponse[] }>(
     `/v1/columns/${columnId}/cards?board_id=${boardId}`
+  )
+  return data.cards.map(mapCard)
+}
+
+export async function searchBoardCards(
+  boardId: string,
+  filters: { search?: string; assigneeIds?: string[]; priority?: string; taskType?: string },
+): Promise<Card[]> {
+  const params = new URLSearchParams()
+  if (filters.search) params.set('search', filters.search)
+  if (filters.assigneeIds?.length) {
+    for (const id of filters.assigneeIds) params.append('assignee_id', id)
+  }
+  if (filters.priority) params.set('priority', filters.priority)
+  if (filters.taskType) params.set('task_type', filters.taskType)
+  const { data } = await api.get<{ cards: CardResponse[] }>(
+    `/v1/boards/${boardId}/cards/search?${params.toString()}`
   )
   return data.cards.map(mapCard)
 }
@@ -735,6 +753,9 @@ function mapBoardSettings(dto: BoardSettingsResponse): BoardSettings {
   return {
     boardId: dto.board_id,
     useBoardLabelsOnly: dto.use_board_labels_only,
+    doneColumnId: dto.done_column_id,
+    sprintDurationDays: dto.sprint_duration_days || 14,
+    releasesEnabled: dto.releases_enabled || false,
   }
 }
 
@@ -755,10 +776,26 @@ export async function getBoardSettings(boardId: string): Promise<BoardSettings> 
   return mapBoardSettings(data.settings)
 }
 
-export async function updateBoardSettings(boardId: string, useBoardLabelsOnly: boolean): Promise<BoardSettings> {
+export async function updateBoardSettings(
+  boardId: string,
+  useBoardLabelsOnly: boolean,
+  doneColumnId?: string,
+  sprintDurationDays?: number,
+  releasesEnabled?: boolean,
+): Promise<BoardSettings> {
+  const body: Record<string, unknown> = { use_board_labels_only: useBoardLabelsOnly }
+  if (doneColumnId !== undefined) {
+    body.done_column_id = doneColumnId || ''
+  }
+  if (sprintDurationDays !== undefined) {
+    body.sprint_duration_days = sprintDurationDays
+  }
+  if (releasesEnabled !== undefined) {
+    body.releases_enabled = releasesEnabled
+  }
   const { data } = await api.put<{ settings: BoardSettingsResponse }>(
     `/v1/boards/${boardId}/settings`,
-    { use_board_labels_only: useBoardLabelsOnly },
+    body,
   )
   return mapBoardSettings(data.settings)
 }

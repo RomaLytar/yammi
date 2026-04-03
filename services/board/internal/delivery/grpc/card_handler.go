@@ -24,6 +24,7 @@ type CardHandler struct {
 	assign   *usecase.AssignCardUseCase
 	unassign *usecase.UnassignCardUseCase
 	activity *usecase.ListCardActivityUseCase
+	search   *usecase.SearchBoardCardsUseCase
 	repo     usecase.CardRepository
 }
 
@@ -37,12 +38,13 @@ func NewCardHandler(
 	assign *usecase.AssignCardUseCase,
 	unassign *usecase.UnassignCardUseCase,
 	activity *usecase.ListCardActivityUseCase,
+	search *usecase.SearchBoardCardsUseCase,
 	repo usecase.CardRepository,
 ) CardHandler {
 	return CardHandler{
 		create: create, get: get, getAll: getAll, update: update,
 		move: move, delete: delete_, assign: assign, unassign: unassign,
-		activity: activity, repo: repo,
+		activity: activity, search: search, repo: repo,
 	}
 }
 
@@ -265,5 +267,24 @@ func (s *BoardServiceServer) UnassignCard(ctx context.Context, req *boardpb.Unas
 
 	return &boardpb.UnassignCardResponse{
 		Card: mapCardToProto(card, req.GetBoardId()),
+	}, nil
+}
+
+// SearchBoardCards ищет карточки по доске с опциональными фильтрами
+func (s *BoardServiceServer) SearchBoardCards(ctx context.Context, req *boardpb.SearchBoardCardsRequest) (*boardpb.SearchBoardCardsResponse, error) {
+	if req.GetBoardId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "board_id is required")
+	}
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	cards, err := s.cards.search.Execute(ctx, req.GetBoardId(), req.GetUserId(), req.GetSearch(), req.GetAssigneeId(), req.GetPriority(), req.GetTaskType())
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	return &boardpb.SearchBoardCardsResponse{
+		Cards: mapCardsToProto(cards, req.GetBoardId()),
 	}, nil
 }

@@ -158,3 +158,31 @@ func (p *EventPublisher) PublishAutomationRuleDeleted(ctx context.Context, event
 func (p *EventPublisher) PublishAutomationExecuted(ctx context.Context, event usecase.AutomationExecuted) error {
 	return p.publisher.Publish(ctx, "automation.executed", event)
 }
+
+func (p *EventPublisher) PublishReleaseCreated(ctx context.Context, event usecase.ReleaseCreatedEvent) error {
+	return p.publisher.Publish(ctx, "release.created", event)
+}
+
+func (p *EventPublisher) PublishReleaseUpdated(ctx context.Context, event usecase.ReleaseUpdatedEvent) error {
+	return p.publisher.Publish(ctx, "release.updated", event)
+}
+
+func (p *EventPublisher) PublishReleaseStarted(ctx context.Context, event usecase.ReleaseStartedEvent) error {
+	return p.publisher.Publish(ctx, "release.started", event)
+}
+
+func (p *EventPublisher) PublishReleaseCompleted(ctx context.Context, event usecase.ReleaseCompletedEvent) error {
+	return p.publisher.Publish(ctx, "release.completed", event)
+}
+
+func (p *EventPublisher) PublishReleaseDeleted(ctx context.Context, event usecase.ReleaseDeletedEvent) error {
+	return p.publisher.Publish(ctx, "release.deleted", event)
+}
+
+func (p *EventPublisher) PublishCardReleaseAssigned(ctx context.Context, event usecase.CardReleaseAssignedEvent) error {
+	return p.publisher.Publish(ctx, "card.release_assigned", event)
+}
+
+func (p *EventPublisher) PublishCardReleaseRemoved(ctx context.Context, event usecase.CardReleaseRemovedEvent) error {
+	return p.publisher.Publish(ctx, "card.release_removed", event)
+}

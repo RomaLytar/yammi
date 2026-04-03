@@ -22,6 +22,7 @@ type BoardServiceServer struct {
 	boardSettings BoardSettingsHandler
 	userLabels    UserLabelHandler
 	templates     TemplateHandler
+	releases      ReleaseHandler
 }
 
 // NewBoardServiceServer создает gRPC сервер с доменными суб-хендлерами
@@ -39,6 +40,7 @@ func NewBoardServiceServer(
 	boardSettings BoardSettingsHandler,
 	userLabels UserLabelHandler,
 	templates TemplateHandler,
+	releases ReleaseHandler,
 ) *BoardServiceServer {
 	return &BoardServiceServer{
 		boards:        boards,
@@ -54,6 +56,7 @@ func NewBoardServiceServer(
 		boardSettings: boardSettings,
 		userLabels:    userLabels,
 		templates:     templates,
+		releases:      releases,
 	}
 }
 

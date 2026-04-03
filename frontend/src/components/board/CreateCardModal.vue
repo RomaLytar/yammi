@@ -5,9 +5,11 @@ import BaseModal from '@/components/shared/BaseModal.vue'
 import BaseInput from '@/components/shared/BaseInput.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSearchSelect from '@/components/shared/BaseSearchSelect.vue'
+import BaseSelect from '@/components/shared/BaseSelect.vue'
 import RichTextEditor from '@/components/shared/RichTextEditor.vue'
 import { DatePicker } from 'v-calendar'
 import { useBoardStore } from '@/stores/board'
+import { useReleasesStore } from '@/stores/releases'
 
 import type { Priority, TaskType } from '@/types/domain'
 
@@ -15,22 +17,34 @@ interface Emits {
   (e: 'close'): void
   (e: 'create', data: {
     title: string; description: string; assigneeId?: string; files?: File[];
-    dueDate?: string; priority?: string; taskType?: string
+    dueDate?: string; priority?: string; taskType?: string; releaseId?: string
   }): void
 }
 
 const emit = defineEmits<Emits>()
 const router = useRouter()
 const boardStore = useBoardStore()
+const releasesStore = useReleasesStore()
 
 const title = ref('')
 const description = ref('')
 const selectedAssignee = ref('')
 const selectedPriority = ref<Priority>('medium')
 const selectedTaskType = ref<TaskType>('task')
+const selectedRelease = ref('')
 const selectedDueDate = ref('')
 const dueDateObj = ref<Date | null>(null)
 const isDarkTheme = computed(() => document.documentElement.getAttribute('data-theme') === 'dark')
+
+const releaseOptions = computed(() => {
+  const opts = [{ value: '', label: 'Бэклог (без релиза)' }]
+  for (const r of releasesStore.releases) {
+    if (r.status !== 'completed') {
+      opts.push({ value: r.id, label: r.name })
+    }
+  }
+  return opts
+})
 
 watch(dueDateObj, (val) => {
   selectedDueDate.value = val ? val.toISOString().split('T')[0] : ''
@@ -125,6 +139,7 @@ function handleCreate() {
     dueDate: selectedDueDate.value || undefined,
     priority: selectedPriority.value,
     taskType: selectedTaskType.value,
+    releaseId: selectedRelease.value || undefined,
   })
 }
 
@@ -288,6 +303,18 @@ function handleClose() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
             </button>
           </div>
+        </div>
+
+        <div v-if="releaseOptions.length > 1" class="ccm-meta-group">
+          <BaseSelect
+            :model-value="selectedRelease"
+            :options="releaseOptions"
+            label="Релиз"
+            placeholder="Бэклог"
+            size="sm"
+            :disabled="loading"
+            @update:model-value="(v) => { selectedRelease = String(v) }"
+          />
         </div>
 
         <div class="ccm-meta-group">

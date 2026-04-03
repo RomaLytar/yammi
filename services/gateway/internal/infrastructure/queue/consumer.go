@@ -107,6 +107,13 @@ func (c *Consumer) Start() error {
 		"comment.created",
 		"comment.updated",
 		"comment.deleted",
+		"release.created",
+		"release.updated",
+		"release.started",
+		"release.completed",
+		"release.deleted",
+		"card.release_assigned",
+		"card.release_removed",
 	}
 
 	for _, subj := range boardSubjects {

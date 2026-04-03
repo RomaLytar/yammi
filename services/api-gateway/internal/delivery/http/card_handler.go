@@ -32,6 +32,7 @@ func (h *BoardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
 		DueDate     *string `json:"due_date"`
 		Priority    string  `json:"priority"`
 		TaskType    string  `json:"task_type"`
+		ReleaseID   string  `json:"release_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -57,6 +58,7 @@ func (h *BoardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
 		AssigneeId:  req.AssigneeID,
 		Priority:    req.Priority,
 		TaskType:    req.TaskType,
+		ReleaseId:   req.ReleaseID,
 	}
 	if req.DueDate != nil && *req.DueDate != "" {
 		t, err := time.Parse(time.RFC3339, *req.DueDate)
@@ -407,6 +409,48 @@ func (h *BoardHandler) GetCardActivity(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"entries":     entries,
 		"next_cursor": resp.NextCursor,
+	})
+}
+
+// SearchBoardCards GET /api/v1/boards/{id}/cards/search
+func (h *BoardHandler) SearchBoardCards(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	boardID := r.PathValue("id")
+	if boardID == "" {
+		writeError(w, http.StatusBadRequest, "board_id is required")
+		return
+	}
+
+	search := r.URL.Query().Get("search")
+	assigneeID := r.URL.Query().Get("assignee_id")
+	priority := r.URL.Query().Get("priority")
+	taskType := r.URL.Query().Get("task_type")
+
+	if msg := validateStringLen(search, "search", maxSearchLen); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+
+	resp, err := h.client.SearchBoardCards(r.Context(), &boardpb.SearchBoardCardsRequest{
+		BoardId:    boardID,
+		UserId:     userID,
+		Search:     search,
+		AssigneeId: assigneeID,
+		Priority:   priority,
+		TaskType:   taskType,
+	})
+	if err != nil {
+		writeGRPCError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"cards": mapCardsFromProto(resp.Cards),
 	})
 }
 

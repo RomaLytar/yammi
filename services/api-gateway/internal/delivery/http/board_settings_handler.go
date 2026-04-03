@@ -50,7 +50,10 @@ func (h *BoardHandler) UpdateBoardSettings(w http.ResponseWriter, r *http.Reques
 	}
 
 	var req struct {
-		UseBoardLabelsOnly bool `json:"use_board_labels_only"`
+		UseBoardLabelsOnly bool   `json:"use_board_labels_only"`
+		DoneColumnID       string `json:"done_column_id"`
+		SprintDurationDays int32  `json:"sprint_duration_days"`
+		ReleasesEnabled    bool   `json:"releases_enabled"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -61,6 +64,9 @@ func (h *BoardHandler) UpdateBoardSettings(w http.ResponseWriter, r *http.Reques
 		BoardId:            boardID,
 		UserId:             userID,
 		UseBoardLabelsOnly: req.UseBoardLabelsOnly,
+		DoneColumnId:       req.DoneColumnID,
+		SprintDurationDays: req.SprintDurationDays,
+		ReleasesEnabled:    req.ReleasesEnabled,
 	})
 	if err != nil {
 		writeGRPCError(w, err)

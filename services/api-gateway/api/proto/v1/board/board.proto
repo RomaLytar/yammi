@@ -31,6 +31,7 @@ service BoardService {
   rpc AssignCard(AssignCardRequest) returns (AssignCardResponse);
   rpc UnassignCard(UnassignCardRequest) returns (UnassignCardResponse);
   rpc GetCardActivity(GetCardActivityRequest) returns (GetCardActivityResponse);
+  rpc SearchBoardCards(SearchBoardCardsRequest) returns (SearchBoardCardsResponse);
 
   // Member operations
   rpc AddMember(AddMemberRequest) returns (AddMemberResponse);
@@ -103,6 +104,20 @@ service BoardService {
   rpc ListBoardTemplates(ListBoardTemplatesRequest) returns (ListBoardTemplatesResponse);
   rpc DeleteBoardTemplate(DeleteBoardTemplateRequest) returns (google.protobuf.Empty);
   rpc CreateBoardFromTemplate(CreateBoardFromTemplateRequest) returns (CreateBoardResponse);
+
+  // Release operations
+  rpc CreateRelease(CreateReleaseRequest) returns (CreateReleaseResponse);
+  rpc GetRelease(GetReleaseRequest) returns (GetReleaseResponse);
+  rpc ListReleases(ListReleasesRequest) returns (ListReleasesResponse);
+  rpc UpdateRelease(UpdateReleaseRequest) returns (UpdateReleaseResponse);
+  rpc DeleteRelease(DeleteReleaseRequest) returns (google.protobuf.Empty);
+  rpc StartRelease(StartReleaseRequest) returns (StartReleaseResponse);
+  rpc CompleteRelease(CompleteReleaseRequest) returns (CompleteReleaseResponse);
+  rpc GetActiveRelease(GetActiveReleaseRequest) returns (GetActiveReleaseResponse);
+  rpc AssignCardToRelease(AssignCardToReleaseRequest) returns (google.protobuf.Empty);
+  rpc RemoveCardFromRelease(RemoveCardFromReleaseRequest) returns (google.protobuf.Empty);
+  rpc GetBacklog(GetBacklogRequest) returns (GetBacklogResponse);
+  rpc GetReleaseCards(GetReleaseCardsRequest) returns (GetReleaseCardsResponse);
 }
 
 // ============================================================================
@@ -234,6 +249,7 @@ message CreateCardRequest {
   google.protobuf.Timestamp due_date = 8;  // optional: дедлайн
   string priority = 9;    // low, medium, high, critical (default: medium)
   string task_type = 10;   // bug, feature, task, improvement (default: task)
+  string release_id = 11;
 }
 
 message CreateCardResponse {
@@ -257,6 +273,19 @@ message GetCardsRequest {
 }
 
 message GetCardsResponse {
+  repeated Card cards = 1;
+}
+
+message SearchBoardCardsRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string search = 3;        // partial title search (ILIKE)
+  string assignee_id = 4;   // filter by assignee
+  string priority = 5;      // filter by priority (low/medium/high/critical)
+  string task_type = 6;     // filter by task type (bug/feature/task/improvement)
+}
+
+message SearchBoardCardsResponse {
   repeated Card cards = 1;
 }
 
@@ -481,6 +510,7 @@ message Card {
   google.protobuf.Timestamp due_date = 12;
   string priority = 13;    // low, medium, high, critical
   string task_type = 14;   // bug, feature, task, improvement
+  string release_id = 15;
 }
 
 message BoardMember {
@@ -926,6 +956,9 @@ message BoardSettings {
   bool use_board_labels_only = 2;
   google.protobuf.Timestamp created_at = 3;
   google.protobuf.Timestamp updated_at = 4;
+  string done_column_id = 5;
+  int32 sprint_duration_days = 6;
+  bool releases_enabled = 7;
 }
 
 message GetBoardSettingsRequest {
@@ -941,6 +974,9 @@ message UpdateBoardSettingsRequest {
   string board_id = 1;
   string user_id = 2;
   bool use_board_labels_only = 3;
+  string done_column_id = 4;
+  int32 sprint_duration_days = 5;
+  bool releases_enabled = 6;
 }
 
 message UpdateBoardSettingsResponse {
@@ -1006,6 +1042,146 @@ message ListAvailableLabelsResponse {
   repeated Label board_labels = 1;
   repeated UserLabel user_labels = 2;
   bool use_board_labels_only = 3;
+}
+
+// ============================================================================
+// Release Domain Model
+// ============================================================================
+
+message Release {
+  string id = 1;
+  string board_id = 2;
+  string name = 3;
+  string description = 4;
+  string status = 5;  // draft, active, completed
+  google.protobuf.Timestamp started_at = 6;
+  google.protobuf.Timestamp completed_at = 7;
+  string created_by = 8;
+  int32 version = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  google.protobuf.Timestamp start_date = 12;
+  google.protobuf.Timestamp end_date = 13;
+}
+
+// ============================================================================
+// Release Messages
+// ============================================================================
+
+message CreateReleaseRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string name = 3;
+  string description = 4;
+  google.protobuf.Timestamp start_date = 5;
+  google.protobuf.Timestamp end_date = 6;
+}
+
+message CreateReleaseResponse {
+  Release release = 1;
+}
+
+message GetReleaseRequest {
+  string release_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message GetReleaseResponse {
+  Release release = 1;
+}
+
+message ListReleasesRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message ListReleasesResponse {
+  repeated Release releases = 1;
+}
+
+message UpdateReleaseRequest {
+  string release_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+  string name = 4;
+  string description = 5;
+  int32 version = 6;
+  google.protobuf.Timestamp start_date = 7;
+  google.protobuf.Timestamp end_date = 8;
+}
+
+message UpdateReleaseResponse {
+  Release release = 1;
+}
+
+message DeleteReleaseRequest {
+  string release_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message StartReleaseRequest {
+  string release_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message StartReleaseResponse {
+  Release release = 1;
+}
+
+message CompleteReleaseRequest {
+  string release_id = 1;
+  string board_id = 2;
+  string user_id = 3;
+}
+
+message CompleteReleaseResponse {
+  Release release = 1;
+  int32 cards_moved_to_backlog = 2;
+}
+
+message GetActiveReleaseRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message GetActiveReleaseResponse {
+  Release release = 1;  // null if no active release
+}
+
+message AssignCardToReleaseRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string release_id = 3;
+  string card_id = 4;
+}
+
+message RemoveCardFromReleaseRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string release_id = 3;
+  string card_id = 4;
+}
+
+message GetBacklogRequest {
+  string board_id = 1;
+  string user_id = 2;
+}
+
+message GetBacklogResponse {
+  repeated Card cards = 1;
+}
+
+message GetReleaseCardsRequest {
+  string board_id = 1;
+  string user_id = 2;
+  string release_id = 3;
+}
+
+message GetReleaseCardsResponse {
+  repeated Card cards = 1;
 }
 
 // ============================================================================

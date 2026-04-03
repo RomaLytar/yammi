@@ -165,6 +165,7 @@ func main() {
 	boardSettingsRepo := postgres.NewBoardSettingsRepository(db)
 	userLabelRepo := postgres.NewUserLabelRepository(db)
 	boardTemplateRepo := postgres.NewBoardTemplateRepository(db)
+	releaseRepo := postgres.NewReleaseRepository(db)
 
 	// Membership repository: Redis cache decorator over PostgreSQL.
 	// Если Redis недоступен — используется чистый PostgreSQL.
@@ -208,6 +209,7 @@ func main() {
 		usecase.NewAssignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
 		usecase.NewUnassignCardUseCase(cardRepo, boardRepo, memberRepo, activityRepo, publisher),
 		usecase.NewListCardActivityUseCase(activityRepo, memberRepo),
+		usecase.NewSearchBoardCardsUseCase(cardRepo, memberRepo),
 		cardRepo,
 	)
 
@@ -290,6 +292,21 @@ func main() {
 		usecase.NewCreateBoardFromTemplateUseCase(boardTemplateRepo, boardRepo, memberRepo, columnRepo, labelRepo, publisher),
 	)
 
+	releaseHandler := delivery.NewReleaseHandler(
+		usecase.NewCreateReleaseUseCase(releaseRepo, memberRepo, publisher),
+		usecase.NewGetReleaseUseCase(releaseRepo, memberRepo),
+		usecase.NewListReleasesUseCase(releaseRepo, memberRepo),
+		usecase.NewUpdateReleaseUseCase(releaseRepo, memberRepo, publisher),
+		usecase.NewDeleteReleaseUseCase(releaseRepo, cardRepo, memberRepo, publisher),
+		usecase.NewStartReleaseUseCase(releaseRepo, memberRepo, boardSettingsRepo, publisher),
+		usecase.NewCompleteReleaseUseCase(releaseRepo, cardRepo, boardSettingsRepo, memberRepo, publisher),
+		usecase.NewGetActiveReleaseUseCase(releaseRepo, memberRepo),
+		usecase.NewAssignCardToReleaseUseCase(releaseRepo, cardRepo, memberRepo, publisher),
+		usecase.NewRemoveCardFromReleaseUseCase(releaseRepo, cardRepo, memberRepo, publisher),
+		usecase.NewGetBacklogUseCase(cardRepo, memberRepo),
+		usecase.NewGetReleaseCardsUseCase(cardRepo, memberRepo),
+	)
+
 	// gRPC server with shared secret interceptor (required)
 	grpcSecret := os.Getenv("GRPC_SHARED_SECRET")
 	if grpcSecret == "" {
@@ -309,6 +326,7 @@ func main() {
 		boardSettingsHandler,
 		userLabelHandler,
 		templateHandler,
+		releaseHandler,
 	)
 
 	grpcServer := grpc.NewServer(

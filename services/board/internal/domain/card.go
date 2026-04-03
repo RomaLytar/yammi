@@ -57,6 +57,7 @@ type Card struct {
 	Position    string     // lexorank (a, am, b, c, ...) — НЕ INT!
 	AssigneeID  *string    // опциональный исполнитель
 	CreatorID   string     // кто создал карточку
+	ReleaseID   *string    // опциональный релиз (nil = бэклог)
 	DueDate     *time.Time // опциональный дедлайн
 	Priority    Priority   // приоритет (low, medium, high, critical)
 	TaskType    TaskType   // тип задачи (bug, feature, task, improvement)

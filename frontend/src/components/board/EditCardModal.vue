@@ -9,6 +9,7 @@ import BaseModal from '@/components/shared/BaseModal.vue'
 import BaseInput from '@/components/shared/BaseInput.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSearchSelect from '@/components/shared/BaseSearchSelect.vue'
+import BaseSelect from '@/components/shared/BaseSelect.vue'
 import RichTextEditor from '@/components/shared/RichTextEditor.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
 import { DatePicker } from 'v-calendar'
@@ -16,7 +17,9 @@ import ConfirmModal from '@/components/shared/ConfirmModal.vue'
 import { useBoardStore } from '@/stores/board'
 import { useUserStore } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
+import { useReleasesStore } from '@/stores/releases'
 import * as boardsApi from '@/api/boards'
+import * as releasesApi from '@/api/releases'
 
 interface Props {
   card: Card
@@ -38,6 +41,7 @@ const emit = defineEmits<Emits>()
 const boardStore = useBoardStore()
 const userStore = useUserStore()
 const authStore = useAuthStore()
+const releasesStore = useReleasesStore()
 
 // --- Sidebar collapsible blocks ---
 const infoOpen = ref(true)
@@ -52,6 +56,34 @@ const selectedPriority = ref<Priority>(props.card.priority || 'medium')
 const selectedTaskType = ref<TaskType>(props.card.taskType || 'task')
 const selectedDueDate = ref(props.card.dueDate || '')
 const dueDateObj = ref<Date | null>(selectedDueDate.value ? new Date(selectedDueDate.value) : null)
+const selectedRelease = ref(props.card.releaseId || '')
+
+// Release options for selector
+const releaseOptions = computed(() => {
+  const opts = [{ value: '', label: 'Бэклог (без релиза)' }]
+  for (const r of releasesStore.releases) {
+    if (r.status !== 'completed') {
+      opts.push({ value: r.id, label: r.name })
+    }
+  }
+  return opts
+})
+
+// Handle release change
+watch(selectedRelease, async (newReleaseId, oldReleaseId) => {
+  if (newReleaseId === oldReleaseId || !boardStore.boardId) return
+  try {
+    if (oldReleaseId) {
+      await releasesApi.removeCardFromRelease(boardStore.boardId, oldReleaseId, props.card.id)
+    }
+    if (newReleaseId) {
+      await releasesApi.assignCardToRelease(boardStore.boardId, newReleaseId, props.card.id)
+    }
+  } catch (err) {
+    console.error('Failed to change release:', err)
+    selectedRelease.value = oldReleaseId
+  }
+})
 const isDarkTheme = computed(() => document.documentElement.getAttribute('data-theme') === 'dark')
 
 watch(dueDateObj, (val) => {
@@ -1272,6 +1304,18 @@ onMounted(() => {
               </div>
             </div>
 
+            <!-- Релиз -->
+            <div v-if="releaseOptions.length > 1" class="ecm-field">
+              <BaseSelect
+                :model-value="selectedRelease"
+                :options="releaseOptions"
+                label="Релиз"
+                placeholder="Бэклог"
+                size="sm"
+                @update:model-value="(v) => { selectedRelease = String(v) }"
+              />
+            </div>
+
             <!-- Дедлайн -->
             <div class="ecm-field">
               <span class="ecm-field__label">Дедлайн</span>
@@ -2204,6 +2248,7 @@ onMounted(() => {
   background: var(--color-primary-soft, rgba(124, 92, 252, 0.08));
   color: var(--color-primary, #7c5cfc);
 }
+
 
 .ecm-date-input {
   padding: 6px 10px;

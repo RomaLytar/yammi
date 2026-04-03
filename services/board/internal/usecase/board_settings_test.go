@@ -78,7 +78,7 @@ func TestUpdateBoardSettings_OwnerSuccess(t *testing.T) {
 	settingsRepo.On("Upsert", mock.Anything, mock.AnythingOfType("*domain.BoardSettings")).Return(nil)
 
 	uc := NewUpdateBoardSettingsUseCase(settingsRepo, memberRepo)
-	settings, err := uc.Execute(context.Background(), "board-123", "user-123", true)
+	settings, err := uc.Execute(context.Background(), "board-123", "user-123", true, nil, 14, false)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, settings)
@@ -96,7 +96,7 @@ func TestUpdateBoardSettings_MemberDenied(t *testing.T) {
 		Return(true, domain.RoleMember, nil)
 
 	uc := NewUpdateBoardSettingsUseCase(settingsRepo, memberRepo)
-	settings, err := uc.Execute(context.Background(), "board-123", "user-456", true)
+	settings, err := uc.Execute(context.Background(), "board-123", "user-456", true, nil, 14, false)
 
 	assert.Error(t, err)
 	assert.Equal(t, domain.ErrNotOwner, err)
@@ -113,7 +113,7 @@ func TestUpdateBoardSettings_NonMember_Denied(t *testing.T) {
 		Return(false, domain.Role(""), nil)
 
 	uc := NewUpdateBoardSettingsUseCase(settingsRepo, memberRepo)
-	settings, err := uc.Execute(context.Background(), "board-123", "user-999", true)
+	settings, err := uc.Execute(context.Background(), "board-123", "user-999", true, nil, 14, false)
 
 	assert.Error(t, err)
 	assert.Equal(t, domain.ErrAccessDenied, err)

@@ -3,6 +3,7 @@
 
 export type Priority = 'low' | 'medium' | 'high' | 'critical'
 export type TaskType = 'bug' | 'feature' | 'task' | 'improvement'
+export type ReleaseStatus = 'draft' | 'active' | 'completed'
 
 export interface UserProfile {
   id: string
@@ -40,6 +41,7 @@ export interface Card {
   columnId: string
   assigneeId?: string
   creatorId: string
+  releaseId?: string
   version: number  // optimistic locking version
   createdAt: string
   dueDate?: string       // ISO date string
@@ -165,6 +167,25 @@ export interface ActivityEntry {
 export interface BoardSettings {
   boardId: string
   useBoardLabelsOnly: boolean
+  doneColumnId?: string
+  sprintDurationDays: number
+  releasesEnabled: boolean
+}
+
+export interface Release {
+  id: string
+  boardId: string
+  name: string
+  description: string
+  status: ReleaseStatus
+  startDate?: string
+  endDate?: string
+  startedAt?: string
+  completedAt?: string
+  createdBy: string
+  version: number
+  createdAt: string
+  updatedAt: string
 }
 
 export interface UserLabel {

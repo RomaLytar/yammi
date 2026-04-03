@@ -79,6 +79,24 @@ type CardRepository interface {
 
 	// UnassignByUser снимает assignee со всех карточек удалённого участника
 	UnassignByUser(ctx context.Context, boardID, userID string) (int, error)
+
+	// SearchByBoardID ищет карточки по доске с опциональными фильтрами
+	SearchByBoardID(ctx context.Context, boardID string, search string, assigneeID string, priority string, taskType string) ([]*domain.Card, error)
+
+	// ListByReleaseID возвращает карточки релиза
+	ListByReleaseID(ctx context.Context, boardID, releaseID string) ([]*domain.Card, error)
+
+	// ListBacklog возвращает карточки без релиза (бэклог)
+	ListBacklog(ctx context.Context, boardID string) ([]*domain.Card, error)
+
+	// MoveToBacklog снимает release_id со всех карточек релиза
+	MoveToBacklog(ctx context.Context, boardID, releaseID string) (int, error)
+
+	// MoveToBacklogExceptColumn снимает release_id с карточек релиза, кроме указанной колонки
+	MoveToBacklogExceptColumn(ctx context.Context, boardID, releaseID, exceptColumnID string) (int, error)
+
+	// SetReleaseID устанавливает или снимает release_id у карточки
+	SetReleaseID(ctx context.Context, cardID, boardID string, releaseID *string) error
 }
 
 // MembershipRepository определяет интерфейс для работы с членством в досках
@@ -299,6 +317,30 @@ type BoardTemplateRepository interface {
 	ListByUserID(ctx context.Context, userID string) ([]*domain.BoardTemplate, error)
 	Update(ctx context.Context, t *domain.BoardTemplate) error
 	Delete(ctx context.Context, id string) error
+}
+
+// ReleaseRepository определяет интерфейс для работы с релизами
+type ReleaseRepository interface {
+	// Create создает новый релиз
+	Create(ctx context.Context, release *domain.Release) error
+
+	// GetByID возвращает релиз по ID (фильтруется по boardID для защиты от IDOR)
+	GetByID(ctx context.Context, releaseID, boardID string) (*domain.Release, error)
+
+	// ListByBoardID возвращает все релизы доски
+	ListByBoardID(ctx context.Context, boardID string) ([]*domain.Release, error)
+
+	// GetActiveByBoardID возвращает активный релиз доски (или ErrReleaseNotFound)
+	GetActiveByBoardID(ctx context.Context, boardID string) (*domain.Release, error)
+
+	// Update обновляет релиз
+	Update(ctx context.Context, release *domain.Release) error
+
+	// Delete удаляет релиз по ID (фильтруется по boardID для защиты от IDOR)
+	Delete(ctx context.Context, releaseID, boardID string) error
+
+	// CountByBoardID возвращает количество релизов доски
+	CountByBoardID(ctx context.Context, boardID string) (int, error)
 }
 
 // FileStorage определяет интерфейс для работы с файловым хранилищем

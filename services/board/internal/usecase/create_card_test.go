@@ -74,6 +74,45 @@ func (m *MockCardRepository) UnassignByUser(ctx context.Context, boardID, userID
 	return args.Int(0), args.Error(1)
 }
 
+func (m *MockCardRepository) SearchByBoardID(ctx context.Context, boardID string, search string, assigneeID string, priority string, taskType string) ([]*domain.Card, error) {
+	args := m.Called(ctx, boardID, search, assigneeID, priority, taskType)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.Card), args.Error(1)
+}
+
+func (m *MockCardRepository) ListByReleaseID(ctx context.Context, boardID, releaseID string) ([]*domain.Card, error) {
+	args := m.Called(ctx, boardID, releaseID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.Card), args.Error(1)
+}
+
+func (m *MockCardRepository) ListBacklog(ctx context.Context, boardID string) ([]*domain.Card, error) {
+	args := m.Called(ctx, boardID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.Card), args.Error(1)
+}
+
+func (m *MockCardRepository) MoveToBacklog(ctx context.Context, boardID, releaseID string) (int, error) {
+	args := m.Called(ctx, boardID, releaseID)
+	return args.Int(0), args.Error(1)
+}
+
+func (m *MockCardRepository) MoveToBacklogExceptColumn(ctx context.Context, boardID, releaseID, exceptColumnID string) (int, error) {
+	args := m.Called(ctx, boardID, releaseID, exceptColumnID)
+	return args.Int(0), args.Error(1)
+}
+
+func (m *MockCardRepository) SetReleaseID(ctx context.Context, cardID, boardID string, releaseID *string) error {
+	args := m.Called(ctx, cardID, boardID, releaseID)
+	return args.Error(0)
+}
+
 type MockActivityRepository struct {
 	mock.Mock
 }

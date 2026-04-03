@@ -395,6 +395,76 @@ type AutomationExecuted struct {
 	Status       string    `json:"status"`
 }
 
+type ReleaseCreatedEvent struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	BoardID      string    `json:"board_id"`
+	ReleaseID    string    `json:"release_id"`
+	Name         string    `json:"name"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type ReleaseUpdatedEvent struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	BoardID      string    `json:"board_id"`
+	ReleaseID    string    `json:"release_id"`
+	Name         string    `json:"name"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type ReleaseStartedEvent struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	BoardID      string    `json:"board_id"`
+	ReleaseID    string    `json:"release_id"`
+	Name         string    `json:"name"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type ReleaseCompletedEvent struct {
+	EventID             string    `json:"event_id"`
+	EventVersion        int       `json:"event_version"`
+	OccurredAt          time.Time `json:"occurred_at"`
+	BoardID             string    `json:"board_id"`
+	ReleaseID           string    `json:"release_id"`
+	Name                string    `json:"name"`
+	ActorID             string    `json:"actor_id"`
+	CardsMovedToBacklog int       `json:"cards_moved_to_backlog"`
+}
+
+type ReleaseDeletedEvent struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	BoardID      string    `json:"board_id"`
+	ReleaseID    string    `json:"release_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type CardReleaseAssignedEvent struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	BoardID      string    `json:"board_id"`
+	CardID       string    `json:"card_id"`
+	ReleaseID    string    `json:"release_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
+type CardReleaseRemovedEvent struct {
+	EventID      string    `json:"event_id"`
+	EventVersion int       `json:"event_version"`
+	OccurredAt   time.Time `json:"occurred_at"`
+	BoardID      string    `json:"board_id"`
+	CardID       string    `json:"card_id"`
+	ReleaseID    string    `json:"release_id"`
+	ActorID      string    `json:"actor_id"`
+}
+
 func generateEventID() string {
 	return uuid.New().String()
 }

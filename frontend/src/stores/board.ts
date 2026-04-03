@@ -133,6 +133,8 @@ export const useBoardStore = defineStore('board', () => {
       boardSettings.value = {
         boardId: id,
         useBoardLabelsOnly: result.useBoardLabelsOnly,
+        sprintDurationDays: boardSettings.value?.sprintDurationDays ?? 14,
+        releasesEnabled: boardSettings.value?.releasesEnabled ?? false,
       }
     } catch {
       // Fallback: load only board labels if available-labels endpoint not ready
@@ -143,7 +145,7 @@ export const useBoardStore = defineStore('board', () => {
         labels.value = []
       }
       globalLabels.value = []
-      boardSettings.value = { boardId: id, useBoardLabelsOnly: false }
+      boardSettings.value = { boardId: id, useBoardLabelsOnly: false, sprintDurationDays: 14, releasesEnabled: false }
     }
   }
 
@@ -198,10 +200,10 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  async function saveBoardSettings(useBoardLabelsOnly: boolean): Promise<void> {
+  async function saveBoardSettings(useBoardLabelsOnly: boolean, doneColumnId?: string, sprintDurationDays?: number, releasesEnabled?: boolean): Promise<void> {
     if (!boardId.value) return
     try {
-      const updated = await boardsApi.updateBoardSettings(boardId.value, useBoardLabelsOnly)
+      const updated = await boardsApi.updateBoardSettings(boardId.value, useBoardLabelsOnly, doneColumnId, sprintDurationDays, releasesEnabled)
       boardSettings.value = updated
     } catch (err) {
       error.value = err instanceof ApiError ? err.message : 'Ошибка сохранения настроек'

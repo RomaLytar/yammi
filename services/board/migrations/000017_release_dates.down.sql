@@ -1,0 +1,2 @@
+ALTER TABLE releases DROP COLUMN IF EXISTS end_date;
+ALTER TABLE releases DROP COLUMN IF EXISTS start_date;

@@ -104,6 +104,9 @@ func mapCardToProto(c *domain.Card, boardID string) *boardpb.Card {
 	if c.DueDate != nil {
 		card.DueDate = timestamppb.New(*c.DueDate)
 	}
+	if c.ReleaseID != nil {
+		card.ReleaseId = *c.ReleaseID
+	}
 
 	return card
 }
@@ -362,12 +365,18 @@ func mapAutomationExecutionsToProto(executions []*domain.AutomationExecution) []
 }
 
 func mapBoardSettingsToProto(s *domain.BoardSettings) *boardpb.BoardSettings {
-	return &boardpb.BoardSettings{
+	settings := &boardpb.BoardSettings{
 		BoardId:            s.BoardID,
 		UseBoardLabelsOnly: s.UseBoardLabelsOnly,
+		SprintDurationDays: safeInt32(s.SprintDurationDays),
+		ReleasesEnabled:    s.ReleasesEnabled,
 		CreatedAt:          timestamppb.New(s.CreatedAt),
 		UpdatedAt:          timestamppb.New(s.UpdatedAt),
 	}
+	if s.DoneColumnID != nil {
+		settings.DoneColumnId = *s.DoneColumnID
+	}
+	return settings
 }
 
 func mapUserLabelToProto(l *domain.UserLabel) *boardpb.UserLabel {
@@ -428,6 +437,45 @@ func mapBoardTemplatesToProto(templates []*domain.BoardTemplate) []*boardpb.Boar
 }
 
 // ============================================================================
+// Release Mappers
+// ============================================================================
+
+func mapReleaseToProto(r *domain.Release) *boardpb.Release {
+	release := &boardpb.Release{
+		Id:          r.ID,
+		BoardId:     r.BoardID,
+		Name:        r.Name,
+		Description: r.Description,
+		Status:      string(r.Status),
+		CreatedBy:   r.CreatedBy,
+		Version:     safeInt32(r.Version),
+		CreatedAt:   timestamppb.New(r.CreatedAt),
+		UpdatedAt:   timestamppb.New(r.UpdatedAt),
+	}
+	if r.StartDate != nil {
+		release.StartDate = timestamppb.New(*r.StartDate)
+	}
+	if r.EndDate != nil {
+		release.EndDate = timestamppb.New(*r.EndDate)
+	}
+	if r.StartedAt != nil {
+		release.StartedAt = timestamppb.New(*r.StartedAt)
+	}
+	if r.CompletedAt != nil {
+		release.CompletedAt = timestamppb.New(*r.CompletedAt)
+	}
+	return release
+}
+
+func mapReleasesToProto(releases []*domain.Release) []*boardpb.Release {
+	result := make([]*boardpb.Release, len(releases))
+	for i, r := range releases {
+		result[i] = mapReleaseToProto(r)
+	}
+	return result
+}
+
+// ============================================================================
 // Error Mapping (domain errors → gRPC codes)
 // ============================================================================
 
@@ -446,7 +494,8 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrCustomFieldValueNotFound) ||
 		errors.Is(err, domain.ErrAutomationRuleNotFound) ||
 		errors.Is(err, domain.ErrUserLabelNotFound) ||
-		errors.Is(err, domain.ErrTemplateNotFound) {
+		errors.Is(err, domain.ErrTemplateNotFound) ||
+		errors.Is(err, domain.ErrReleaseNotFound) {
 		return status.Error(codes.NotFound, err.Error())
 	}
 
@@ -482,7 +531,9 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrEmptyRuleName) ||
 		errors.Is(err, domain.ErrInvalidTriggerType) ||
 		errors.Is(err, domain.ErrInvalidActionType) ||
-		errors.Is(err, domain.ErrEmptyTemplateName) {
+		errors.Is(err, domain.ErrEmptyTemplateName) ||
+		errors.Is(err, domain.ErrEmptyReleaseName) ||
+		errors.Is(err, domain.ErrInvalidSprintDuration) {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 
@@ -492,7 +543,8 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrMaxUserLabelsReached) ||
 		errors.Is(err, domain.ErrMaxCustomFieldsReached) ||
 		errors.Is(err, domain.ErrMaxRulesReached) ||
-		errors.Is(err, domain.ErrMaxTemplatesReached) {
+		errors.Is(err, domain.ErrMaxTemplatesReached) ||
+		errors.Is(err, domain.ErrMaxReleasesReached) {
 		return status.Error(codes.ResourceExhausted, err.Error())
 	}
 
@@ -502,12 +554,17 @@ func mapDomainError(err error) error {
 		errors.Is(err, domain.ErrLabelAlreadyOnCard) ||
 		errors.Is(err, domain.ErrLinkAlreadyExists) ||
 		errors.Is(err, domain.ErrCustomFieldExists) ||
-		errors.Is(err, domain.ErrUserLabelExists) {
+		errors.Is(err, domain.ErrUserLabelExists) ||
+		errors.Is(err, domain.ErrActiveReleaseExists) {
 		return status.Error(codes.AlreadyExists, err.Error())
 	}
 
 	// FailedPrecondition errors
-	if errors.Is(err, domain.ErrCannotRemoveOwner) {
+	if errors.Is(err, domain.ErrCannotRemoveOwner) ||
+		errors.Is(err, domain.ErrReleaseCompleted) ||
+		errors.Is(err, domain.ErrReleaseNotDraft) ||
+		errors.Is(err, domain.ErrReleaseNotActive) ||
+		errors.Is(err, domain.ErrCardInCompletedRelease) {
 		return status.Error(codes.FailedPrecondition, err.Error())
 	}
 

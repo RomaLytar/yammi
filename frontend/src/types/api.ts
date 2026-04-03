@@ -112,6 +112,7 @@ export interface CreateCardRequest {
   description: string
   position: string
   assignee_id?: string
+  release_id?: string
   due_date?: string
   priority?: string
   task_type?: string
@@ -148,6 +149,7 @@ export interface CardResponse {
   position: string
   assignee_id?: string
   creator_id: string
+  release_id?: string
   version: number
   created_at: string
   updated_at: string
@@ -340,6 +342,9 @@ export interface ActivityEntryResponse {
 export interface BoardSettingsResponse {
   board_id: string
   use_board_labels_only: boolean
+  done_column_id?: string
+  sprint_duration_days: number
+  releases_enabled: boolean
 }
 
 // --- User Labels (global) ---
@@ -356,6 +361,39 @@ export interface AvailableLabelsResponse {
   board_labels: LabelResponse[]
   user_labels: UserLabelResponse[]
   use_board_labels_only: boolean
+}
+
+// --- Releases ---
+
+export interface ReleaseResponse {
+  id: string
+  board_id: string
+  name: string
+  description: string
+  status: string
+  start_date?: string
+  end_date?: string
+  started_at?: string
+  completed_at?: string
+  created_by: string
+  version: number
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateReleaseRequest {
+  name: string
+  description?: string
+  start_date?: string
+  end_date?: string
+}
+
+export interface UpdateReleaseRequest {
+  name: string
+  description?: string
+  start_date?: string
+  end_date?: string
+  version: number
 }
 
 // --- Errors ---

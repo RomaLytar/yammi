@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { Column, Card } from '@/types/domain'
 import BoardCard from './BoardCard.vue'
 import Draggable from 'vuedraggable'
@@ -10,6 +10,8 @@ interface Props {
   currentUserId: string
   selectMode?: boolean
   selectedIds?: Set<string>
+  hiddenCardIds?: Set<string>
+  filteredCardCount?: number
 }
 
 interface Emits {
@@ -24,6 +26,11 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+const isFiltering = computed(() => props.hiddenCardIds && props.hiddenCardIds.size > 0)
+const displayCount = computed(() =>
+  props.filteredCardCount !== undefined ? props.filteredCardCount : props.column.cards.length
+)
 
 const isEditingTitle = ref(false)
 const editedTitle = ref(props.column.title)
@@ -99,7 +106,7 @@ function onDragChange(event: any) {
         @dblclick="startEdit"
       >
         {{ column.title }}
-        <span class="board-column__count">{{ column.cards.length }}</span>
+        <span class="board-column__count">{{ displayCount }}</span>
       </h3>
 
       <div v-if="isOwner" class="board-column__actions">
@@ -123,17 +130,19 @@ function onDragChange(event: any) {
       @change="onDragChange"
     >
       <template #item="{ element }">
-        <BoardCard
-          :key="element.id"
-          :card="element"
-          :can-delete="isOwner || element.creatorId === currentUserId"
-          :select-mode="selectMode"
-          :selected="selectedIds?.has(element.id)"
-          :can-select="isOwner || element.creatorId === currentUserId"
-          @click="selectMode ? (isOwner || element.creatorId === currentUserId) && $emit('card-toggle-select', element.id) : $emit('card-click', element)"
-          @delete="$emit('card-delete', element.id)"
-          @toggle-select="$emit('card-toggle-select', element.id)"
-        />
+        <div v-show="!hiddenCardIds?.has(element.id)">
+          <BoardCard
+            :key="element.id"
+            :card="element"
+            :can-delete="isOwner || element.creatorId === currentUserId"
+            :select-mode="selectMode"
+            :selected="selectedIds?.has(element.id)"
+            :can-select="isOwner || element.creatorId === currentUserId"
+            @click="selectMode ? (isOwner || element.creatorId === currentUserId) && $emit('card-toggle-select', element.id) : $emit('card-click', element)"
+            @delete="$emit('card-delete', element.id)"
+            @toggle-select="$emit('card-toggle-select', element.id)"
+          />
+        </div>
       </template>
     </Draggable>
 
@@ -149,11 +158,11 @@ function onDragChange(event: any) {
   border: 1px solid var(--color-border-light);
   border-radius: 16px;
   padding: 16px;
-  min-width: 300px;
-  max-width: 300px;
+  min-width: 360px;
+  max-width: 360px;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 180px);
+  max-height: calc(100vh - 230px);
   box-shadow: var(--shadow-sm);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;

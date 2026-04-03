@@ -77,6 +77,7 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 	mux.Handle("PUT /api/v1/cards/{id}/assign", rateLimit(requireAuth(http.HandlerFunc(board.AssignCard))))
 	mux.Handle("DELETE /api/v1/cards/{id}/assign", rateLimit(requireAuth(http.HandlerFunc(board.UnassignCard))))
 	mux.Handle("GET /api/v1/cards/{id}/activity", rateLimit(requireAuth(http.HandlerFunc(board.GetCardActivity))))
+	mux.Handle("GET /api/v1/boards/{id}/cards/search", rateLimit(requireAuth(http.HandlerFunc(board.SearchBoardCards))))
 
 	// Member routes
 	mux.Handle("POST /api/v1/boards/{id}/members", rateLimit(requireAuth(http.HandlerFunc(board.AddMember))))
@@ -142,6 +143,20 @@ func NewRouter(clients *infrastructure.GRPCClients, verifier *infrastructure.JWT
 
 	// Available Labels route
 	mux.Handle("GET /api/v1/boards/{id}/available-labels", rateLimit(requireAuth(http.HandlerFunc(board.GetAvailableLabels))))
+
+	// Release routes
+	mux.Handle("POST /api/v1/boards/{id}/releases", rateLimit(requireAuth(http.HandlerFunc(board.CreateRelease))))
+	mux.Handle("GET /api/v1/boards/{id}/releases", rateLimit(requireAuth(http.HandlerFunc(board.ListReleases))))
+	mux.Handle("GET /api/v1/boards/{id}/releases/active", rateLimit(requireAuth(http.HandlerFunc(board.GetActiveRelease))))
+	mux.Handle("GET /api/v1/boards/{boardId}/releases/{releaseId}", rateLimit(requireAuth(http.HandlerFunc(board.GetRelease))))
+	mux.Handle("PUT /api/v1/boards/{boardId}/releases/{releaseId}", rateLimit(requireAuth(http.HandlerFunc(board.UpdateRelease))))
+	mux.Handle("DELETE /api/v1/boards/{boardId}/releases/{releaseId}", rateLimit(requireAuth(http.HandlerFunc(board.DeleteRelease))))
+	mux.Handle("POST /api/v1/boards/{boardId}/releases/{releaseId}/start", rateLimit(requireAuth(http.HandlerFunc(board.StartRelease))))
+	mux.Handle("POST /api/v1/boards/{boardId}/releases/{releaseId}/complete", rateLimit(requireAuth(http.HandlerFunc(board.CompleteRelease))))
+	mux.Handle("GET /api/v1/boards/{boardId}/releases/{releaseId}/cards", rateLimit(requireAuth(http.HandlerFunc(board.GetReleaseCards))))
+	mux.Handle("POST /api/v1/boards/{boardId}/releases/{releaseId}/cards", rateLimit(requireAuth(http.HandlerFunc(board.AssignCardToRelease))))
+	mux.Handle("DELETE /api/v1/boards/{boardId}/releases/{releaseId}/cards/{cardId}", rateLimit(requireAuth(http.HandlerFunc(board.RemoveCardFromRelease))))
+	mux.Handle("GET /api/v1/boards/{id}/backlog", rateLimit(requireAuth(http.HandlerFunc(board.GetBacklog))))
 
 	// Board Template routes
 	mux.Handle("POST /api/v1/board-templates", rateLimit(requireAuth(http.HandlerFunc(board.CreateBoardTemplate))))

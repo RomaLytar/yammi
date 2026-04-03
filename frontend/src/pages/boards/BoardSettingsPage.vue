@@ -7,6 +7,7 @@ import * as boardsApi from '@/api/boards'
 import * as usersApi from '@/api/users'
 import type { MemberResponse } from '@/types/api'
 import type { Label, UserLabel, AutomationRule } from '@/types/domain'
+import BaseSelect from '@/components/shared/BaseSelect.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
 import BaseSpinner from '@/components/shared/BaseSpinner.vue'
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
@@ -109,6 +110,9 @@ const PRIORITIES = [
 
 // --- Settings ---
 const useBoardLabelsOnly = ref(false)
+const doneColumnId = ref('')
+const sprintDurationDays = ref(14)
+const releasesEnabled = ref(false)
 const settingsSaving = ref(false)
 const settingsSaved = ref(false)
 
@@ -142,7 +146,18 @@ onMounted(async () => {
       avatarUrl: m.avatar_url || '',
     }))
 
-    useBoardLabelsOnly.value = boardStore.boardSettings?.useBoardLabelsOnly ?? false
+    // Load full board settings (including done_column_id, sprint_duration_days)
+    try {
+      const fullSettings = await boardsApi.getBoardSettings(boardId)
+      useBoardLabelsOnly.value = fullSettings.useBoardLabelsOnly
+      doneColumnId.value = fullSettings.doneColumnId ?? ''
+      sprintDurationDays.value = fullSettings.sprintDurationDays || 14
+      releasesEnabled.value = fullSettings.releasesEnabled || false
+    } catch {
+      useBoardLabelsOnly.value = boardStore.boardSettings?.useBoardLabelsOnly ?? false
+      doneColumnId.value = ''
+      sprintDurationDays.value = 14
+    }
 
     // Load automations
     try {
@@ -430,7 +445,7 @@ async function handleSaveSettings() {
   settingsSaving.value = true
   settingsSaved.value = false
   try {
-    await boardStore.saveBoardSettings(useBoardLabelsOnly.value)
+    await boardStore.saveBoardSettings(useBoardLabelsOnly.value, doneColumnId.value || undefined, sprintDurationDays.value, releasesEnabled.value)
     settingsSaved.value = true
     setTimeout(() => { settingsSaved.value = false }, 2000)
   } catch (err) {
@@ -888,6 +903,60 @@ function goBack() {
               </span>
             </label>
           </div>
+
+          <div class="bsp-setting-row">
+            <div class="bsp-setting-info">
+              <span class="bsp-setting-label">Использовать релизы</span>
+              <span class="bsp-setting-desc">
+                Включает табы Релизы и Бэклог. На доске будут показываться только задачи активного релиза.
+              </span>
+            </div>
+            <label class="bsp-toggle" @click.prevent="releasesEnabled = !releasesEnabled">
+              <span class="bsp-toggle__track" :class="{ 'bsp-toggle__track--active': releasesEnabled }">
+                <span class="bsp-toggle__thumb" />
+              </span>
+            </label>
+          </div>
+
+          <template v-if="releasesEnabled">
+          <div class="bsp-setting-row">
+            <div class="bsp-setting-info">
+              <span class="bsp-setting-label">Done-колонка для релизов</span>
+              <span class="bsp-setting-desc">
+                Колонка, в которую перемещаются завершённые карточки. Используется при автоматическом завершении релизов.
+              </span>
+            </div>
+            <BaseSelect
+              :model-value="doneColumnId"
+              :options="[{ value: '', label: 'Не выбрано' }, ...boardStore.columns.map(c => ({ value: c.id, label: c.title }))]"
+              placeholder="Не выбрано"
+              size="sm"
+              @update:model-value="(v) => { doneColumnId = String(v) }"
+            />
+          </div>
+
+          <div class="bsp-setting-row">
+            <div class="bsp-setting-info">
+              <span class="bsp-setting-label">Длительность релиза (дней)</span>
+              <span class="bsp-setting-desc">
+                При запуске релиза дата окончания рассчитается автоматически. Минимум 7 дней.
+              </span>
+            </div>
+            <BaseSelect
+              :model-value="sprintDurationDays"
+              :options="[
+                { value: 7, label: '7 дней (1 неделя)' },
+                { value: 10, label: '10 дней' },
+                { value: 14, label: '14 дней (2 недели)' },
+                { value: 21, label: '21 день (3 недели)' },
+                { value: 28, label: '28 дней (4 недели)' },
+              ]"
+              size="sm"
+              @update:model-value="(v) => { sprintDurationDays = Number(v) }"
+            />
+          </div>
+
+          </template>
 
           <div class="bsp-setting-actions">
             <BaseButton :loading="settingsSaving" @click="handleSaveSettings">

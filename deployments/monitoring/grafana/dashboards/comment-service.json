@@ -6,30 +6,9 @@
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
-      "id": 100,
-      "title": "gRPC Operations",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "ops"
-        }
-      },
-      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 1 },
       "id": 1,
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
-      },
-      "title": "gRPC запросы (по методу)",
-      "description": "Скорость gRPC запросов: создание/получение/обновление/удаление комментариев",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "sum(rate(comment_grpc_requests_total[1m])) by (method)", "legendFormat": "{{ method }}" }
-      ]
+      "title": "Обзор",
+      "type": "row"
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -40,20 +19,22 @@
             "steps": [
               { "color": "green", "value": null }
             ]
-          }
+          },
+          "unit": "reqps"
         }
       },
-      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
       "id": 2,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
-      "title": "Всего gRPC запросов",
+      "title": "RPS",
+      "description": "Текущая скорость gRPC запросов в секунду",
       "type": "stat",
       "targets": [
-        { "expr": "sum(comment_grpc_requests_total)", "legendFormat": "total" }
+        { "expr": "sum(rate(comment_grpc_requests_total[1m]))", "legendFormat": "" }
       ]
     },
     {
@@ -64,52 +45,54 @@
           "thresholds": {
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.1 },
               { "color": "red", "value": 1 }
             ]
           },
-          "unit": "ops"
+          "unit": "percent"
         }
       },
-      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
       "id": 3,
       "options": {
-        "colorMode": "value",
+        "colorMode": "background",
         "graphMode": "area",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
-      "title": "Ошибки gRPC/s",
+      "title": "Ошибки %",
+      "description": "Процент gRPC запросов с ошибками (все кроме OK)",
       "type": "stat",
       "targets": [
-        { "expr": "sum(rate(comment_grpc_requests_total{code!=\"OK\"}[1m]))", "legendFormat": "errors" }
+        { "expr": "sum(rate(comment_grpc_requests_total{code!=\"OK\"}[1m])) / sum(rate(comment_grpc_requests_total[1m])) * 100", "legendFormat": "" }
       ]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "s"
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "red", "value": 500 }
+            ]
+          },
+          "unit": "ms"
         }
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
       "id": 4,
       "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
       },
-      "title": "gRPC латентность p95 (по методу)",
-      "type": "timeseries",
+      "title": "p95 Латентность",
+      "description": "95-й персентиль латентности gRPC запросов",
+      "type": "stat",
       "targets": [
-        { "expr": "histogram_quantile(0.95, sum(rate(comment_grpc_duration_seconds_bucket[1m])) by (le, method))", "legendFormat": "p95 {{ method }}" }
+        { "expr": "histogram_quantile(0.95, sum(rate(comment_grpc_request_duration_seconds_bucket[1m])) by (le)) * 1000", "legendFormat": "" }
       ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
-      "id": 200,
-      "title": "Comments",
-      "type": "row"
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -123,17 +106,18 @@
           }
         }
       },
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 18 },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
       "id": 5,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
-      "title": "Комментарии создано",
+      "title": "Комментариев создано",
+      "description": "Общее количество созданных комментариев",
       "type": "stat",
       "targets": [
-        { "expr": "sum(comment_comments_created_total)", "legendFormat": "total" }
+        { "expr": "sum(comment_comments_created_total)", "legendFormat": "" }
       ]
     },
     {
@@ -148,44 +132,18 @@
           }
         }
       },
-      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 18 },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
       "id": 6,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
-      "title": "Ответы создано",
+      "title": "Ответов создано",
+      "description": "Общее количество созданных ответов (replies)",
       "type": "stat",
       "targets": [
-        { "expr": "sum(comment_replies_created_total)", "legendFormat": "total" }
-      ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
-      "id": 300,
-      "title": "NATS Events",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "ops"
-        }
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
-      "id": 7,
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
-      },
-      "title": "NATS события опубликовано",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "sum(rate(comment_events_published_total[1m])) by (subject)", "legendFormat": "{{ subject }}" }
+        { "expr": "sum(comment_replies_created_total)", "legendFormat": "" }
       ]
     },
     {
@@ -201,24 +159,324 @@
           }
         }
       },
-      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 23 },
-      "id": 8,
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "id": 7,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
+        "colorMode": "background",
+        "graphMode": "none",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
       "title": "Ошибки публикации",
+      "description": "Ошибки публикации событий в NATS (red если > 0)",
       "type": "stat",
       "targets": [
-        { "expr": "sum(comment_event_publish_errors_total)", "legendFormat": "errors" }
+        { "expr": "sum(comment_event_publish_errors_total)", "legendFormat": "" }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 8,
+      "title": "gRPC Трафик",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 30, "stacking": { "mode": "normal" } },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 9,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+      },
+      "title": "Запросы по методу",
+      "description": "Скорость gRPC запросов по методу (stacked)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(comment_grpc_requests_total[1m])) by (method)", "legendFormat": "{{ method }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 10,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+      },
+      "title": "Ошибки по методу и коду",
+      "description": "gRPC ошибки (все кроме OK) по методу и статус коду",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(comment_grpc_requests_total{code!=\"OK\"}[1m])) by (method, code)", "legendFormat": "{{ method }} ({{ code }})" }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 11,
+      "title": "Латентность",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ms"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "id": 12,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Латентность p50 / p95 / p99",
+      "description": "Персентили латентности gRPC запросов (общие)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(comment_grpc_request_duration_seconds_bucket[1m])) by (le)) * 1000", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(comment_grpc_request_duration_seconds_bucket[1m])) by (le)) * 1000", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(comment_grpc_request_duration_seconds_bucket[1m])) by (le)) * 1000", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ms"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "id": 13,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+      },
+      "title": "p95 по методу",
+      "description": "95-й персентиль латентности по каждому gRPC методу",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(comment_grpc_request_duration_seconds_bucket[1m])) by (le, method)) * 1000", "legendFormat": "p95 {{ method }}" }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "id": 14,
+      "title": "Операции",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 24 },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "CreateComment",
+      "description": "Успешные вызовы CreateComment",
+      "type": "stat",
+      "targets": [
+        { "expr": "sum(comment_grpc_requests_total{method=\"CreateComment\",code=\"OK\"})", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 24 },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "ListComments",
+      "description": "Успешные вызовы ListComments",
+      "type": "stat",
+      "targets": [
+        { "expr": "sum(comment_grpc_requests_total{method=\"ListComments\",code=\"OK\"})", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 24 },
+      "id": 17,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "UpdateComment",
+      "description": "Успешные вызовы UpdateComment",
+      "type": "stat",
+      "targets": [
+        { "expr": "sum(comment_grpc_requests_total{method=\"UpdateComment\",code=\"OK\"})", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 24 },
+      "id": 18,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "DeleteComment",
+      "description": "Успешные вызовы DeleteComment",
+      "type": "stat",
+      "targets": [
+        { "expr": "sum(comment_grpc_requests_total{method=\"DeleteComment\",code=\"OK\"})", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 24 },
+      "id": 19,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "GetCommentCount",
+      "description": "Успешные вызовы GetCommentCount",
+      "type": "stat",
+      "targets": [
+        { "expr": "sum(comment_grpc_requests_total{method=\"GetCommentCount\",code=\"OK\"})", "legendFormat": "" }
+      ]
+    },
+
+    {
+      "collapsed": true,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 28 },
+      "id": 20,
+      "title": "NATS События",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "fillOpacity": 30, "stacking": { "mode": "normal" } },
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 29 },
+          "id": 21,
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+          },
+          "title": "События по subject",
+          "description": "Скорость публикации NATS событий по subject (stacked)",
+          "type": "timeseries",
+          "targets": [
+            { "expr": "sum(rate(comment_events_published_total[1m])) by (subject)", "legendFormat": "{{ subject }}" }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 29 },
+          "id": 22,
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+          },
+          "title": "Ошибки публикации по subject",
+          "description": "Ошибки публикации NATS событий по subject",
+          "type": "timeseries",
+          "targets": [
+            { "expr": "sum(rate(comment_event_publish_errors_total[1m])) by (subject)", "legendFormat": "{{ subject }}" }
+          ]
+        }
       ]
     }
   ],
   "refresh": "5s",
   "schemaVersion": 39,
   "tags": ["comment-service", "yammi"],
+  "templating": { "list": [] },
   "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+  },
+  "timezone": "browser",
   "title": "Comment Service",
   "uid": "comment-service",
   "liveNow": true

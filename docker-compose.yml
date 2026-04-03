@@ -79,7 +79,7 @@ services:
   minio-proxy:
     image: nginx:alpine
     volumes:
-      - ./deployments/nginx/minio-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deployments/nginx/minio-proxy:/etc/nginx/conf.d:ro
     ports:
       - "9002:9090"
     depends_on:
@@ -89,8 +89,7 @@ services:
   pgbouncer:
     image: edoburu/pgbouncer:latest
     volumes:
-      - ./deployments/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
-      - ./deployments/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
+      - ./deployments/pgbouncer/api:/etc/pgbouncer
     ports:
       - "127.0.0.1:6432:6432"
     depends_on:
@@ -105,8 +104,7 @@ services:
   pgbouncer-consumer:
     image: edoburu/pgbouncer:latest
     volumes:
-      - ./deployments/pgbouncer/pgbouncer-consumer.ini:/etc/pgbouncer/pgbouncer.ini
-      - ./deployments/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
+      - ./deployments/pgbouncer/consumer:/etc/pgbouncer
     depends_on:
       postgres:
         condition: service_healthy
@@ -128,7 +126,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     volumes:
-      - ./deployments/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./deployments/monitoring/prometheus:/etc/prometheus
     ports:
       - "127.0.0.1:9090:9090"
     depends_on:

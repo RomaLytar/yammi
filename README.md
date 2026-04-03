@@ -27,11 +27,38 @@ Client → Frontend (:3000) → API Gateway (:8080) → gRPC → Microservices
 
 7 микросервисов, каждый со своей PostgreSQL базой, clean architecture, lightweight DDD.
 
-## Запуск
+## Makefile команды
 
 ```bash
-docker compose up --build
+# Поднять всё (бек, фронт, графана, сокеты)
+make up
+
+# Остановить всё
+make down
+
+# Перезапустить
+make restart
+
+# Нагрузочный тест (FILE обязателен)
+make test FILE=realistic_1000_users.js
+
+# Тест с повышенным rate limit (все эндпоинты)
+make test FILE=realistic_1000_users.js LIMIT=300000
+
+# Тест + очистка данных после
+make test FILE=realistic_1000_users.js CLEAN=1
+
+# Все параметры вместе
+make test FILE=realistic_1000_users.js LIMIT=300000 CLEAN=1 REDIS_PASS=my_secret
+
+# Очистка всех БД и Redis (без теста)
+make clean
+
+# Очистка с кастомным паролем Redis
+make clean REDIS_PASS=my_secret
 ```
+
+Доступные тест-файлы: `tests/load/` — `realistic_1000_users.js`, `realistic_2000_users.js`, `burst_3000_users.js`, `ceiling_test.js` и др.
 
 ## Ссылки
 

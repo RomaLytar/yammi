@@ -95,14 +95,17 @@ func ServeWS(hub *Hub, verifier *auth.JWTVerifier, checker BoardAccessChecker, w
 		return
 	}
 
-	// JWT только через Authorization header — query string токены утекают через логи,
-	// историю браузера и reverse proxy diagnostics.
+	// JWT: Authorization header (предпочтительно) или query-параметр token
+	// (fallback для браузерного WebSocket API, который не поддерживает кастомные headers)
 	token := ""
 	if header := r.Header.Get("Authorization"); strings.HasPrefix(header, "Bearer ") {
 		token = strings.TrimPrefix(header, "Bearer ")
 	}
 	if token == "" {
-		http.Error(w, "missing or invalid Authorization header", http.StatusUnauthorized)
+		token = r.URL.Query().Get("token")
+	}
+	if token == "" {
+		http.Error(w, "missing or invalid authorization", http.StatusUnauthorized)
 		return
 	}
 

@@ -85,10 +85,17 @@ const errorRate = new Rate('error_rate');
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 const TOTAL_USERS = parseInt(__ENV.USERS || '1000');
-const MEMBERS_PER_BOARD = parseInt(__ENV.MEMBERS || '2');
+const BOARD_CREATORS = parseInt(__ENV.BOARD_CREATORS || '50');
+const MIN_BOARDS = parseInt(__ENV.MIN_BOARDS || '1');
+const MAX_BOARDS = parseInt(__ENV.MAX_BOARDS || '3');
+const MIN_COLUMNS = parseInt(__ENV.MIN_COLUMNS || '1');
+const MAX_COLUMNS = parseInt(__ENV.MAX_COLUMNS || '8');
+const MIN_CARDS = parseInt(__ENV.MIN_CARDS || '0');
+const MAX_CARDS = parseInt(__ENV.MAX_CARDS || '15');
+const MEMBERS_PER_BOARD = parseInt(__ENV.MEMBERS || '5');
 
 export const options = {
-  setupTimeout: '180s',
+  setupTimeout: '600s',
   scenarios: {
     realistic_usage: {
       executor: 'ramping-vus',
@@ -118,11 +125,11 @@ export const options = {
   },
 };
 
-// ─── Setup: регистрация всех пользователей ──────────────────────────────
+// ─── Setup: регистрация пользователей + создание тяжёлых досок ──────────
 
 export function setup() {
+  // 1. Регистрация пользователей
   console.log(`Регистрируем ${TOTAL_USERS} пользователей...`);
-
   const users = [];
   const ts = Date.now();
 
@@ -132,7 +139,7 @@ export function setup() {
 
     const res = http.post(
       `${BASE_URL}/api/v1/auth/register`,
-      JSON.stringify({ email, password: 'loadtest123456', name }),
+      JSON.stringify({ email, password: 'LoadTest123456', name }),
       { headers: { 'Content-Type': 'application/json' }, timeout: '30s' }
     );
 
@@ -152,18 +159,176 @@ export function setup() {
   console.log(`Зарегистрировано ${users.length}/${TOTAL_USERS}. Ждём создание профилей...`);
   sleep(5);
 
-  return { users };
+  if (users.length === 0) {
+    console.error('Не удалось зарегистрировать пользователей!');
+    return { users: [], boards: [] };
+  }
+
+  // 2. Каждый пользователь создаёт 1-3 доски с 1-8 колонками и 0-15 карточками
+  const creators = Math.min(BOARD_CREATORS, users.length);
+  console.log(`\n${creators} юзеров создают по ${MIN_BOARDS}-${MAX_BOARDS} досок (${MIN_COLUMNS}-${MAX_COLUMNS} кол, ${MIN_CARDS}-${MAX_CARDS} карт/кол)...`);
+
+  const boardsData = [];
+  const columnNames = ['Backlog', 'To Do', 'In Progress', 'Review', 'QA', 'Staging', 'Done', 'Archive'];
+  const labelPresets = [
+    { name: 'Bug', color: '#E53E3E' }, { name: 'Feature', color: '#38A169' },
+    { name: 'Task', color: '#3182CE' }, { name: 'Improvement', color: '#D69E2E' },
+    { name: 'Urgent', color: '#E53E3E' }, { name: 'Low', color: '#718096' },
+    { name: 'Backend', color: '#805AD5' },
+  ];
+  const priorities = ['low', 'medium', 'high', 'critical'];
+  const taskTypes = ['bug', 'feature', 'task', 'improvement'];
+  let boardCounter = 0;
+
+  for (let u = 0; u < creators; u++) {
+    const owner = users[u];
+    const h = authHeaders(owner.token);
+    const numBoards = MIN_BOARDS + Math.floor(Math.random() * (MAX_BOARDS - MIN_BOARDS + 1));
+
+    for (let b = 0; b < numBoards; b++) {
+      boardCounter++;
+
+      // Создать доску
+      const boardRes = http.post(
+        `${BASE_URL}/api/v1/boards`,
+        JSON.stringify({ title: `${owner.name} — Board ${b + 1}`, description: `Доска ${b + 1} пользователя ${owner.name}` }),
+        h
+      );
+      if (boardRes.status !== 201) {
+        console.warn(`Setup: board ${boardCounter} failed: ${boardRes.status}`);
+        continue;
+      }
+      const board = boardRes.json().board;
+
+      // Добавить участников
+      const memberUsers = [];
+      for (let m = 0; m < MEMBERS_PER_BOARD; m++) {
+        const memberIdx = (boardCounter * MEMBERS_PER_BOARD + m + 1) % users.length;
+        if (users[memberIdx].id === owner.id) continue;
+        const mRes = http.post(
+          `${BASE_URL}/api/v1/boards/${board.id}/members`,
+          JSON.stringify({ user_id: users[memberIdx].id, role: 'member' }),
+          h
+        );
+        if (mRes.status >= 200 && mRes.status < 300) {
+          memberUsers.push(users[memberIdx]);
+        }
+      }
+
+      // Создать метки (3-7 случайных)
+      const boardLabels = [];
+      const numLabels = 3 + Math.floor(Math.random() * 5);
+      const shuffledLabels = labelPresets.slice().sort(() => Math.random() - 0.5);
+      for (let i = 0; i < numLabels && i < shuffledLabels.length; i++) {
+        const lRes = http.post(
+          `${BASE_URL}/api/v1/boards/${board.id}/labels`,
+          JSON.stringify({ name: shuffledLabels[i].name, color: shuffledLabels[i].color }),
+          h
+        );
+        if (lRes.status === 201) boardLabels.push(lRes.json().label);
+      }
+
+      // Создать колонки (1-8)
+      const numColumns = MIN_COLUMNS + Math.floor(Math.random() * (MAX_COLUMNS - MIN_COLUMNS + 1));
+      const columnIds = [];
+
+      for (let c = 0; c < numColumns; c++) {
+        const colTitle = c < columnNames.length ? columnNames[c] : `Column ${c + 1}`;
+        const cRes = http.post(
+          `${BASE_URL}/api/v1/boards/${board.id}/columns`,
+          JSON.stringify({ title: colTitle }),
+          h
+        );
+        if (cRes.status === 201) {
+          columnIds.push(cRes.json().column.id);
+        }
+      }
+
+      if (columnIds.length === 0) {
+        console.warn(`Setup: board ${boardCounter} — no columns created`);
+        continue;
+      }
+
+      // Создать карточки в каждой колонке (0-15)
+      const allCardIds = [];
+      let totalCards = 0;
+
+      for (let c = 0; c < columnIds.length; c++) {
+        const numCards = MIN_CARDS + Math.floor(Math.random() * (MAX_CARDS - MIN_CARDS + 1));
+
+        for (let i = 0; i < numCards; i++) {
+          const payload = {
+            title: `Task ${c + 1}-${i + 1}`,
+            description: `Задача в колонке ${c + 1}, позиция ${i + 1}`,
+            board_id: board.id,
+            position: lexorank(i),
+            priority: priorities[Math.floor(Math.random() * priorities.length)],
+            task_type: taskTypes[Math.floor(Math.random() * taskTypes.length)],
+          };
+          if (Math.random() < 0.6) {
+            const d = new Date();
+            d.setDate(d.getDate() + Math.floor(Math.random() * 14) + 1);
+            payload.due_date = d.toISOString();
+          }
+
+          const cardRes = http.post(
+            `${BASE_URL}/api/v1/columns/${columnIds[c]}/cards`,
+            JSON.stringify(payload),
+            h
+          );
+          if (cardRes.status === 201) {
+            const card = cardRes.json().card;
+            allCardIds.push({ id: card.id, column_id: columnIds[c], version: card.version || 1 });
+            totalCards++;
+
+            // Привязать метку (~40%)
+            if (Math.random() < 0.4 && boardLabels.length > 0) {
+              const lbl = boardLabels[Math.floor(Math.random() * boardLabels.length)];
+              http.post(
+                `${BASE_URL}/api/v1/boards/${board.id}/cards/${card.id}/labels`,
+                JSON.stringify({ label_id: lbl.id }),
+                h
+              );
+            }
+          }
+        }
+      }
+
+      boardsData.push({
+        id: board.id,
+        ownerId: owner.id,
+        ownerToken: owner.token,
+        memberIds: memberUsers.map(u => u.id),
+        memberTokens: memberUsers.map(u => u.token),
+        columnIds: columnIds,
+        cardIds: allCardIds,
+        labelIds: boardLabels.map(l => l.id),
+      });
+
+      if (boardCounter % 10 === 0) {
+        console.log(`  ...досок: ${boardCounter}, последняя: ${columnIds.length} кол, ${totalCards} карт`);
+        sleep(0.3);
+      }
+    }
+  }
+
+  console.log(`\nSetup готов: ${users.length} юзеров, ${boardsData.length} досок`);
+  const totalCardsCreated = boardsData.reduce((sum, b) => sum + b.cardIds.length, 0);
+  const totalColumnsCreated = boardsData.reduce((sum, b) => sum + b.columnIds.length, 0);
+  console.log(`Всего: ${totalColumnsCreated} колонок, ${totalCardsCreated} карточек`);
+
+  return { users, boards: boardsData };
 }
 
 // ─── Teardown ───────────────────────────────────────────────────────────
 
 export function teardown(data) {
-  console.log('Тест завершён. Для очистки БД/Redis запустите: ./tests/load/cleanup.sh');
+  console.log('Тест завершён. Данные оставлены в БД.');
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 
-function auth(token) {
+function authHeaders(token) {
   return {
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -215,6 +380,16 @@ const LABEL_PRESETS = [
 
 const PRIORITIES = ['low', 'medium', 'high', 'critical'];
 const TASK_TYPES = ['bug', 'feature', 'task', 'improvement'];
+
+// ─── Soft GET (403/404 — нормальная гонка) ──────────────────────────────
+
+function softGet(h, url, latencyTrend) {
+  const start = Date.now();
+  const res = http.get(url, h);
+  if (latencyTrend) latencyTrend.add(Date.now() - start);
+  if (res.status === 200) { errorRate.add(false); return res.json(); }
+  return null;
+}
 
 // ─── Board CRUD helpers ─────────────────────────────────────────────────
 
@@ -299,16 +474,16 @@ function createCard(h, columnId, boardId, title, posIndex, opts) {
   return body.card;
 }
 
-function moveCard(h, card, targetColumnId, boardId) {
+function moveCard(h, cardId, fromColumnId, targetColumnId, boardId, version) {
   const start = Date.now();
   const res = http.put(
-    `${BASE_URL}/api/v1/cards/${card.id}/move`,
+    `${BASE_URL}/api/v1/cards/${cardId}/move`,
     JSON.stringify({
       board_id: boardId,
-      from_column_id: card.column_id,
+      from_column_id: fromColumnId,
       to_column_id: targetColumnId,
       position: lexorank(Math.floor(Math.random() * 26)),
-      version: card.version || 1,
+      version: version || 1,
     }),
     h
   );
@@ -320,11 +495,11 @@ function moveCard(h, card, targetColumnId, boardId) {
   return true;
 }
 
-function updateCard(h, card, boardId, title) {
+function updateCard(h, cardId, boardId, title, version) {
   const start = Date.now();
   const res = http.put(
-    `${BASE_URL}/api/v1/cards/${card.id}`,
-    JSON.stringify({ title, description: 'Обновлено в load test', board_id: boardId, version: card.version || 1 }),
+    `${BASE_URL}/api/v1/cards/${cardId}`,
+    JSON.stringify({ title, description: 'Обновлено в load test', board_id: boardId, version: version || 1 }),
     h
   );
   latency.updateCard.add(Date.now() - start);
@@ -346,47 +521,6 @@ function deleteCard(h, cardId, boardId) {
 
   const ok = check(res, { 'deleteCard: 200': (r) => r.status === 200 });
   if (!ok) { trackError(errors.card, 'deleteCard', res); return false; }
-  errorRate.add(false);
-  return true;
-}
-
-function deleteColumn(h, columnId, boardId) {
-  const start = Date.now();
-  const res = http.del(
-    `${BASE_URL}/api/v1/columns/${columnId}`,
-    JSON.stringify({ board_id: boardId }),
-    h
-  );
-  latency.deleteColumn.add(Date.now() - start);
-
-  const ok = check(res, { 'deleteColumn: 200': (r) => r.status === 200 });
-  if (!ok) { trackError(errors.column, 'deleteColumn', res); return false; }
-  errorRate.add(false);
-  return true;
-}
-
-function removeMember(h, boardId, userId) {
-  const start = Date.now();
-  const res = http.del(`${BASE_URL}/api/v1/boards/${boardId}/members/${userId}`, null, h);
-  latency.deleteMember.add(Date.now() - start);
-
-  const ok = check(res, { 'removeMember: 200': (r) => r.status === 200 });
-  if (!ok) { trackError(errors.member, 'removeMember', res); return false; }
-  errorRate.add(false);
-  return true;
-}
-
-function deleteBoard(h, boardId) {
-  const start = Date.now();
-  const res = http.post(
-    `${BASE_URL}/api/v1/boards/delete`,
-    JSON.stringify({ board_ids: [boardId] }),
-    h
-  );
-  latency.deleteBoard.add(Date.now() - start);
-
-  const ok = check(res, { 'deleteBoard: 200': (r) => r.status === 200 });
-  if (!ok) { trackError(errors.board, 'deleteBoard', res); return false; }
   errorRate.add(false);
   return true;
 }
@@ -525,10 +659,7 @@ function replyComment(h, cardId, boardId, parentId, content) {
   latency.replyComment.add(Date.now() - start);
 
   const body = res.json();
-  const ok = check(res, {
-    'replyComment: 201': (r) => r.status === 201,
-  });
-
+  const ok = check(res, { 'replyComment: 201': (r) => r.status === 201 });
   if (!ok) { trackError(errors.comment, 'replyComment', res); return null; }
   errorRate.add(false);
   return body.comment;
@@ -577,10 +708,7 @@ function createChecklistItem(h, boardId, checklistId, title, position) {
   latency.createChecklistItem.add(Date.now() - start);
 
   const body = res.json();
-  const ok = check(res, {
-    'createChecklistItem: 201': (r) => r.status === 201,
-  });
-
+  const ok = check(res, { 'createChecklistItem: 201': (r) => r.status === 201 });
   if (!ok) { trackError(errors.checklist, 'createChecklistItem', res); return null; }
   errorRate.add(false);
   return body.item;
@@ -630,10 +758,7 @@ function createAutomation(h, boardId, name, triggerType, triggerConfig, actionTy
   latency.createAutomation.add(Date.now() - start);
 
   const body = res.json();
-  const ok = check(res, {
-    'createAutomation: 201': (r) => r.status === 201,
-  });
-
+  const ok = check(res, { 'createAutomation: 201': (r) => r.status === 201 });
   if (!ok) { trackError(errors.automation, 'createAutomation', res); return null; }
   errorRate.add(false);
   return body.rule;
@@ -667,10 +792,7 @@ function createCustomField(h, boardId, name, fieldType, opts) {
   latency.createCustomField.add(Date.now() - start);
 
   const body = res.json();
-  const ok = check(res, {
-    'createCustomField: 201': (r) => r.status === 201,
-  });
-
+  const ok = check(res, { 'createCustomField: 201': (r) => r.status === 201 });
   if (!ok) { trackError(errors.customField, 'createCustomField', res); return null; }
   errorRate.add(false);
   return body.field;
@@ -781,10 +903,7 @@ function createUserLabel(h, name, color) {
   latency.createUserLabel.add(Date.now() - start);
 
   const body = res.json();
-  const ok = check(res, {
-    'createUserLabel: 201': (r) => r.status === 201,
-  });
-
+  const ok = check(res, { 'createUserLabel: 201': (r) => r.status === 201 });
   if (!ok) { trackError(errors.userLabel, 'createUserLabel', res); return null; }
   errorRate.add(false);
   return body.label;
@@ -857,32 +976,10 @@ function createBoardFromTemplate(h, templateId, title) {
   return body.board;
 }
 
-function createCardTemplate(h, boardId, name, title, priority, taskType) {
-  const start = Date.now();
-  const res = http.post(
-    `${BASE_URL}/api/v1/boards/${boardId}/card-templates`,
-    JSON.stringify({
-      name,
-      title: title || name,
-      description: 'Template card',
-      priority: priority || 'medium',
-      task_type: taskType || 'task',
-    }),
-    h
-  );
-  latency.createTemplate.add(Date.now() - start);
-
-  const body = res.json();
-  const ok = check(res, { 'createCardTemplate: 201': (r) => r.status === 201 });
-  if (!ok) { trackError(errors.template, 'createCardTemplate', res); return null; }
-  errorRate.add(false);
-  return body.template;
-}
-
 function listBoardTemplates(h) {
   const start = Date.now();
   const res = http.get(`${BASE_URL}/api/v1/board-templates`, h);
-  latency.createTemplate.add(Date.now() - start); // reuse trend for read too
+  latency.createTemplate.add(Date.now() - start);
 
   if (res.status !== 200) return [];
   errorRate.add(false);
@@ -913,37 +1010,6 @@ function getUnreadCount(h) {
   return -1;
 }
 
-function measureDelivery(ownerH, memberH, boardID) {
-  if (!boardID) return;
-
-  markAllRead(memberH);
-  sleep(0.2);
-  const beforeCount = getUnreadCount(memberH);
-  if (beforeCount < 0) return;
-
-  const actionTime = Date.now();
-  const col = createColumn(ownerH, boardID, `measure-${Date.now()}`);
-  if (!col) return;
-
-  const maxPollMs = 10000;
-  const pollInterval = 200;
-
-  for (let elapsed = 0; elapsed < maxPollMs; elapsed += pollInterval) {
-    sleep(pollInterval / 1000);
-    const count = getUnreadCount(memberH);
-    if (count > beforeCount) {
-      latency.notifDelivery.add(Date.now() - actionTime);
-      deleteColumn(ownerH, col.id, boardID);
-      return;
-    }
-  }
-
-  latency.notifDelivery.add(maxPollMs);
-  deleteColumn(ownerH, col.id, boardID);
-}
-
-// ─── Генерация due_date (через 1-14 дней от сейчас) ────────────────────
-
 function randomDueDate() {
   const d = new Date();
   d.setDate(d.getDate() + Math.floor(Math.random() * 14) + 1);
@@ -954,574 +1020,378 @@ function randomDueDate() {
 // ─── СЦЕНАРИИ ПОЛЬЗОВАТЕЛЕЙ ─────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ─── Worker (60%): полный цикл работы с доской ─────────────────────────
+// Выбрать случайную доску где юзер — owner или member
+function pickBoard(boards, userId) {
+  const myBoards = boards.filter(b => b.ownerId === userId || b.memberIds.includes(userId));
+  if (myBoards.length > 0) return pickRandom(myBoards);
+  return pickRandom(boards); // fallback — случайная (доступ проверит сервер)
+}
 
-function workerScenario(me, allUsers, h) {
-  // 1. Создание доски
-  const board = createBoard(h, `Доска ${me.name}`);
-  if (!board) return;
-  sleep(randomBetween(0.3, 0.8));
+function getTokenForBoard(board, userId, userToken) {
+  if (board.ownerId === userId) return userToken;
+  const idx = board.memberIds.indexOf(userId);
+  if (idx >= 0) return board.memberTokens[idx];
+  return board.ownerToken; // fallback
+}
 
-  // 2. Добавление участников
-  const memberCount = MEMBERS_PER_BOARD > 2 ? MEMBERS_PER_BOARD : (Math.random() < 0.5 ? 1 : 2);
-  const members = pickRandomUsers(allUsers, me.id, memberCount);
-  for (const m of members) {
-    addMember(h, board.id, m.id, 'member');
-    sleep(randomBetween(0.1, 0.2));
-  }
+// ─── Worker (55%): работа с существующей доской ─────────────────────────
 
-  // 3. Создание 5-7 меток на доске
-  const labelCount = Math.floor(randomBetween(5, 8));
-  const boardLabels = [];
-  for (let i = 0; i < labelCount && i < LABEL_PRESETS.length; i++) {
-    const lbl = createLabel(h, board.id, LABEL_PRESETS[i].name, LABEL_PRESETS[i].color);
-    if (lbl) boardLabels.push(lbl);
-    sleep(randomBetween(0.05, 0.15));
-  }
+function workerScenario(me, allUsers, boards, h) {
+  const board = pickBoard(boards, me.id);
+  const token = getTokenForBoard(board, me.id, me.token);
+  const bh = authHeaders(token);
 
-  // 4. ~5% создают автоматизации (1-2 правила)
-  if (Math.random() < 0.05) {
-    createAutomation(
-      h, board.id,
-      'Done → Low Priority',
-      'card_moved_to_column', { column_name: 'Done' },
-      'set_priority', { priority: 'low' }
-    );
-    sleep(randomBetween(0.1, 0.3));
-
-    if (Math.random() < 0.5) {
-      createAutomation(
-        h, board.id,
-        'New card → add Task label',
-        'card_created', {},
-        'add_label', { label_name: 'Task' }
-      );
-      sleep(randomBetween(0.1, 0.3));
-    }
-  }
-
-  // 5. ~10% обновляют настройки доски
-  if (Math.random() < 0.1) {
-    updateBoardSettings(h, board.id, true);
-    sleep(randomBetween(0.1, 0.2));
-  }
-
-  // 6. Создание колонок
-  const col1 = createColumn(h, board.id, 'To Do');
+  // Посмотреть доску
+  getBoard(bh, board.id);
   sleep(randomBetween(0.2, 0.5));
-  const col2 = createColumn(h, board.id, 'In Progress');
-  sleep(randomBetween(0.2, 0.5));
-  const col3 = createColumn(h, board.id, 'Done');
-  sleep(randomBetween(0.2, 0.5));
-  if (!col1 || !col2) return;
 
-  // 7. Создание карт с metadata
-  const cardCount = Math.floor(randomBetween(2, 4));
-  const cards = [];
-  for (let i = 0; i < cardCount; i++) {
-    const card = createCard(h, col1.id, board.id, `Задача ${i + 1}`, i, {
+  // Создать карточку в случайной колонке
+  if (board.columnIds.length > 0) {
+    const colId = pickRandom(board.columnIds);
+    const card = createCard(bh, colId, board.id, `Новая задача ${Date.now() % 10000}`, Math.floor(Math.random() * 26), {
       priority: pickRandom(PRIORITIES),
       task_type: pickRandom(TASK_TYPES),
       due_date: Math.random() < 0.6 ? randomDueDate() : undefined,
     });
-    if (card) cards.push(card);
     sleep(randomBetween(0.2, 0.5));
-  }
 
-  // 8. Привязать метки к картам (~60% карт получают 1-3 метки)
-  for (const card of cards) {
-    if (Math.random() < 0.6 && boardLabels.length > 0) {
-      const labelsToPick = Math.floor(randomBetween(1, Math.min(4, boardLabels.length + 1)));
-      const shuffled = boardLabels.slice().sort(() => Math.random() - 0.5);
-      for (let i = 0; i < labelsToPick; i++) {
-        attachLabel(h, board.id, card.id, shuffled[i].id);
-        sleep(randomBetween(0.05, 0.1));
+    if (card) {
+      // Привязать метку
+      if (board.labelIds.length > 0 && Math.random() < 0.6) {
+        attachLabel(bh, board.id, card.id, pickRandom(board.labelIds));
+        sleep(randomBetween(0.05, 0.15));
       }
-    }
-  }
 
-  // 9. Создать чеклист на ~40% карт (3-5 items)
-  for (const card of cards) {
-    if (Math.random() < 0.4) {
-      const cl = createChecklist(h, board.id, card.id, 'Задачи', 0);
-      if (cl) {
-        const itemCount = Math.floor(randomBetween(3, 6));
-        const items = [];
-        for (let i = 0; i < itemCount; i++) {
-          const item = createChecklistItem(h, board.id, cl.id, `Пункт ${i + 1}`, i);
-          if (item) items.push(item);
-          sleep(randomBetween(0.05, 0.1));
-        }
-        // Toggle 2-3 items (~30%)
-        if (Math.random() < 0.3) {
-          for (let i = 0; i < Math.min(3, items.length); i++) {
-            toggleChecklistItem(h, board.id, items[i].id);
-            sleep(randomBetween(0.05, 0.1));
+      // Написать комментарий (~50%)
+      if (Math.random() < 0.5) {
+        createComment(bh, card.id, board.id, `Работаю над: ${card.title}`);
+        sleep(randomBetween(0.1, 0.3));
+      }
+
+      // Создать чеклист (~30%)
+      if (Math.random() < 0.3) {
+        const cl = createChecklist(bh, board.id, card.id, 'TODO', 0);
+        if (cl) {
+          for (let i = 0; i < Math.floor(randomBetween(3, 6)); i++) {
+            createChecklistItem(bh, board.id, cl.id, `Шаг ${i + 1}`, i);
+            sleep(randomBetween(0.03, 0.08));
           }
         }
+        sleep(randomBetween(0.1, 0.2));
       }
-      sleep(randomBetween(0.1, 0.3));
     }
   }
 
-  // 10. Написать комментарий к карте (~40%)
-  const commentsMap = {}; // cardId → comment
-  for (const card of cards) {
-    if (Math.random() < 0.4) {
-      const comment = createComment(h, card.id, board.id, `Комментарий к задаче ${card.title}`);
-      if (comment) commentsMap[card.id] = comment;
-      sleep(randomBetween(0.1, 0.3));
+  // Переместить существующую карточку (~40%)
+  if (Math.random() < 0.4 && board.cardIds.length > 0 && board.columnIds.length > 1) {
+    const card = pickRandom(board.cardIds);
+    const targetCol = pickRandom(board.columnIds.filter(c => c !== card.column_id));
+    if (targetCol) {
+      moveCard(bh, card.id, card.column_id, targetCol, board.id, card.version);
+      sleep(randomBetween(0.2, 0.5));
     }
   }
 
-  // 11. Назначить карту на участника (~50%)
-  for (const card of cards) {
-    if (Math.random() < 0.5 && members.length > 0) {
-      assignCard(h, card.id, pickRandom(members).id, board.id);
-      sleep(randomBetween(0.1, 0.2));
-    }
+  // Обновить существующую карточку (~30%)
+  if (Math.random() < 0.3 && board.cardIds.length > 0) {
+    const card = pickRandom(board.cardIds);
+    updateCard(bh, card.id, board.id, `Updated ${Date.now() % 10000}`, card.version);
+    sleep(randomBetween(0.2, 0.4));
   }
 
-  // 12. Перемещение карт
-  if (cards.length > 0) {
-    moveCard(h, cards[0], col2.id, board.id);
-    cards[0].column_id = col2.id;
-    sleep(randomBetween(0.3, 0.8));
+  // Назначить карточку (~20%)
+  if (Math.random() < 0.2 && board.cardIds.length > 0 && board.memberIds.length > 0) {
+    const card = pickRandom(board.cardIds);
+    assignCard(bh, card.id, pickRandom(board.memberIds), board.id);
+    sleep(randomBetween(0.1, 0.2));
   }
 
-  // 13. Замер реальной latency доставки нотификации
-  if (Math.random() < 0.2 && members.length > 0) {
-    const memberH = auth(members[0].token);
-    measureDelivery(h, memberH, board.id);
-  } else {
-    checkNotifications(h);
-    markAllRead(h);
-  }
-  sleep(randomBetween(0.3, 0.8));
-
-  // 14. ~50% удаляют доску
-  if (Math.random() < 0.5) {
-    deleteBoard(h, board.id);
-  }
+  // Нотификации
+  checkNotifications(bh);
+  markAllRead(bh);
+  sleep(randomBetween(0.2, 0.5));
 }
 
-// ─── Collaborator (15%): работа на чужой доске ──────────────────────────
+// ─── Collaborator (15%): работа на чужих досках ─────────────────────────
 
-function collaboratorScenario(me, allUsers, h) {
-  // Найти доску где мы участник
-  const boards = listBoards(h);
-  sleep(randomBetween(0.5, 1));
+function collaboratorScenario(me, allUsers, boards, h) {
+  const board = pickBoard(boards, me.id);
+  const token = getTokenForBoard(board, me.id, me.token);
+  const bh = authHeaders(token);
 
-  if (boards.length === 0) {
-    // Нет досок — создадим мини-доску и поработаем
-    const board = createBoard(h, `Collab-${me.name}`);
-    if (!board) return;
+  // Получить доску
+  const boardInfo = getBoard(bh, board.id);
+  if (!boardInfo) return;
+  sleep(randomBetween(0.3, 0.5));
 
-    const col = createColumn(h, board.id, 'Tasks');
-    if (!col) return;
+  // Прочитать метки
+  listLabels(bh, board.id);
+  sleep(randomBetween(0.1, 0.3));
 
-    const card = createCard(h, col.id, board.id, 'Collab task', 0, {
-      priority: 'medium', task_type: 'task',
-    });
-    if (card) {
-      createComment(h, card.id, board.id, 'Начинаю работу над задачей');
-    }
-    sleep(randomBetween(0.5, 1));
-    return;
-  }
+  // Посмотреть available labels
+  getAvailableLabels(bh, board.id);
+  sleep(randomBetween(0.1, 0.3));
 
-  const boardInfo = getBoard(h, boards[0].id);
-  if (!boardInfo || !boardInfo.board) return;
-  const board = boardInfo.board;
-  sleep(randomBetween(0.3, 0.8));
+  // Работа с карточками
+  if (board.cardIds.length > 0) {
+    const card = pickRandom(board.cardIds);
 
-  // Получить колонки и карточки (softGet — доска может быть удалена)
-  const colData = softGet(h, `${BASE_URL}/api/v1/boards/${board.id}/columns`);
-  const columns = colData ? (colData.columns || []) : [];
-  if (columns.length === 0) return;
-  sleep(randomBetween(0.2, 0.5));
-
-  const cardData = softGet(h, `${BASE_URL}/api/v1/columns/${columns[0].id}/cards`);
-  const cards = cardData ? (cardData.cards || []) : [];
-  sleep(randomBetween(0.2, 0.5));
-
-  if (cards.length > 0) {
-    const card = cards[0];
-
-    // Прочитать комментарии и ответить на них
-    const commData = softGet(h, `${BASE_URL}/api/v1/cards/${card.id}/comments`, latency.listComments);
+    // Прочитать комментарии и ответить
+    const commData = softGet(bh, `${BASE_URL}/api/v1/cards/${card.id}/comments`, latency.listComments);
     const comments = commData ? (commData.comments || []) : [];
     sleep(randomBetween(0.2, 0.5));
 
     if (comments.length > 0) {
-      replyComment(h, card.id, board.id, comments[0].id, `Ответ от ${me.name}: согласен, работаю`);
-      sleep(randomBetween(0.2, 0.5));
+      replyComment(bh, card.id, board.id, comments[0].id, `Ответ от ${me.name}`);
     } else {
-      createComment(h, card.id, board.id, `${me.name}: взял задачу в работу`);
-      sleep(randomBetween(0.2, 0.5));
+      createComment(bh, card.id, board.id, `${me.name}: начинаю работу`);
     }
+    sleep(randomBetween(0.2, 0.5));
 
-    // Прочитать чеклисты и toggle items
-    const clData = softGet(h, `${BASE_URL}/api/v1/boards/${board.id}/cards/${card.id}/checklists`, latency.listChecklists);
+    // Прочитать чеклисты и toggle
+    const clData = softGet(bh, `${BASE_URL}/api/v1/boards/${board.id}/cards/${card.id}/checklists`, latency.listChecklists);
     const checklists = clData ? (clData.checklists || []) : [];
-    sleep(randomBetween(0.1, 0.3));
     if (checklists.length > 0 && checklists[0].items && checklists[0].items.length > 0) {
       const unchecked = checklists[0].items.filter(i => !i.is_checked);
       if (unchecked.length > 0) {
-        toggleChecklistItem(h, board.id, unchecked[0].id);
-        sleep(randomBetween(0.1, 0.3));
+        toggleChecklistItem(bh, board.id, unchecked[0].id);
       }
     }
-
-    // Прочитать метки карточки
-    softGet(h, `${BASE_URL}/api/v1/boards/${board.id}/cards/${card.id}/labels`, latency.getCardLabels);
     sleep(randomBetween(0.1, 0.3));
 
-    // Переместить карточку если есть вторая колонка
-    if (columns.length > 1) {
-      moveCard(h, card, columns[1].id, board.id);
-      sleep(randomBetween(0.3, 0.8));
-    }
-  }
+    // Прочитать метки карточки
+    softGet(bh, `${BASE_URL}/api/v1/boards/${board.id}/cards/${card.id}/labels`, latency.getCardLabels);
+    sleep(randomBetween(0.1, 0.3));
 
-  // Получить available labels
-  softGet(h, `${BASE_URL}/api/v1/boards/${board.id}/available-labels`, latency.availableLabels);
-  sleep(randomBetween(0.1, 0.3));
-
-  // Нотификации
-  checkNotifications(h);
-  markAllRead(h);
-  sleep(randomBetween(0.3, 0.8));
-}
-
-// ─── Reader (15%): чтение данных доски ──────────────────────────────────
-
-// Мягкие GET-хелперы для reader/collaborator: 403/404 — нормальная гонка, не ошибка
-function softGet(h, url, latencyTrend) {
-  const start = Date.now();
-  const res = http.get(url, h);
-  if (latencyTrend) latencyTrend.add(Date.now() - start);
-  if (res.status === 200) { errorRate.add(false); return res.json(); }
-  // 403/404 — доска удалена или участник удалён другим VU — не считаем ошибкой
-  return null;
-}
-
-function readerScenario(me, allUsers, h) {
-  const boards = listBoards(h);
-  sleep(randomBetween(0.5, 1));
-
-  if (boards.length > 0) {
-    const boardInfo = getBoard(h, boards[0].id);
-    sleep(randomBetween(0.5, 1));
-
-    if (boardInfo && boardInfo.board) {
-      const boardId = boardInfo.board.id;
-
-      // Прочитать метки доски
-      softGet(h, `${BASE_URL}/api/v1/boards/${boardId}/labels`, latency.listLabels);
-      sleep(randomBetween(0.3, 0.8));
-
-      // Прочитать available labels (board + global)
-      softGet(h, `${BASE_URL}/api/v1/boards/${boardId}/available-labels`, latency.availableLabels);
-      sleep(randomBetween(0.3, 0.8));
-
-      // Прочитать автоматизации
-      softGet(h, `${BASE_URL}/api/v1/boards/${boardId}/automations`, latency.listAutomations);
-      sleep(randomBetween(0.3, 0.8));
-
-      // Прочитать custom fields
-      softGet(h, `${BASE_URL}/api/v1/boards/${boardId}/custom-fields`, latency.listCustomFields);
-      sleep(randomBetween(0.3, 0.8));
-
-      // Прочитать настройки доски
-      softGet(h, `${BASE_URL}/api/v1/boards/${boardId}/settings`, latency.getSettings);
-      sleep(randomBetween(0.3, 0.5));
-
-      // Получить колонки → карточки → детали
-      const colData = softGet(h, `${BASE_URL}/api/v1/boards/${boardId}/columns`);
-      const columns = colData ? (colData.columns || []) : [];
-      sleep(randomBetween(0.3, 0.5));
-
-      if (columns.length > 0) {
-        const cardData = softGet(h, `${BASE_URL}/api/v1/columns/${columns[0].id}/cards`);
-        const cards = cardData ? (cardData.cards || []) : [];
-        sleep(randomBetween(0.3, 0.5));
-
-        if (cards.length > 0) {
-          const card = cards[0];
-
-          // Прочитать метки карточки
-          softGet(h, `${BASE_URL}/api/v1/boards/${boardId}/cards/${card.id}/labels`, latency.getCardLabels);
-          sleep(randomBetween(0.2, 0.5));
-
-          // Прочитать чеклисты
-          softGet(h, `${BASE_URL}/api/v1/boards/${boardId}/cards/${card.id}/checklists`, latency.listChecklists);
-          sleep(randomBetween(0.2, 0.5));
-
-          // Прочитать комментарии
-          softGet(h, `${BASE_URL}/api/v1/cards/${card.id}/comments`, latency.listComments);
-          sleep(randomBetween(0.2, 0.5));
-
-          // Прочитать custom field values
-          softGet(h, `${BASE_URL}/api/v1/boards/${boardId}/cards/${card.id}/custom-fields`, latency.getCardFields);
-          sleep(randomBetween(0.2, 0.5));
-
-          // Прочитать дочерние карточки
-          softGet(h, `${BASE_URL}/api/v1/boards/${boardId}/cards/${card.id}/children`, latency.getChildren);
-          sleep(randomBetween(0.2, 0.5));
-        }
+    // Переместить карточку
+    if (board.columnIds.length > 1) {
+      const targetCol = pickRandom(board.columnIds.filter(c => c !== card.column_id));
+      if (targetCol) {
+        moveCard(bh, card.id, card.column_id, targetCol, board.id, card.version);
       }
     }
+    sleep(randomBetween(0.2, 0.5));
   }
 
   // Нотификации
-  checkNotifications(h);
-  sleep(randomBetween(0.3, 0.5));
-  getUnreadCount(h);
-  sleep(randomBetween(0.5, 1));
+  checkNotifications(bh);
+  markAllRead(bh);
+  sleep(randomBetween(0.2, 0.5));
 }
 
-// ─── Heavy / Admin (7%): полная настройка + масса операций ──────────────
+// ─── Reader (15%): чтение данных досок ──────────────────────────────────
 
-function heavyUserScenario(me, allUsers, h) {
-  const boards = [];
-  for (let b = 0; b < 2; b++) {
-    const board = createBoard(h, `Heavy Board ${b + 1} — ${me.name}`);
-    if (board) boards.push(board);
-    sleep(randomBetween(0.2, 0.5));
+function readerScenario(me, allUsers, boards, h) {
+  const board = pickBoard(boards, me.id);
+  const token = getTokenForBoard(board, me.id, me.token);
+  const bh = authHeaders(token);
+
+  // Список досок
+  listBoards(bh);
+  sleep(randomBetween(0.3, 0.5));
+
+  // Полная загрузка доски
+  getBoard(bh, board.id);
+  sleep(randomBetween(0.3, 0.5));
+
+  // Метки
+  softGet(bh, `${BASE_URL}/api/v1/boards/${board.id}/labels`, latency.listLabels);
+  sleep(randomBetween(0.2, 0.4));
+
+  // Available labels
+  softGet(bh, `${BASE_URL}/api/v1/boards/${board.id}/available-labels`, latency.availableLabels);
+  sleep(randomBetween(0.2, 0.4));
+
+  // Автоматизации
+  softGet(bh, `${BASE_URL}/api/v1/boards/${board.id}/automations`, latency.listAutomations);
+  sleep(randomBetween(0.2, 0.4));
+
+  // Custom fields
+  softGet(bh, `${BASE_URL}/api/v1/boards/${board.id}/custom-fields`, latency.listCustomFields);
+  sleep(randomBetween(0.2, 0.4));
+
+  // Настройки доски
+  softGet(bh, `${BASE_URL}/api/v1/boards/${board.id}/settings`, latency.getSettings);
+  sleep(randomBetween(0.2, 0.3));
+
+  // Детали карточек
+  if (board.cardIds.length > 0) {
+    const card = pickRandom(board.cardIds);
+
+    softGet(bh, `${BASE_URL}/api/v1/boards/${board.id}/cards/${card.id}/labels`, latency.getCardLabels);
+    sleep(randomBetween(0.1, 0.3));
+
+    softGet(bh, `${BASE_URL}/api/v1/boards/${board.id}/cards/${card.id}/checklists`, latency.listChecklists);
+    sleep(randomBetween(0.1, 0.3));
+
+    softGet(bh, `${BASE_URL}/api/v1/cards/${card.id}/comments`, latency.listComments);
+    sleep(randomBetween(0.1, 0.3));
+
+    softGet(bh, `${BASE_URL}/api/v1/boards/${board.id}/cards/${card.id}/custom-fields`, latency.getCardFields);
+    sleep(randomBetween(0.1, 0.3));
+
+    softGet(bh, `${BASE_URL}/api/v1/boards/${board.id}/cards/${card.id}/children`, latency.getChildren);
+    sleep(randomBetween(0.1, 0.3));
   }
-  if (boards.length === 0) return;
 
-  for (const board of boards) {
-    // Участники
-    const heavyMemberCount = MEMBERS_PER_BOARD > 3 ? MEMBERS_PER_BOARD : 3;
-    const members = pickRandomUsers(allUsers, me.id, heavyMemberCount);
-    for (const m of members) {
-      addMember(h, board.id, m.id, 'member');
-      sleep(randomBetween(0.05, 0.15));
-    }
+  // Нотификации
+  checkNotifications(bh);
+  sleep(randomBetween(0.2, 0.4));
+  getUnreadCount(bh);
+  sleep(randomBetween(0.3, 0.5));
+}
 
-    // ── Полная настройка доски (owner) ──
+// ─── Heavy Admin (7%): массовые операции на доске ───────────────────────
 
-    // Все 7 меток
-    const boardLabels = [];
-    for (const preset of LABEL_PRESETS) {
-      const lbl = createLabel(h, board.id, preset.name, preset.color);
-      if (lbl) boardLabels.push(lbl);
-      sleep(randomBetween(0.05, 0.1));
-    }
+function heavyUserScenario(me, allUsers, boards, h) {
+  // Берём доску где мы owner
+  const ownerBoards = boards.filter(b => b.ownerId === me.id);
+  const board = ownerBoards.length > 0 ? pickRandom(ownerBoards) : pickRandom(boards);
+  const bh = authHeaders(board.ownerToken);
 
-    // 2 автоматизации
-    createAutomation(
-      h, board.id,
-      'Move to Done → set Low',
-      'card_moved_to_column', { column_name: 'Done' },
-      'set_priority', { priority: 'low' }
-    );
-    sleep(randomBetween(0.1, 0.2));
+  // Создать автоматизации
+  createAutomation(
+    bh, board.id,
+    `Auto ${Date.now() % 10000}: Done → Low`,
+    'card_moved_to_column', { column_name: 'Done' },
+    'set_priority', { priority: 'low' }
+  );
+  sleep(randomBetween(0.1, 0.3));
 
-    createAutomation(
-      h, board.id,
-      'New card → assign member',
-      'card_created', {},
-      'assign_member', { member_id: members.length > 0 ? members[0].id : me.id }
-    );
-    sleep(randomBetween(0.1, 0.2));
+  // Создать custom fields
+  const textField = createCustomField(bh, board.id, `Sprint-${Date.now() % 10000}`, 'text', { position: 0 });
+  sleep(randomBetween(0.1, 0.2));
+  const dropdownField = createCustomField(bh, board.id, `Severity-${Date.now() % 10000}`, 'dropdown', {
+    position: 1,
+    options: ['Critical', 'Major', 'Minor', 'Trivial'],
+  });
+  sleep(randomBetween(0.1, 0.2));
 
-    // 2 custom fields
-    const textField = createCustomField(h, board.id, 'Sprint', 'text', { position: 0 });
-    sleep(randomBetween(0.05, 0.1));
-    const dropdownField = createCustomField(h, board.id, 'Severity', 'dropdown', {
-      position: 1,
-      options: ['Critical', 'Major', 'Minor', 'Trivial'],
-    });
-    sleep(randomBetween(0.05, 0.1));
+  // Обновить настройки
+  updateBoardSettings(bh, board.id, Math.random() < 0.5);
+  sleep(randomBetween(0.1, 0.2));
 
-    // Обновить настройки
-    updateBoardSettings(h, board.id, true);
-    sleep(randomBetween(0.1, 0.2));
-
-    // ── Колонки ──
-    const cols = [];
-    for (const title of ['Backlog', 'In Progress', 'Review', 'Done']) {
-      const col = createColumn(h, board.id, title);
-      if (col) cols.push(col);
-      sleep(randomBetween(0.1, 0.3));
-    }
-    if (cols.length < 3) continue;
-
-    // ── 5 карт с полным набором ──
-    const cards = [];
-    for (let i = 0; i < 5; i++) {
-      const card = createCard(h, cols[0].id, board.id, `Heavy Task ${i + 1}`, i, {
+  // Массовое создание карточек (5-10 штук)
+  const cards = [];
+  if (board.columnIds.length > 0) {
+    const colId = pickRandom(board.columnIds);
+    const count = Math.floor(randomBetween(5, 11));
+    for (let i = 0; i < count; i++) {
+      const card = createCard(bh, colId, board.id, `Heavy Task ${Date.now() % 10000}-${i}`, i, {
         priority: PRIORITIES[i % PRIORITIES.length],
         task_type: TASK_TYPES[i % TASK_TYPES.length],
         due_date: randomDueDate(),
       });
       if (card) cards.push(card);
-      sleep(randomBetween(0.1, 0.3));
-    }
-
-    // Привязать метки ко всем картам (2-3 метки на карту)
-    for (const card of cards) {
-      const shuffled = boardLabels.slice().sort(() => Math.random() - 0.5);
-      const count = Math.floor(randomBetween(2, 4));
-      for (let i = 0; i < count && i < shuffled.length; i++) {
-        attachLabel(h, board.id, card.id, shuffled[i].id);
-        sleep(randomBetween(0.03, 0.08));
-      }
-    }
-
-    // Чеклисты на первых 3 картах (4-5 items каждый)
-    const allItems = [];
-    for (let i = 0; i < Math.min(3, cards.length); i++) {
-      const cl = createChecklist(h, board.id, cards[i].id, `Чеклист ${i + 1}`, 0);
-      if (cl) {
-        for (let j = 0; j < Math.floor(randomBetween(4, 6)); j++) {
-          const item = createChecklistItem(h, board.id, cl.id, `Шаг ${j + 1}`, j);
-          if (item) allItems.push({ boardId: board.id, item });
-          sleep(randomBetween(0.03, 0.08));
-        }
-      }
-      sleep(randomBetween(0.1, 0.2));
-    }
-
-    // Toggle половину items
-    for (let i = 0; i < Math.floor(allItems.length / 2); i++) {
-      toggleChecklistItem(h, allItems[i].boardId, allItems[i].item.id);
-      sleep(randomBetween(0.03, 0.08));
-    }
-
-    // Комментарии: owner пишет, member отвечает
-    for (let i = 0; i < Math.min(3, cards.length); i++) {
-      const comment = createComment(h, cards[i].id, board.id, `Описание задачи ${i + 1}: нужно сделать...`);
-      sleep(randomBetween(0.1, 0.2));
-
-      // Участник отвечает на комментарий
-      if (comment && members.length > 0) {
-        const memberH = auth(members[0].token);
-        replyComment(memberH, cards[i].id, board.id, comment.id, 'Принял, начинаю работу');
-        sleep(randomBetween(0.1, 0.2));
-
-        // Второй участник тоже отвечает
-        if (members.length > 1) {
-          const memberH2 = auth(members[1].token);
-          replyComment(memberH2, cards[i].id, board.id, comment.id, 'Могу помочь, если нужно');
-          sleep(randomBetween(0.1, 0.2));
-        }
-      }
-    }
-
-    // Назначить карты на участников
-    for (let i = 0; i < cards.length && i < members.length; i++) {
-      assignCard(h, cards[i].id, members[i].id, board.id);
       sleep(randomBetween(0.05, 0.15));
-    }
-
-    // Set custom field values
-    if (textField) {
-      for (const card of cards) {
-        setFieldValue(h, board.id, card.id, textField.id, { value_text: 'Sprint 12' });
-        sleep(randomBetween(0.03, 0.08));
-      }
-    }
-    if (dropdownField) {
-      for (const card of cards) {
-        setFieldValue(h, board.id, card.id, dropdownField.id, {
-          value_text: pickRandom(['Critical', 'Major', 'Minor', 'Trivial']),
-        });
-        sleep(randomBetween(0.03, 0.08));
-      }
-    }
-
-    // Card links: parent-child между первой и остальными
-    if (cards.length >= 3) {
-      linkCards(h, board.id, cards[0].id, cards[1].id);
-      sleep(randomBetween(0.05, 0.1));
-      linkCards(h, board.id, cards[0].id, cards[2].id);
-      sleep(randomBetween(0.05, 0.1));
-      getChildren(h, board.id, cards[0].id);
-      sleep(randomBetween(0.1, 0.2));
-    }
-
-    // ── Перемещения ──
-    for (let i = 0; i < Math.min(3, cards.length); i++) {
-      moveCard(h, cards[i], cols[1].id, board.id);
-      cards[i].column_id = cols[1].id;
-      sleep(randomBetween(0.2, 0.5));
-    }
-
-    if (cards.length > 0) {
-      moveCard(h, cards[0], cols[cols.length - 1].id, board.id);
-      cards[0].column_id = cols[cols.length - 1].id;
-      sleep(randomBetween(0.2, 0.5));
-    }
-
-    // Обновить пару карт
-    for (let i = 0; i < Math.min(2, cards.length); i++) {
-      updateCard(h, cards[i], board.id, `Updated Heavy Task ${i + 1}`);
-      sleep(randomBetween(0.2, 0.3));
-    }
-
-    // Удалить последнюю карту
-    if (cards.length > 2) {
-      deleteCard(h, cards[cards.length - 1].id, board.id);
-      sleep(randomBetween(0.2, 0.3));
-    }
-
-    // ── Чтение: member проверяет всё ──
-    if (members.length > 0) {
-      const memberH = auth(members[0].token);
-
-      // Замер latency доставки нотификаций
-      measureDelivery(h, memberH, board.id);
-
-      // Member читает available labels, automations, settings
-      getAvailableLabels(memberH, board.id);
-      sleep(randomBetween(0.1, 0.2));
-      listAutomations(memberH, board.id);
-      sleep(randomBetween(0.1, 0.2));
-      getBoardSettings(memberH, board.id);
-      sleep(randomBetween(0.1, 0.2));
-    }
-
-    // Удалить одного участника
-    if (members.length > 0) {
-      removeMember(h, board.id, members[members.length - 1].id);
-      sleep(randomBetween(0.2, 0.3));
     }
   }
 
-  // ~30% удаляют первую доску
-  if (Math.random() < 0.3 && boards.length > 0) {
-    deleteBoard(h, boards[0].id);
+  // Привязать метки ко всем новым картам
+  for (const card of cards) {
+    if (board.labelIds.length > 0) {
+      const count = Math.floor(randomBetween(2, 4));
+      const shuffled = board.labelIds.slice().sort(() => Math.random() - 0.5);
+      for (let i = 0; i < count && i < shuffled.length; i++) {
+        attachLabel(bh, board.id, card.id, shuffled[i]);
+        sleep(randomBetween(0.03, 0.08));
+      }
+    }
+  }
+
+  // Чеклисты на новых картах
+  for (let i = 0; i < Math.min(3, cards.length); i++) {
+    const cl = createChecklist(bh, board.id, cards[i].id, `Чеклист ${i + 1}`, 0);
+    if (cl) {
+      const items = [];
+      for (let j = 0; j < Math.floor(randomBetween(4, 7)); j++) {
+        const item = createChecklistItem(bh, board.id, cl.id, `Шаг ${j + 1}`, j);
+        if (item) items.push(item);
+        sleep(randomBetween(0.03, 0.08));
+      }
+      // Toggle половину
+      for (let j = 0; j < Math.floor(items.length / 2); j++) {
+        toggleChecklistItem(bh, board.id, items[j].id);
+        sleep(randomBetween(0.03, 0.08));
+      }
+    }
+    sleep(randomBetween(0.1, 0.2));
+  }
+
+  // Комментарии
+  for (let i = 0; i < Math.min(3, cards.length); i++) {
+    createComment(bh, cards[i].id, board.id, `Описание задачи ${i + 1}`);
+    sleep(randomBetween(0.1, 0.2));
+  }
+
+  // Set custom field values
+  if (textField) {
+    for (const card of cards) {
+      setFieldValue(bh, board.id, card.id, textField.id, { value_text: 'Sprint 12' });
+      sleep(randomBetween(0.03, 0.08));
+    }
+  }
+  if (dropdownField) {
+    for (const card of cards) {
+      setFieldValue(bh, board.id, card.id, dropdownField.id, {
+        value_text: pickRandom(['Critical', 'Major', 'Minor', 'Trivial']),
+      });
+      sleep(randomBetween(0.03, 0.08));
+    }
+  }
+
+  // Card links
+  if (cards.length >= 3) {
+    linkCards(bh, board.id, cards[0].id, cards[1].id);
+    sleep(randomBetween(0.05, 0.1));
+    linkCards(bh, board.id, cards[0].id, cards[2].id);
+    sleep(randomBetween(0.05, 0.1));
+    getChildren(bh, board.id, cards[0].id);
+    sleep(randomBetween(0.1, 0.2));
+  }
+
+  // Перемещения
+  if (board.columnIds.length > 1) {
+    for (let i = 0; i < Math.min(3, cards.length); i++) {
+      const targetCol = pickRandom(board.columnIds);
+      moveCard(bh, cards[i].id, board.columnIds[0], targetCol, board.id, cards[i].version || 1);
+      sleep(randomBetween(0.1, 0.3));
+    }
+  }
+
+  // Чтение member'ом
+  if (board.memberTokens.length > 0) {
+    const mh = authHeaders(board.memberTokens[0]);
+    getAvailableLabels(mh, board.id);
+    sleep(randomBetween(0.1, 0.2));
+    listAutomations(mh, board.id);
+    sleep(randomBetween(0.1, 0.2));
+    getBoardSettings(mh, board.id);
+    sleep(randomBetween(0.1, 0.2));
   }
 }
 
-// ─── Setup-once (3%): шаблоны и глобальные метки ────────────────────────
+// ─── Setup-once (8%): шаблоны и глобальные метки ────────────────────────
 
-function setupOnceScenario(me, allUsers, h) {
-  // 1. Создать 2-3 глобальные метки пользователя (с уникальным суффиксом чтобы избежать 409)
-  const userLabels = [];
+function setupOnceScenario(me, allUsers, boards, h) {
   const suffix = Date.now() % 100000;
+
+  // Глобальные метки
   const globalPresets = [
     { name: `Мой приоритет ${suffix}`, color: '#E53E3E' },
     { name: `Следить ${suffix}`,       color: '#3182CE' },
     { name: `Важное ${suffix}`,        color: '#D69E2E' },
   ];
-  const count = Math.floor(randomBetween(2, 4));
-  for (let i = 0; i < count; i++) {
-    const lbl = createUserLabel(h, globalPresets[i].name, globalPresets[i].color);
-    if (lbl) userLabels.push(lbl);
+  for (let i = 0; i < Math.floor(randomBetween(2, 4)); i++) {
+    createUserLabel(h, globalPresets[i].name, globalPresets[i].color);
     sleep(randomBetween(0.1, 0.3));
   }
 
-  // 2. Прочитать свои глобальные метки
   listUserLabels(h);
-  sleep(randomBetween(0.3, 0.5));
+  sleep(randomBetween(0.2, 0.4));
 
-  // 3. Создать board template
-  const tmpl = createBoardTemplate(h, `Scrum Board Template ${suffix}`, 'Стандартный scrum', [
+  // Создать board template
+  const tmpl = createBoardTemplate(h, `Template ${suffix}`, 'Шаблон из теста', [
     { title: 'Backlog', position: 0 },
     { title: 'Sprint', position: 1 },
     { title: 'In Progress', position: 2 },
@@ -1530,37 +1400,28 @@ function setupOnceScenario(me, allUsers, h) {
   ], [
     { name: 'Bug', color: '#E53E3E' },
     { name: 'Feature', color: '#38A169' },
-    { name: 'Tech Debt', color: '#718096' },
   ]);
-  sleep(randomBetween(0.3, 0.8));
+  sleep(randomBetween(0.3, 0.5));
 
-  // 4. Создать доску из шаблона
   if (tmpl) {
-    const board = createBoardFromTemplate(h, tmpl.id, `${me.name}'s Scrum Board`);
-    sleep(randomBetween(0.3, 0.8));
+    const newBoard = createBoardFromTemplate(h, tmpl.id, `${me.name}'s Board from template`);
+    sleep(randomBetween(0.3, 0.5));
 
-    if (board) {
-      // Проверить что доска создалась — прочитать
-      getBoard(h, board.id);
-      sleep(randomBetween(0.2, 0.5));
-
-      // Прочитать метки созданной доски
-      listLabels(h, board.id);
-      sleep(randomBetween(0.2, 0.5));
-
-      // Available labels = board labels + user global labels
-      getAvailableLabels(h, board.id);
-      sleep(randomBetween(0.2, 0.5));
+    if (newBoard) {
+      getBoard(h, newBoard.id);
+      sleep(randomBetween(0.2, 0.3));
+      listLabels(h, newBoard.id);
+      sleep(randomBetween(0.2, 0.3));
+      getAvailableLabels(h, newBoard.id);
+      sleep(randomBetween(0.2, 0.3));
     }
   }
 
-  // 5. Проверить список шаблонов
   listBoardTemplates(h);
-  sleep(randomBetween(0.3, 0.5));
+  sleep(randomBetween(0.2, 0.4));
 
-  // Нотификации
   checkNotifications(h);
-  sleep(randomBetween(0.3, 0.5));
+  sleep(randomBetween(0.2, 0.4));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1569,29 +1430,31 @@ function setupOnceScenario(me, allUsers, h) {
 
 export default function (data) {
   const allUsers = data.users;
-  if (!allUsers || allUsers.length === 0) {
-    console.error('No users from setup!');
+  const boards = data.boards;
+
+  if (!allUsers || allUsers.length === 0 || !boards || boards.length === 0) {
+    console.error('No users or boards from setup!');
     return;
   }
 
   const iterGlobal = exec.scenario.iterationInTest;
   const userIdx = ((exec.vu.idInTest - 1) + iterGlobal) % allUsers.length;
   const me = allUsers[userIdx];
-  const h = auth(me.token);
+  const h = authHeaders(me.token);
 
-  // Распределение: 60% worker, 15% collaborator, 15% reader, 7% heavy, 3% setup-once
+  // Распределение: 55% worker, 15% collaborator, 15% reader, 7% heavy, 8% setup-once
   const roll = iterGlobal % 100;
 
-  if (roll < 60) {
-    workerScenario(me, allUsers, h);
-  } else if (roll < 75) {
-    collaboratorScenario(me, allUsers, h);
-  } else if (roll < 90) {
-    readerScenario(me, allUsers, h);
-  } else if (roll < 97) {
-    heavyUserScenario(me, allUsers, h);
+  if (roll < 55) {
+    workerScenario(me, allUsers, boards, h);
+  } else if (roll < 70) {
+    collaboratorScenario(me, allUsers, boards, h);
+  } else if (roll < 85) {
+    readerScenario(me, allUsers, boards, h);
+  } else if (roll < 92) {
+    heavyUserScenario(me, allUsers, boards, h);
   } else {
-    setupOnceScenario(me, allUsers, h);
+    setupOnceScenario(me, allUsers, boards, h);
   }
 }
 
@@ -1612,11 +1475,11 @@ export function handleSummary(data) {
 
   const summary = `
 ╔════════════════════════════════════════════════════════════════════════╗
-║           НАГРУЗОЧНЫЙ ТЕСТ: 1000 пользователей (FULL)                ║
+║  НАГРУЗОЧНЫЙ ТЕСТ: 1000 юзеров, 1-3 доски/юзер (1-8 кол, 0-15 карт) ║
 ╠════════════════════════════════════════════════════════════════════════╣
 ║                                                                        ║
 ║  Распределение:                                                        ║
-║    60% workers / 15% collaborators / 15% readers / 7% heavy / 3% setup ║
+║    55% workers / 15% collab / 15% readers / 7% heavy / 8% setup       ║
 ║                                                                        ║
 ║  ── Core Latency (p95) ──────────────────────────────────────────────  ║
 ║  Создание доски:       ${pad(val('latency_create_board_ms', 'p(95)'))} ms                               ║

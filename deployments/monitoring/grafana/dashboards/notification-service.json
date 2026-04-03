@@ -7,29 +7,8 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 100,
-      "title": "Уведомления",
+      "title": "Обзор",
       "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "ops"
-        }
-      },
-      "gridPos": { "h": 7, "w": 16, "x": 0, "y": 1 },
-      "id": 1,
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
-      },
-      "title": "Уведомления пользователям (по типу)",
-      "description": "Скорость доставки уведомлений пользователям, разбивка по типу события",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "rate(notification_created_total[1m])", "legendFormat": "{{ type }}" }
-      ]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -40,10 +19,37 @@
             "steps": [
               { "color": "green", "value": null }
             ]
+          },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Events consumed/s",
+      "description": "Скорость потребления событий из NATS",
+      "type": "stat",
+      "targets": [
+        { "expr": "sum(rate(notification_events_consumed_total[1m]))", "legendFormat": "" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
           }
         }
       },
-      "gridPos": { "h": 7, "w": 4, "x": 16, "y": 1 },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
       "id": 2,
       "options": {
         "colorMode": "value",
@@ -51,7 +57,7 @@
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
       "title": "Уведомлений создано",
-      "description": "Сколько уведомлений доставлено пользователям. Одно событие → уведомление каждому участнику доски (кроме автора), поэтому больше чем событий",
+      "description": "Общее количество созданных уведомлений пользователям",
       "type": "stat",
       "targets": [
         { "expr": "sum(notification_created_total)", "legendFormat": "" }
@@ -64,12 +70,12 @@
           "color": { "mode": "thresholds" },
           "thresholds": {
             "steps": [
-              { "color": "green", "value": null }
+              { "color": "orange", "value": null }
             ]
           }
         }
       },
-      "gridPos": { "h": 7, "w": 4, "x": 20, "y": 1 },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
       "id": 3,
       "options": {
         "colorMode": "value",
@@ -80,36 +86,7 @@
       "description": "Уведомления пропущенные из-за отключённых настроек",
       "type": "stat",
       "targets": [
-        { "expr": "notification_skipped_total", "legendFormat": "" }
-      ]
-    },
-
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 8 },
-      "id": 101,
-      "title": "NATS Events",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "ops"
-        }
-      },
-      "gridPos": { "h": 7, "w": 16, "x": 0, "y": 9 },
-      "id": 4,
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
-      },
-      "title": "Входящие события из NATS (по subject)",
-      "description": "Действия пользователей, пришедшие как события из NATS. Одно событие = одно действие (создал доску, переместил карточку и т.д.)",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "rate(notification_events_consumed_total[1m])", "legendFormat": "{{ subject }}" }
+        { "expr": "sum(notification_skipped_total)", "legendFormat": "" }
       ]
     },
     {
@@ -119,23 +96,26 @@
           "color": { "mode": "thresholds" },
           "thresholds": {
             "steps": [
-              { "color": "green", "value": null }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
             ]
-          }
+          },
+          "unit": "percent"
         }
       },
-      "gridPos": { "h": 7, "w": 4, "x": 16, "y": 9 },
-      "id": 5,
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "id": 4,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
-      "title": "Событий из NATS",
-      "description": "Сколько NATS-событий обработано (board.created, card.moved и т.д.). Одно событие = одно действие пользователя",
+      "title": "Error Rate %",
+      "description": "Процент ошибок относительно потреблённых событий",
       "type": "stat",
       "targets": [
-        { "expr": "sum(notification_events_consumed_total)", "legendFormat": "" }
+        { "expr": "sum(rate(notification_event_errors_total[1m])) / sum(rate(notification_events_consumed_total[1m])) * 100", "legendFormat": "" }
       ]
     },
     {
@@ -151,130 +131,126 @@
           }
         }
       },
-      "gridPos": { "h": 7, "w": 4, "x": 20, "y": 9 },
-      "id": 6,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
-      },
-      "title": "Ретраи",
-      "description": "Количество ретраев обработки событий",
-      "type": "stat",
-      "targets": [
-        { "expr": "sum(notification_event_retries_total)", "legendFormat": "" }
-      ]
-    },
-
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
-      "id": 102,
-      "title": "Ошибки и DLQ",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "ops"
-        }
-      },
-      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 17 },
-      "id": 7,
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      },
-      "title": "Ошибки обработки событий",
-      "description": "Ошибки обработки NATS событий по subject",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "rate(notification_event_errors_total[1m])", "legendFormat": "{{ subject }}" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "ops"
-        }
-      },
-      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 17 },
-      "id": 8,
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      },
-      "title": "Dead Letter Queue",
-      "description": "События отправленные в DLQ по subject",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "rate(notification_events_dlq_total[1m])", "legendFormat": "{{ subject }}" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
-            ]
-          }
-        }
-      },
-      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 23 },
-      "id": 9,
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "id": 5,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
-      "title": "Всего ошибок",
-      "description": "Суммарно ошибок обработки (red если > 0)",
-      "type": "stat",
-      "targets": [
-        { "expr": "sum(notification_event_errors_total)", "legendFormat": "" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
-            ]
-          }
-        }
-      },
-      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 23 },
-      "id": 10,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
-      },
-      "title": "Всего в DLQ",
-      "description": "Суммарно событий в DLQ (red если > 0)",
+      "title": "DLQ Total",
+      "description": "Суммарно событий в Dead Letter Queue (красный если > 0)",
       "type": "stat",
       "targets": [
         { "expr": "sum(notification_events_dlq_total)", "legendFormat": "" }
       ]
     },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "purple", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Goroutines",
+      "description": "Текущее количество горутин в сервисе",
+      "type": "stat",
+      "targets": [
+        { "expr": "notification_goroutines", "legendFormat": "" }
+      ]
+    },
 
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
-      "id": 105,
-      "title": "Hybrid Architecture",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 101,
+      "title": "Обработка событий",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 30, "stacking": { "mode": "normal" } },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 6 },
+      "id": 7,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+      },
+      "title": "Входящие события по subject",
+      "description": "Скорость потребления NATS событий, разбивка по subject (stacked)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(notification_events_consumed_total[1m])) by (subject)", "legendFormat": "{{ subject }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
+      "id": 8,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+      },
+      "title": "Уведомления по типу",
+      "description": "Скорость создания уведомлений пользователям по типу события",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(notification_created_total[1m])) by (type)", "legendFormat": "{{ type }}" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "ms"
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+      "id": 9,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Латентность обработки событий p50/p95/p99",
+      "description": "Персентили длительности обработки NATS событий (мс)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(notification_event_processing_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(notification_event_processing_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(notification_event_processing_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p99" }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 102,
+      "title": "Ошибки и ретраи",
       "type": "row"
     },
     {
@@ -285,122 +261,38 @@
           "unit": "ops"
         }
       },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 30 },
-      "id": 20,
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
-      },
-      "title": "Board Events (event-sourced)",
-      "description": "Board events: 1 INSERT на событие (вместо N INSERT fan-out). Показывает RPS по типу события",
-      "type": "timeseries",
-      "targets": [
-        { "expr": "rate(notification_board_events_created_total[1m])", "legendFormat": "{{ type }}" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          }
-        }
-      },
-      "gridPos": { "h": 7, "w": 4, "x": 12, "y": 30 },
-      "id": 21,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
-      },
-      "title": "Board Events",
-      "description": "Всего board events (event-sourcing). Сравни с 'Уведомлений создано' — при fan-out было бы в N раз больше",
-      "type": "stat",
-      "targets": [
-        { "expr": "sum(notification_board_events_created_total)", "legendFormat": "" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          }
-        }
-      },
-      "gridPos": { "h": 7, "w": 4, "x": 16, "y": 30 },
-      "id": 22,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
-      },
-      "title": "Redis INCR",
-      "description": "Redis INCR для unread counters. Дешёвая in-memory операция вместо DB INSERT",
-      "type": "stat",
-      "targets": [
-        { "expr": "notification_redis_increments_total", "legendFormat": "" }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "fillOpacity": 30 }
-        }
-      },
-      "gridPos": { "h": 7, "w": 4, "x": 20, "y": 30 },
-      "id": 23,
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 15 },
+      "id": 10,
       "options": {
         "tooltip": { "mode": "multi" },
         "legend": { "displayMode": "list", "placement": "bottom" }
       },
-      "title": "Fan-out Efficiency",
-      "description": "Соотношение NATS events → DB writes. При старой архитектуре = N (количество участников). При hybrid = 1",
+      "title": "Ошибки по subject",
+      "description": "Ошибки обработки NATS событий по subject",
       "type": "timeseries",
       "targets": [
-        { "expr": "sum(rate(notification_board_events_created_total[1m]))", "legendFormat": "board_events (1 per event)" },
-        { "expr": "sum(rate(notification_events_consumed_total[1m]))", "legendFormat": "NATS events consumed" }
+        { "expr": "sum(rate(notification_event_errors_total[1m])) by (subject)", "legendFormat": "{{ subject }}" }
       ]
-    },
-
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 37 },
-      "id": 103,
-      "title": "Latency",
-      "type": "row"
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
-          "unit": "s"
+          "unit": "ops"
         }
       },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 30 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 15 },
       "id": 11,
       "options": {
         "tooltip": { "mode": "multi" },
         "legend": { "displayMode": "list", "placement": "bottom" }
       },
-      "title": "Обработка событий — p50 / p95 / p99",
-      "description": "Длительность обработки NATS событий (персентили)",
+      "title": "Ретраи по subject",
+      "description": "Количество повторных попыток обработки событий по subject",
       "type": "timeseries",
       "targets": [
-        { "expr": "histogram_quantile(0.50, sum(rate(notification_event_processing_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
-        { "expr": "histogram_quantile(0.95, sum(rate(notification_event_processing_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
-        { "expr": "histogram_quantile(0.99, sum(rate(notification_event_processing_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+        { "expr": "sum(rate(notification_event_retries_total[1m])) by (subject)", "legendFormat": "{{ subject }}" }
       ]
     },
     {
@@ -408,30 +300,28 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
-          "unit": "s"
+          "unit": "ops"
         }
       },
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 30 },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
       "id": 12,
       "options": {
         "tooltip": { "mode": "multi" },
         "legend": { "displayMode": "list", "placement": "bottom" }
       },
-      "title": "gRPC запросы — p50 / p95 / p99",
-      "description": "Длительность gRPC запросов (персентили)",
+      "title": "DLQ по subject",
+      "description": "События отправленные в Dead Letter Queue по subject",
       "type": "timeseries",
       "targets": [
-        { "expr": "histogram_quantile(0.50, sum(rate(notification_grpc_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
-        { "expr": "histogram_quantile(0.95, sum(rate(notification_grpc_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
-        { "expr": "histogram_quantile(0.99, sum(rate(notification_grpc_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+        { "expr": "sum(rate(notification_events_dlq_total[1m])) by (subject)", "legendFormat": "{{ subject }}" }
       ]
     },
 
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 37 },
-      "id": 104,
-      "title": "gRPC",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "id": 103,
+      "title": "Board Events (гибридная архитектура)",
       "type": "row"
     },
     {
@@ -442,17 +332,17 @@
           "unit": "ops"
         }
       },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 38 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
       "id": 13,
       "options": {
         "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] }
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
       },
-      "title": "gRPC запросы (по методу)",
-      "description": "Скорость gRPC запросов по методу",
+      "title": "Board events по типу",
+      "description": "Board events (event-sourced): 1 INSERT на событие вместо N INSERT fan-out. RPS по типу события",
       "type": "timeseries",
       "targets": [
-        { "expr": "sum(rate(notification_grpc_requests_total[1m])) by (method)", "legendFormat": "{{ method }}" }
+        { "expr": "sum(rate(notification_board_events_created_total[1m])) by (type)", "legendFormat": "{{ type }}" }
       ]
     },
     {
@@ -460,20 +350,202 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 20 },
           "unit": "ops"
         }
       },
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 38 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
       "id": 14,
       "options": {
         "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] }
+        "legend": { "displayMode": "list", "placement": "bottom" }
       },
-      "title": "gRPC ошибки (по методу и коду)",
-      "description": "gRPC ошибки (все кроме OK)",
+      "title": "Fan-out: board events vs уведомления",
+      "description": "Сравнение board events (1 per event) и индивидуальных уведомлений. При fan-out было бы в N раз больше записей",
       "type": "timeseries",
       "targets": [
-        { "expr": "sum(rate(notification_grpc_requests_total{code!=\"OK\"}[1m])) by (method, code)", "legendFormat": "{{ method }} ({{ code }})" }
+        { "expr": "sum(rate(notification_board_events_created_total[1m]))", "legendFormat": "board_events (1 per event)" },
+        { "expr": "sum(rate(notification_created_total[1m]))", "legendFormat": "individual notifications" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "id": 15,
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Участников на событие p50/p95",
+      "description": "Распределение количества участников доски на одно событие (персентили)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(notification_members_per_event_bucket[5m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(notification_members_per_event_bucket[5m])) by (le))", "legendFormat": "p95" }
+      ]
+    },
+
+    {
+      "collapsed": true,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "id": 104,
+      "title": "Инфраструктура",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "ms"
+            }
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 33 },
+          "id": 16,
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "title": "Redis латентность p50/p95/p99",
+          "description": "Персентили латентности Redis операций (мс)",
+          "type": "timeseries",
+          "targets": [
+            { "expr": "histogram_quantile(0.50, sum(rate(notification_redis_latency_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p50" },
+            { "expr": "histogram_quantile(0.95, sum(rate(notification_redis_latency_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p95" },
+            { "expr": "histogram_quantile(0.99, sum(rate(notification_redis_latency_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p99" }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              },
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 33 },
+          "id": 17,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "title": "Redis increments/s",
+          "description": "Скорость Redis INCR операций для unread counters",
+          "type": "stat",
+          "targets": [
+            { "expr": "rate(notification_redis_increments_total[1m])", "legendFormat": "" }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "ms"
+            }
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 33 },
+          "id": 18,
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "title": "DB wait p50/p95/p99",
+          "description": "Персентили времени ожидания соединения из пула PostgreSQL (мс)",
+          "type": "timeseries",
+          "targets": [
+            { "expr": "histogram_quantile(0.50, sum(rate(notification_db_wait_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p50" },
+            { "expr": "histogram_quantile(0.95, sum(rate(notification_db_wait_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p95" },
+            { "expr": "histogram_quantile(0.99, sum(rate(notification_db_wait_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p99" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "collapsed": true,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 33 },
+      "id": 105,
+      "title": "gRPC API",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 34 },
+          "id": 19,
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"] }
+          },
+          "title": "gRPC запросы по методу",
+          "description": "Скорость gRPC запросов по методу",
+          "type": "timeseries",
+          "targets": [
+            { "expr": "sum(rate(notification_grpc_requests_total[1m])) by (method)", "legendFormat": "{{ method }}" }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "ops"
+            }
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 34 },
+          "id": 20,
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "title": "gRPC ошибки по методу и коду",
+          "description": "gRPC ошибки (все кроме OK) по методу и статус коду",
+          "type": "timeseries",
+          "targets": [
+            { "expr": "sum(rate(notification_grpc_requests_total{code!=\"OK\"}[1m])) by (method, code)", "legendFormat": "{{ method }} ({{ code }})" }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "ms"
+            }
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 34 },
+          "id": 21,
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "title": "gRPC латентность p50/p95/p99",
+          "description": "Персентили длительности gRPC запросов (мс)",
+          "type": "timeseries",
+          "targets": [
+            { "expr": "histogram_quantile(0.50, sum(rate(notification_grpc_request_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p50" },
+            { "expr": "histogram_quantile(0.95, sum(rate(notification_grpc_request_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p95" },
+            { "expr": "histogram_quantile(0.99, sum(rate(notification_grpc_request_duration_seconds_bucket[5m])) by (le)) * 1000", "legendFormat": "p99" }
+          ]
+        }
       ]
     }
   ],
@@ -482,12 +554,12 @@
   "schemaVersion": 39,
   "tags": ["notification-service", "events", "grpc"],
   "templating": { "list": [] },
-  "time": { "from": "now-5m", "to": "now" },
+  "time": { "from": "now-15m", "to": "now" },
   "timepicker": {
     "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
   },
   "timezone": "browser",
   "title": "Notification Service",
   "uid": "notification-service",
-  "version": 2
+  "version": 3
 }
